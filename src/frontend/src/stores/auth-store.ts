@@ -1,13 +1,13 @@
 import { create } from 'zustand'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 
-const ACCESS_TOKEN = 'thisisjustarandomstring'
+const ACCESS_TOKEN = 'siwarga_access_token'
 
 interface AuthUser {
-  accountNo: string
+  id: number
+  name: string
   email: string
-  role: string[]
-  exp: number
+  permissions: string[]
 }
 
 interface AuthState {
@@ -15,7 +15,7 @@ interface AuthState {
     user: AuthUser | null
     setUser: (user: AuthUser | null) => void
     accessToken: string
-    setAccessToken: (accessToken: string) => void
+    setAccessToken: (token: string) => void
     resetAccessToken: () => void
     reset: () => void
   }
