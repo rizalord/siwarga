@@ -38,6 +38,7 @@ const formSchema = z.object({
   marital_status: z.enum(['menikah', 'belum_menikah'], {
     required_error: 'Status nikah wajib dipilih.',
   }),
+  ktp_photo: z.instanceof(File).optional(),
 })
 
 type ResidentForm = z.infer<typeof formSchema>
@@ -58,6 +59,7 @@ export function ResidentFormDialog({
       status: 'tetap',
       phone_number: '',
       marital_status: 'belum_menikah',
+      ktp_photo: undefined,
     },
   })
 
@@ -206,6 +208,30 @@ export function ResidentFormDialog({
                         </FormLabel>
                       </FormItem>
                     </RadioGroup>
+                  </FormControl>
+                  <FormMessage className='col-span-4 col-start-3' />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='ktp_photo'
+              render={({ field: { value, onChange, ...field } }) => (
+                <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                  <FormLabel className='col-span-2 text-end'>
+                    Foto KTP
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type='file'
+                      accept='image/*'
+                      className='col-span-4'
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        onChange(file ?? undefined)
+                      }}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className='col-span-4 col-start-3' />
                 </FormItem>
