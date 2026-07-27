@@ -55,6 +55,15 @@ class User extends Authenticatable implements PasskeyUser
         return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id');
     }
 
+    public function hasPermission(string $permission): bool
+    {
+        return $this->roles->loadMissing('permissions')
+            ->pluck('permissions')
+            ->flatten()
+            ->pluck('name')
+            ->contains($permission);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
