@@ -1,0 +1,172 @@
+// ============================================================
+// SIWarga - Sistem Informasi Warga
+// Aplikasi manajemen penghuni, rumah, iuran & pengeluaran RT
+// ============================================================
+
+Table residents {
+  id                bigint        [pk, increment]
+  full_name         varchar(150)  [not null]
+  ktp_photo_path    varchar(255)  [note: 'path file foto KTP di storage']
+  status            enum('kontrak', 'tetap') [not null]
+  phone_number      varchar(20)   [not null]
+  marital_status    enum('menikah', 'belum_menikah') [not null]
+  created_at        timestamp
+  updated_at        timestamp
+
+  Note: 'Data master penghuni. Satu penghuni bisa punya histori tinggal di beberapa rumah (lihat house_residents).'
+}
+
+Table houses {
+  id            bigint        [pk, increment]
+  house_number  varchar(20)   [not null, unique, note: 'nomor/blok rumah, misal A-01']
+  address       varchar(255)
+  status        enum('dihuni', 'kosong') [not null, default: 'kosong']
+  created_at    timestamp
+  updated_at    timestamp
+
+  Note: 'Status dihuni/kosong bisa disinkron otomatis dari house_residents (ada relasi aktif atau tidak), disimpan di sini untuk query cepat.'
+}
+
+Table house_residents {
+  id            bigint    [pk, increment]
+  house_id      bigint    [not null]
+  resident_id   bigint    [not null]
+  start_date    date      [not null]
+  end_date      date      [note: 'null = masih tinggal / masih aktif sampai sekarang']
+  created_at    timestamp
+  updated_at    timestamp
+
+  Note: 'Pivot table + histori. Setiap kali penghuni pindah/keluar, end_date diisi dan baris baru dibuat untuk penghuni berikutnya. Ini yang menjawab kriteria "catatan historical siapa penghuninya".'
+}
+
+Table due_types {
+  id            bigint          [pk, increment]
+  name          varchar(50)     [not null, note: 'contoh: Satpam, Kebersihan']
+  amount        decimal(12,2)   [not null, note: 'nominal per bulan, contoh 100000 / 15000']
+  billing_cycle enum('bulanan', 'fleksibel') [not null, default: 'bulanan', note: 'satpam biasanya bulanan, kebersihan bisa dibayar tahunan sekaligus']
+  created_at    timestamp
+  updated_at    timestamp
+
+  Note: 'Master jenis iuran. Dibuat sebagai tabel (bukan hardcode) supaya nominal bisa diubah tanpa ubah kode, dan gampang nambah jenis iuran baru di masa depan.'
+}
+
+Table bills {
+  id                bigint        [pk, increment]
+  house_id          bigint        [not null]
+  resident_id       bigint        [not null, note: 'penghuni yang wajib bayar pada periode ini']
+  due_type_id       bigint        [not null]
+  period_start      date          [not null]
+  period_end        date          [not null, note: 'untuk bulanan = period_start + 1 bulan, untuk tahunan = period_start + 1 tahun']
+  amount_due        decimal(12,2) [not null]
+  status            enum('lunas', 'belum_lunas') [not null, default: 'belum_lunas']
+  generated_at      timestamp     [note: 'kapan tagihan ini dibuat oleh sistem/RT']
+  generated_by      bigint        [note: 'user (admin/bendahara) yang generate tagihan ini']
+  created_at        timestamp
+  updated_at        timestamp
+
+  Note: 'Tagihan per penghuni per jenis iuran per periode. Untuk 15 rumah tetap dibuat rutin tiap bulan; untuk 5 rumah lainnya hanya dibuat kalau ada penghuni aktif (dicek dari house_residents).'
+}
+
+Table payments {
+  id            bigint        [pk, increment]
+  bill_id       bigint        [not null]
+  amount_paid   decimal(12,2) [not null]
+  payment_date  date          [not null]
+  notes         varchar(255)
+  created_by    bigint        [note: 'user (bendahara/admin) yang input pembayaran ini']
+  created_at    timestamp
+  updated_at    timestamp
+
+  Note: 'Transaksi pembayaran aktual terhadap sebuah tagihan. Dipisah dari bills supaya bisa handle histori pembayaran & cicilan/partial payment jika diperlukan nanti.'
+}
+
+Table expenses {
+  id              bigint        [pk, increment]
+  category        varchar(100)  [not null, note: 'contoh: Perbaikan Jalan, Gaji Satpam, Token Listrik Pos Satpam']
+  description     varchar(255)
+  amount          decimal(12,2) [not null]
+  expense_date    date          [not null]
+  created_by      bigint        [note: 'user (bendahara/admin) yang input pengeluaran ini']
+  created_at      timestamp
+  updated_at      timestamp
+
+  Note: 'Pengeluaran bulanan RT, dipakai untuk laporan saldo pemasukan vs pengeluaran.'
+}
+
+// ============================================================
+// RBAC (Role-Based Access Control)
+// ============================================================
+
+Table users {
+  id            bigint        [pk, increment]
+  resident_id   bigint        [note: 'opsional, isi kalau user ini juga terdaftar sebagai penghuni (login warga)']
+  name          varchar(150)  [not null]
+  email         varchar(150)  [not null, unique]
+  password      varchar(255)  [not null]
+  is_active     boolean       [not null, default: true]
+  created_at    timestamp
+  updated_at    timestamp
+}
+
+Table roles {
+  id            bigint        [pk, increment]
+  name          varchar(50)   [not null, unique, note: 'contoh: admin, bendahara, warga']
+  description   varchar(255)
+  created_at    timestamp
+  updated_at    timestamp
+}
+
+Table permissions {
+  id            bigint        [pk, increment]
+  name          varchar(100)  [not null, unique, note: 'contoh: residents.create, bills.update, payments.view, reports.view']
+  description   varchar(255)
+  created_at    timestamp
+
+  Note: 'Granular per-action per-modul, supaya akses bisa diatur fleksibel per role tanpa hardcode di kode.'
+}
+
+Table role_permissions {
+  id              bigint  [pk, increment]
+  role_id         bigint  [not null]
+  permission_id   bigint  [not null]
+
+  indexes {
+    (role_id, permission_id) [unique]
+  }
+}
+
+Table user_roles {
+  id        bigint  [pk, increment]
+  user_id   bigint  [not null]
+  role_id   bigint  [not null]
+
+  indexes {
+    (user_id, role_id) [unique]
+  }
+
+  Note: 'Many-to-many: satu user bisa punya lebih dari satu role kalau dibutuhkan (misal RT merangkap bendahara).'
+}
+
+// ============================================================
+// Relationships
+// ============================================================
+
+Ref: users.resident_id > residents.id
+
+Ref: role_permissions.role_id > roles.id
+Ref: role_permissions.permission_id > permissions.id
+
+Ref: user_roles.user_id > users.id
+Ref: user_roles.role_id > roles.id
+
+Ref: house_residents.house_id > houses.id
+Ref: house_residents.resident_id > residents.id
+
+Ref: bills.house_id > houses.id
+Ref: bills.resident_id > residents.id
+Ref: bills.due_type_id > due_types.id
+
+Ref: payments.bill_id > bills.id
+Ref: payments.created_by > users.id
+Ref: expenses.created_by > users.id
+Ref: bills.generated_by > users.id
