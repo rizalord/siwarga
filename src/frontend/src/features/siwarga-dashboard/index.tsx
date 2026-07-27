@@ -3,12 +3,13 @@ import { useYearlySummary } from '@/hooks/use-reports'
 import { SummaryCards } from '@/features/siwarga-dashboard/summary-cards'
 import { IncomeExpenseChart } from '@/features/siwarga-dashboard/income-expense-chart'
 
-export function Dashboard() {
+export function DashboardPage() {
   const [year, setYear] = useState(new Date().getFullYear())
   const { data: summary, isLoading } = useYearlySummary(year)
 
-  if (isLoading)
+  if (isLoading) {
     return <div className='p-6'>Memuat data...</div>
+  }
 
   return (
     <div className='space-y-6 p-6'>
