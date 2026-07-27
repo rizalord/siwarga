@@ -1,0 +1,233 @@
+// Response wrappers
+export interface ApiResponse<T> {
+  data: T
+  message?: string
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
+// Auth
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  user: User
+  token: string
+  permissions: string[]
+}
+
+export interface User {
+  id: number
+  name: string
+  email: string
+  is_active: boolean
+  resident_id: number | null
+  roles: Role[]
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface Role {
+  id: number
+  name: string
+  description: string
+}
+
+export interface Permission {
+  id: number
+  name: string
+  description: string
+}
+
+// Residents
+export interface Resident {
+  id: number
+  full_name: string
+  ktp_photo_url: string | null
+  status: 'kontrak' | 'tetap'
+  phone_number: string
+  marital_status: 'menikah' | 'belum_menikah'
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface CreateResidentRequest {
+  full_name: string
+  status: 'kontrak' | 'tetap'
+  phone_number: string
+  marital_status: 'menikah' | 'belum_menikah'
+  ktp_photo?: File
+}
+
+export interface UpdateResidentRequest extends Partial<CreateResidentRequest> {}
+
+// Houses
+export interface House {
+  id: number
+  house_number: string
+  address: string
+  status: 'dihuni' | 'kosong'
+  current_resident?: Resident
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface CreateHouseRequest {
+  house_number: string
+  address?: string
+}
+
+export interface HouseResident {
+  id: number
+  house_id: number
+  resident: Resident
+  start_date: string
+  end_date: string | null
+}
+
+export interface AssignResidentRequest {
+  resident_id: number
+  start_date: string
+}
+
+// Due Types
+export interface DueType {
+  id: number
+  name: string
+  amount: number
+  billing_cycle: 'bulanan' | 'fleksibel'
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface CreateDueTypeRequest {
+  name: string
+  amount: number
+  billing_cycle: 'bulanan' | 'fleksibel'
+}
+
+// Bills
+export interface Bill {
+  id: number
+  house: House
+  resident: Resident
+  due_type: DueType
+  period_start: string
+  period_end: string
+  amount_due: number
+  status: 'lunas' | 'belum_lunas'
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface GenerateBillsRequest {
+  month: number
+  year: number
+}
+
+// Payments
+export interface Payment {
+  id: number
+  bill_id: number
+  bill?: Bill
+  amount_paid: number
+  payment_date: string
+  notes: string | null
+  created_by: number
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface CreatePaymentRequest {
+  bill_id: number
+  amount_paid: number
+  payment_date: string
+  notes?: string
+}
+
+// Expenses
+export interface Expense {
+  id: number
+  category: string
+  description: string | null
+  amount: number
+  expense_date: string
+  created_by: number
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface CreateExpenseRequest {
+  category: string
+  description?: string
+  amount: number
+  expense_date: string
+}
+
+// Reports
+export interface MonthlyReport {
+  year: number
+  month: number
+  total_income: number
+  total_expense: number
+  balance: number
+  payments: Payment[]
+  expenses: Expense[]
+}
+
+export interface YearlySummary {
+  year: number
+  monthly_data: Array<{
+    month: number
+    total_income: number
+    total_expense: number
+    balance: number
+  }>
+  year_balance: number
+}
+
+// DTOs for list filters
+export interface ResidentFilter {
+  status?: string
+  search?: string
+  page?: number
+  per_page?: number
+}
+
+export interface HouseFilter {
+  status?: string
+  page?: number
+  per_page?: number
+}
+
+export interface BillFilter {
+  month?: number
+  year?: number
+  status?: string
+  house_id?: number
+  page?: number
+  per_page?: number
+}
+
+export interface ExpenseFilter {
+  month?: number
+  year?: number
+  category?: string
+  page?: number
+  per_page?: number
+}

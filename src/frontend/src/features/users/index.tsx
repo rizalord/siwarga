@@ -1,45 +1,155 @@
+import { useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
-import { ConfigDrawer } from '@/components/config-drawer'
+import { AlertTriangle, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { UsersDialogs } from './components/users-dialogs'
-import { UsersPrimaryButtons } from './components/users-primary-buttons'
-import { UsersProvider } from './components/users-provider'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { useUsers, useDeleteUser } from '@/hooks/use-users'
+import type { User } from '@/types/api'
+import { UserFormDialog } from './components/user-form'
 import { UsersTable } from './components/users-table'
-import { users } from './data/users'
 
 const route = getRouteApi('/_authenticated/users/')
 
-export function Users() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+function UsersDialogs({
+  open,
+  setOpen,
+  currentRow,
+  setCurrentRow,
+}: {
+  open: 'create' | 'update' | 'delete' | null
+  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  currentRow: User | null
+  setCurrentRow: (row: User | null) => void
+}) {
+  const deleteUser = useDeleteUser()
+
+  const handleDelete = () => {
+    if (!currentRow) return
+    deleteUser.mutate(currentRow.id, {
+      onSuccess: () => {
+        setOpen(null)
+        setTimeout(() => {
+          setCurrentRow(null)
+        }, 500)
+      },
+    })
+  }
 
   return (
-    <UsersProvider>
+    <>
+      <UserFormDialog
+        key='user-create'
+        open={open === 'create'}
+        onOpenChange={() => setOpen('create')}
+      />
+
+      {currentRow && (
+        <>
+          <UserFormDialog
+            key={`user-update-${currentRow.id}`}
+            open={open === 'update'}
+            onOpenChange={() => {
+              setOpen('update')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            currentRow={currentRow}
+          />
+
+          <ConfirmDialog
+            key={`user-delete-${currentRow.id}`}
+            open={open === 'delete'}
+            onOpenChange={() => {
+              setOpen('delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={handleDelete}
+            disabled={deleteUser.isPending}
+            title={
+              <span className='text-destructive'>
+                <AlertTriangle
+                  className='me-1 inline-block stroke-destructive'
+                  size={18}
+                />{' '}
+                Hapus Pengguna
+              </span>
+            }
+            desc={
+              <p>
+                Apakah Anda yakin ingin menghapus{' '}
+                <span className='font-bold'>{currentRow.name}</span>?
+                <br />
+                Tindakan ini akan menghapus pengguna secara permanen dan
+                tidak dapat dibatalkan.
+              </p>
+            }
+            confirmText='Hapus'
+            destructive
+          />
+        </>
+      )}
+    </>
+  )
+}
+
+function UsersPageInner() {
+  const search = route.useSearch()
+  const navigate = route.useNavigate()
+  const { data, isLoading } = useUsers()
+
+  const [open, setOpen] = useState<'create' | 'update' | 'delete' | null>(null)
+  const [currentRow, setCurrentRow] = useState<User | null>(null)
+
+  return (
+    <>
       <Header fixed>
-        <Search className='me-auto' />
-        <ThemeSwitch />
-        <ConfigDrawer />
-        <ProfileDropdown />
+        {/* Empty header: matches shadcn-admin pattern */}
       </Header>
 
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>User List</h2>
+            <h2 className='text-2xl font-bold tracking-tight'>
+              Pengguna
+            </h2>
             <p className='text-muted-foreground'>
-              Manage your users and their roles here.
+              Kelola pengguna sistem di sini.
             </p>
           </div>
-          <UsersPrimaryButtons />
+          <Button className='space-x-1' onClick={() => setOpen('create')}>
+            <span>Tambah Pengguna</span> <Plus size={18} />
+          </Button>
         </div>
-        <UsersTable data={users} search={search} navigate={navigate} />
+        {isLoading ? (
+          <div className='flex flex-1 items-center justify-center'>
+            <p className='text-muted-foreground'>Memuat data...</p>
+          </div>
+        ) : (
+          <UsersTable
+            data={data ?? []}
+            search={search}
+            navigate={navigate}
+            setOpen={setOpen}
+            setCurrentRow={setCurrentRow}
+          />
+        )}
       </Main>
 
-      <UsersDialogs />
-    </UsersProvider>
+      <UsersDialogs
+        open={open}
+        setOpen={setOpen}
+        currentRow={currentRow}
+        setCurrentRow={setCurrentRow}
+      />
+    </>
   )
+}
+
+export function Users() {
+  return <UsersPageInner />
 }

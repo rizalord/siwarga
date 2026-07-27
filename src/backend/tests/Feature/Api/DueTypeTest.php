@@ -1,0 +1,75 @@
+<?php
+
+namespace Tests\Feature\Api;
+
+use App\Models\DueType;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class DueTypeTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected User $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
+    }
+
+    public function test_can_list_due_types()
+    {
+        DueType::factory()->count(3)->create();
+
+        $response = $this->getJson('/api/due-types');
+
+        $response->assertStatus(200)->assertJsonCount(3, 'data');
+    }
+
+    public function test_can_create_due_type()
+    {
+        $data = ['name' => 'Iuran Kebersihan', 'amount' => 50000, 'billing_cycle' => 'bulanan'];
+
+        $response = $this->postJson('/api/due-types', $data);
+
+        $response->assertStatus(201)->assertJsonPath('data.name', 'Iuran Kebersihan');
+    }
+
+    public function test_validates_required_due_type_fields()
+    {
+        $response = $this->postJson('/api/due-types', []);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_can_show_due_type()
+    {
+        $dueType = DueType::factory()->create();
+
+        $response = $this->getJson("/api/due-types/{$dueType->id}");
+
+        $response->assertStatus(200);
+    }
+
+    public function test_can_update_due_type()
+    {
+        $dueType = DueType::factory()->create();
+
+        $response = $this->putJson("/api/due-types/{$dueType->id}", ['amount' => 75000]);
+
+        $response->assertStatus(200)->assertJsonPath('data.amount', 75000);
+    }
+
+    public function test_can_soft_delete_due_type()
+    {
+        $dueType = DueType::factory()->create();
+
+        $this->deleteJson("/api/due-types/{$dueType->id}");
+
+        $this->assertSoftDeleted($dueType);
+    }
+}

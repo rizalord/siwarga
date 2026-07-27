@@ -1,4 +1,3 @@
-import { Link, useSearch } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -8,11 +7,9 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { AuthLayout } from '../auth-layout'
-import { UserAuthForm } from './components/user-auth-form'
+import { SiwargaSignInForm } from './components/siwarga-sign-in-form'
 
 export function SignIn() {
-  const { redirect } = useSearch({ from: '/(auth)/sign-in' })
-
   return (
     <AuthLayout>
       <Card className='max-w-sm gap-4'>
@@ -20,18 +17,11 @@ export function SignIn() {
           <CardTitle className='text-lg tracking-tight'>Sign in</CardTitle>
           <CardDescription>
             Enter your email and password below to log into{' '}
-            <br className='max-sm:hidden' /> your account. Don't have an
-            account?{' '}
-            <Link
-              to='/sign-up'
-              className='text-nowrap underline underline-offset-4 hover:text-primary'
-            >
-              Sign Up
-            </Link>
+            <br className='max-sm:hidden' /> your account.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <UserAuthForm redirectTo={redirect} />
+          <SiwargaSignInForm />
         </CardContent>
         <CardFooter>
           <p className='px-8 text-center text-sm text-muted-foreground'>
