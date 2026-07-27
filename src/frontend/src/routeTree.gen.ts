@@ -30,6 +30,7 @@ import { Route as AuthenticatedBillsIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedDueTypesIndexRouteImport } from './routes/_authenticated/due-types/index'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
+import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authenticated/expenses/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedHousesIndexRouteImport } from './routes/_authenticated/houses/index'
 import { Route as AuthenticatedHousesIdRouteImport } from './routes/_authenticated/houses/$id'
@@ -152,6 +153,12 @@ const AuthenticatedErrorsErrorRoute =
     path: '/errors/$error',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedExpensesIndexRoute =
+  AuthenticatedExpensesIndexRouteImport.update({
+    id: '/expenses/',
+    path: '/expenses/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
     id: '/help-center/',
@@ -272,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/bills/': typeof AuthenticatedBillsIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
+  '/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/houses/': typeof AuthenticatedHousesIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
@@ -307,6 +315,7 @@ export interface FileRoutesByTo {
   '/bills': typeof AuthenticatedBillsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
+  '/expenses': typeof AuthenticatedExpensesIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/houses': typeof AuthenticatedHousesIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
@@ -347,6 +356,7 @@ export interface FileRoutesById {
   '/_authenticated/bills/': typeof AuthenticatedBillsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
+  '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
@@ -385,6 +395,7 @@ export interface FileRouteTypes {
     | '/bills/'
     | '/chats/'
     | '/due-types/'
+    | '/expenses/'
     | '/help-center/'
     | '/houses/'
     | '/payments/'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/bills'
     | '/chats'
     | '/due-types'
+    | '/expenses'
     | '/help-center'
     | '/houses'
     | '/payments'
@@ -459,6 +471,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bills/'
     | '/_authenticated/chats/'
     | '/_authenticated/due-types/'
+    | '/_authenticated/expenses/'
     | '/_authenticated/help-center/'
     | '/_authenticated/houses/'
     | '/_authenticated/payments/'
@@ -632,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedErrorsErrorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/expenses/': {
+      id: '/_authenticated/expenses/'
+      path: '/expenses'
+      fullPath: '/expenses/'
+      preLoaderRoute: typeof AuthenticatedExpensesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
       path: '/help-center'
@@ -780,6 +800,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBillsIndexRoute: typeof AuthenticatedBillsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
+  AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
@@ -798,6 +819,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillsIndexRoute: AuthenticatedBillsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedDueTypesIndexRoute: AuthenticatedDueTypesIndexRoute,
+  AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
