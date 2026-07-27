@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\HouseController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ResidentController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -31,4 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('expenses', ExpenseController::class);
     Route::get('reports/summary/{year}', [ReportController::class, 'summary']);
     Route::get('reports/monthly/{year}/{month}', [ReportController::class, 'monthly']);
+
+    Route::apiResource('users', UserController::class);
+    Route::get('roles', [RoleController::class, 'index']);
 });
