@@ -21,7 +21,7 @@ export function useUser(id: number) {
 export function useCreateUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { name: string; email: string; password: string; is_active?: boolean }) =>
+    mutationFn: (data: { name: string; email: string; password: string; is_active?: boolean; role_ids?: number[] }) =>
       usersService.create(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   })
@@ -30,7 +30,7 @@ export function useCreateUser() {
 export function useUpdateUser(id: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { name?: string; email?: string; is_active?: boolean }) =>
+    mutationFn: (data: { name?: string; email?: string; is_active?: boolean; role_ids?: number[] }) =>
       usersService.update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   })
