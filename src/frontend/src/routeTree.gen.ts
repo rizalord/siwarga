@@ -33,6 +33,7 @@ import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenti
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedHousesIndexRouteImport } from './routes/_authenticated/houses/index'
 import { Route as AuthenticatedHousesIdRouteImport } from './routes/_authenticated/houses/$id'
+import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
 import { Route as AuthenticatedResidentsIndexRouteImport } from './routes/_authenticated/residents/index'
 import { Route as AuthenticatedResidentsIdRouteImport } from './routes/_authenticated/residents/$id'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
@@ -168,6 +169,12 @@ const AuthenticatedHousesIdRoute = AuthenticatedHousesIdRouteImport.update({
   path: '/houses/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPaymentsIndexRoute =
+  AuthenticatedPaymentsIndexRouteImport.update({
+    id: '/payments/',
+    path: '/payments/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedResidentsIndexRoute =
   AuthenticatedResidentsIndexRouteImport.update({
     id: '/residents/',
@@ -267,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/houses/': typeof AuthenticatedHousesIndexRoute
+  '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/residents/': typeof AuthenticatedResidentsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks/': typeof AuthenticatedTasksIndexRoute
@@ -301,6 +309,7 @@ export interface FileRoutesByTo {
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/houses': typeof AuthenticatedHousesIndexRoute
+  '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/residents': typeof AuthenticatedResidentsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
@@ -340,6 +349,7 @@ export interface FileRoutesById {
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
+  '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/residents/': typeof AuthenticatedResidentsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/due-types/'
     | '/help-center/'
     | '/houses/'
+    | '/payments/'
     | '/residents/'
     | '/settings/'
     | '/tasks/'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/due-types'
     | '/help-center'
     | '/houses'
+    | '/payments'
     | '/residents'
     | '/settings'
     | '/tasks'
@@ -449,6 +461,7 @@ export interface FileRouteTypes {
     | '/_authenticated/due-types/'
     | '/_authenticated/help-center/'
     | '/_authenticated/houses/'
+    | '/_authenticated/payments/'
     | '/_authenticated/residents/'
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
@@ -640,6 +653,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHousesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/payments/': {
+      id: '/_authenticated/payments/'
+      path: '/payments'
+      fullPath: '/payments/'
+      preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/residents/': {
       id: '/_authenticated/residents/'
       path: '/residents'
@@ -762,6 +782,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
+  AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
   AuthenticatedResidentsIndexRoute: typeof AuthenticatedResidentsIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
@@ -779,6 +800,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDueTypesIndexRoute: AuthenticatedDueTypesIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
+  AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
   AuthenticatedResidentsIndexRoute: AuthenticatedResidentsIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
