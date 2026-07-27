@@ -51,3 +51,12 @@ export function useAssignResident() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['houses'] }),
   })
 }
+
+export function useHouseResidents(id: number) {
+  return useQuery({
+    queryKey: ['houses', id, 'residents'],
+    queryFn: () => housesService.getResidents(id),
+    select: (res) => res.data,
+    enabled: !!id,
+  })
+}
