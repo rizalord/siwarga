@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\DueTypeResource;
+use App\Models\DueType;
+use Illuminate\Http\Request;
+
+class DueTypeController extends Controller
+{
+    public function index(Request $request)
+    {
+        return DueTypeResource::collection(DueType::paginate($request->per_page ?? 10));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:50',
+            'amount' => 'required|numeric|min:0',
+            'billing_cycle' => 'sometimes|in:bulanan,fleksibel',
+        ]);
+
+        $dueType = DueType::create($validated);
+
+        return new DueTypeResource($dueType);
+    }
+
+    public function show(DueType $dueType)
+    {
+        return new DueTypeResource($dueType);
+    }
+
+    public function update(Request $request, DueType $dueType)
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:50',
+            'amount' => 'sometimes|numeric|min:0',
+            'billing_cycle' => 'sometimes|in:bulanan,fleksibel',
+        ]);
+
+        $dueType->update($validated);
+
+        return new DueTypeResource($dueType);
+    }
+
+    public function destroy(DueType $dueType)
+    {
+        $dueType->delete();
+
+        return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+}
