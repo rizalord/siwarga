@@ -42,6 +42,7 @@ export interface Role {
   description: string | null
   permissions?: Permission[]
   users_count?: number
+  is_admin?: boolean
   created_at?: string
   updated_at?: string
 }
@@ -303,4 +304,41 @@ export interface UserFilter {
   per_page?: number
   sort?: string
   order?: 'asc' | 'desc'
+}
+
+export interface ActivityLog {
+  id: number
+  user: { id: number; name: string; email: string } | null
+  action: string
+  subject_type: string | null
+  subject_id: number | null
+  description: string
+  changes:
+    | ({
+        before?: Record<string, unknown>
+        after?: Record<string, unknown>
+      } & Record<string, unknown>)
+    | null
+  ip_address: string | null
+  user_agent: string | null
+  url: string | null
+  created_at: string
+}
+
+export interface ActivityLogFilter {
+  search?: string
+  action?: string | string[]
+  subject_type?: string | string[]
+  user_id?: number
+  date_from?: string
+  date_to?: string
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+export interface TrackPageViewRequest {
+  path: string
+  title?: string
 }

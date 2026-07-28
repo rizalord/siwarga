@@ -64,6 +64,7 @@ export function RoleFormDialog({
   onOpenChange,
 }: RoleFormDialogProps) {
   const isUpdate = !!currentRow
+  const isAdminRole = !!currentRow?.is_admin
   const createRole = useCreateRole()
   const updateRole = useUpdateRole(currentRow?.id ?? 0)
   const { data: permissionsData } = usePermissions({ per_page: 100 })
@@ -147,6 +148,7 @@ export function RoleFormDialog({
                       placeholder='contoh: petugas-keamanan'
                       className='col-span-4'
                       autoComplete='off'
+                      disabled={isAdminRole}
                       {...field}
                     />
                   </FormControl>

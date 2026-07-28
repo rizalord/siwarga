@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -40,6 +41,12 @@ class UserController extends Controller
             'role_ids.*' => 'exists:roles,id',
         ]);
 
+        if ($request->has('role_ids') && $this->assignsAdminRole($request->role_ids) && $this->otherAdminExists()) {
+            return response()->json([
+                'message' => 'Sudah ada user dengan role admin. Hanya diperbolehkan satu admin untuk menghindari konflik kepentingan.',
+            ], 422);
+        }
+
         $validated['password'] = Hash::make($validated['password']);
         $user = User::create($validated);
 
@@ -66,6 +73,23 @@ class UserController extends Controller
             'role_ids.*' => 'exists:roles,id',
         ]);
 
+        if ($request->has('role_ids')) {
+            $userIsAdmin = $this->userHasAdminRole($user);
+            $willBeAdmin = $this->assignsAdminRole($request->role_ids);
+
+            if ($userIsAdmin && ! $willBeAdmin) {
+                return response()->json([
+                    'message' => 'User dengan role admin tidak bisa dipindahkan ke role lain.',
+                ], 422);
+            }
+
+            if (! $userIsAdmin && $willBeAdmin && $this->otherAdminExists($user->id)) {
+                return response()->json([
+                    'message' => 'Sudah ada user dengan role admin. Hanya diperbolehkan satu admin untuk menghindari konflik kepentingan.',
+                ], 422);
+            }
+        }
+
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         }
@@ -84,5 +108,29 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    /**
+     * @param  array<int, int>  $roleIds
+     */
+    private function assignsAdminRole(array $roleIds): bool
+    {
+        $adminRoleId = Role::where('name', Role::ADMIN_ROLE_NAME)->value('id');
+
+        return $adminRoleId && in_array($adminRoleId, $roleIds);
+    }
+
+    private function userHasAdminRole(User $user): bool
+    {
+        return $user->roles()->where('name', Role::ADMIN_ROLE_NAME)->exists();
+    }
+
+    private function otherAdminExists(?int $excludeUserId = null): bool
+    {
+        return User::whereHas('roles', function ($query) {
+            $query->where('name', Role::ADMIN_ROLE_NAME);
+        })
+            ->when($excludeUserId, fn ($query) => $query->where('users.id', '!=', $excludeUserId))
+            ->exists();
     }
 }

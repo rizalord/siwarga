@@ -43,6 +43,7 @@ class Permission extends Model
         'reports.view' => 'Lihat laporan',
         'users.view' => 'Lihat data user',
         'users.manage' => 'Kelola user',
+        'activity-logs.view' => 'Lihat log aktivitas',
     ];
 
     public function roles(): BelongsToMany

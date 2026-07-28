@@ -51,6 +51,7 @@ export function UserFormDialog({
   onOpenChange,
 }: UserFormDialogProps) {
   const isUpdate = !!currentRow
+  const isCurrentlyAdmin = !!currentRow?.roles.some((role) => role.is_admin)
   const createUser = useCreateUser()
   const updateUser = useUpdateUser(currentRow?.id ?? 0)
   const { data: roles } = useRoles({ per_page: 100 })
@@ -220,8 +221,15 @@ export function UserFormDialog({
                       placeholder='Pilih role'
                       className='col-span-4'
                       items={roleOptions}
+                      disabled={isCurrentlyAdmin}
                     />
                   </FormControl>
+                  {isCurrentlyAdmin && (
+                    <p className='col-span-4 col-start-3 text-sm text-muted-foreground'>
+                      User dengan role admin tidak bisa dipindahkan ke role
+                      lain.
+                    </p>
+                  )}
                   <FormMessage className='col-span-4 col-start-3' />
                 </FormItem>
               )}

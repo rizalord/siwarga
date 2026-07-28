@@ -8,6 +8,7 @@ export const mockRoles: Role[] = [
     description: 'Administrator',
     permissions: mockPermissions,
     users_count: 1,
+    is_admin: true,
   },
   {
     id: 2,

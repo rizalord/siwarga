@@ -92,4 +92,38 @@ class RoleTest extends TestCase
         $response->assertStatus(422);
         $this->assertDatabaseHas('roles', ['id' => $role->id]);
     }
+
+    public function test_cannot_delete_admin_role()
+    {
+        $adminRole = Role::where('name', 'admin')->first();
+
+        $response = $this->deleteJson("/api/roles/{$adminRole->id}");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('roles', ['id' => $adminRole->id]);
+    }
+
+    public function test_cannot_rename_admin_role()
+    {
+        $adminRole = Role::where('name', 'admin')->first();
+
+        $response = $this->putJson("/api/roles/{$adminRole->id}", [
+            'name' => 'super-admin',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('roles', ['id' => $adminRole->id, 'name' => 'admin']);
+    }
+
+    public function test_can_update_admin_role_description_without_renaming()
+    {
+        $adminRole = Role::where('name', 'admin')->first();
+
+        $response = $this->putJson("/api/roles/{$adminRole->id}", [
+            'description' => 'Administrator Sistem',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.description', 'Administrator Sistem');
+    }
 }

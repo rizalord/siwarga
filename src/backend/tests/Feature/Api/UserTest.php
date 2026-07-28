@@ -104,4 +104,54 @@ class UserTest extends TestCase
         $this->assertSoftDeleted($users[0]);
         $this->assertSoftDeleted($users[1]);
     }
+
+    public function test_cannot_assign_admin_role_to_a_second_user_on_create()
+    {
+        $adminRoleId = Role::where('name', 'admin')->first()->id;
+
+        $response = $this->postJson('/api/users', [
+            'name' => 'Second Admin',
+            'email' => 'second-admin@test.com',
+            'password' => 'password123',
+            'role_ids' => [$adminRoleId],
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseMissing('users', ['email' => 'second-admin@test.com']);
+    }
+
+    public function test_cannot_assign_admin_role_to_a_second_user_on_update()
+    {
+        $adminRoleId = Role::where('name', 'admin')->first()->id;
+        $user = User::factory()->create();
+        $user->roles()->attach(Role::where('name', 'warga')->first()->id);
+
+        $response = $this->putJson("/api/users/{$user->id}", [
+            'role_ids' => [$adminRoleId],
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertFalse($user->fresh()->roles()->where('name', 'admin')->exists());
+    }
+
+    public function test_cannot_move_an_admin_user_to_another_role()
+    {
+        $wargaRoleId = Role::where('name', 'warga')->first()->id;
+
+        $response = $this->putJson("/api/users/{$this->admin->id}", [
+            'role_ids' => [$wargaRoleId],
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertTrue($this->admin->fresh()->roles()->where('name', 'admin')->exists());
+    }
+
+    public function test_can_update_admin_user_without_changing_roles()
+    {
+        $response = $this->putJson("/api/users/{$this->admin->id}", [
+            'name' => 'Updated Admin Name',
+        ]);
+
+        $response->assertStatus(200)->assertJsonPath('data.name', 'Updated Admin Name');
+    }
 }

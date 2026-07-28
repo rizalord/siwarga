@@ -7,7 +7,7 @@ export const mockUsers: User[] = [
     email: 'admin@siwarga.test',
     is_active: true,
     resident_id: null,
-    roles: [{ id: 1, name: 'admin', description: 'Administrator' }],
+    roles: [{ id: 1, name: 'admin', description: 'Administrator', is_admin: true }],
     created_at: '2024-01-01T00:00:00.000000Z',
     updated_at: '2024-01-01T00:00:00.000000Z',
     deleted_at: null,

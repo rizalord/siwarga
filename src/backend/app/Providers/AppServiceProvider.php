@@ -2,7 +2,16 @@
 
 namespace App\Providers;
 
+use App\Models\Bill;
+use App\Models\DueType;
+use App\Models\Expense;
+use App\Models\House;
+use App\Models\Payment;
+use App\Models\Permission;
+use App\Models\Resident;
+use App\Models\Role;
 use App\Models\User;
+use App\Observers\ActivityLogObserver;
 use App\Policies\BillPolicy;
 use App\Policies\DueTypePolicy;
 use App\Policies\ExpensePolicy;
@@ -34,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->registerGates();
+        $this->registerActivityLogObservers();
     }
 
     /**
@@ -100,5 +110,18 @@ class AppServiceProvider extends ServiceProvider
         // Users
         Gate::define('users.view', [UserPolicy::class, 'viewAny']);
         Gate::define('users.manage', [UserPolicy::class, 'create']);
+
+        // Activity Logs
+        Gate::define('activity-logs.view', fn (User $user) => $user->hasPermission('activity-logs.view'));
+    }
+
+    /**
+     * Observe models whose changes should be recorded in the activity log.
+     */
+    protected function registerActivityLogObservers(): void
+    {
+        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, User::class, Role::class, Permission::class] as $model) {
+            $model::observe(ActivityLogObserver::class);
+        }
     }
 }

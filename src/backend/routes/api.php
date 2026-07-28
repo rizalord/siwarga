@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
 use App\Http\Controllers\Api\DueTypeController;
@@ -96,4 +97,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('permissions/{permission}', [PermissionController::class, 'show'])->middleware('can:users.view');
     Route::put('permissions/{permission}', [PermissionController::class, 'update'])->middleware('can:users.manage');
     Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])->middleware('can:users.manage');
+
+    // Activity Logs
+    Route::get('activity-logs', [ActivityLogController::class, 'index'])->middleware('can:activity-logs.view');
+    Route::post('activity-logs/track', [ActivityLogController::class, 'track']);
 });

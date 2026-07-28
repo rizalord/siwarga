@@ -7,6 +7,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { activityLogsService } from '@/services/activity-logs'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth-store'
 import { handleServerError } from '@/lib/handle-server-error'
@@ -86,6 +87,14 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
+
+// Track authenticated page navigations for the activity log
+router.subscribe('onResolved', ({ toLocation, fromLocation }) => {
+  if (!useAuthStore.getState().auth.accessToken) return
+  if (fromLocation && fromLocation.pathname === toLocation.pathname) return
+
+  activityLogsService.track({ path: toLocation.pathname }).catch(() => {})
+})
 
 async function enableMocking() {
   if (import.meta.env.VITE_USE_MOCK !== 'true') return

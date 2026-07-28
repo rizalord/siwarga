@@ -17,6 +17,7 @@ import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedActivityLogsIndexRouteImport } from './routes/_authenticated/activity-logs/index'
 import { Route as AuthenticatedBillsIndexRouteImport } from './routes/_authenticated/bills/index'
 import { Route as AuthenticatedDueTypesIndexRouteImport } from './routes/_authenticated/due-types/index'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
@@ -70,6 +71,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedActivityLogsIndexRoute =
+  AuthenticatedActivityLogsIndexRouteImport.update({
+    id: '/activity-logs/',
+    path: '/activity-logs/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBillsIndexRoute = AuthenticatedBillsIndexRouteImport.update({
   id: '/bills/',
   path: '/bills/',
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/houses/$id': typeof AuthenticatedHousesIdRoute
   '/residents/$id': typeof AuthenticatedResidentsIdRoute
+  '/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
   '/bills/': typeof AuthenticatedBillsIndexRoute
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
@@ -178,6 +186,7 @@ export interface FileRoutesByTo {
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/houses/$id': typeof AuthenticatedHousesIdRoute
   '/residents/$id': typeof AuthenticatedResidentsIdRoute
+  '/activity-logs': typeof AuthenticatedActivityLogsIndexRoute
   '/bills': typeof AuthenticatedBillsIndexRoute
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
   '/expenses': typeof AuthenticatedExpensesIndexRoute
@@ -202,6 +211,7 @@ export interface FileRoutesById {
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/houses/$id': typeof AuthenticatedHousesIdRoute
   '/_authenticated/residents/$id': typeof AuthenticatedResidentsIdRoute
+  '/_authenticated/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
   '/_authenticated/bills/': typeof AuthenticatedBillsIndexRoute
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/houses/$id'
     | '/residents/$id'
+    | '/activity-logs/'
     | '/bills/'
     | '/due-types/'
     | '/expenses/'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/houses/$id'
     | '/residents/$id'
+    | '/activity-logs'
     | '/bills'
     | '/due-types'
     | '/expenses'
@@ -271,6 +283,7 @@ export interface FileRouteTypes {
     | '/_authenticated/errors/$error'
     | '/_authenticated/houses/$id'
     | '/_authenticated/residents/$id'
+    | '/_authenticated/activity-logs/'
     | '/_authenticated/bills/'
     | '/_authenticated/due-types/'
     | '/_authenticated/expenses/'
@@ -349,6 +362,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/activity-logs/': {
+      id: '/_authenticated/activity-logs/'
+      path: '/activity-logs'
+      fullPath: '/activity-logs/'
+      preLoaderRoute: typeof AuthenticatedActivityLogsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bills/': {
@@ -450,6 +470,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
   AuthenticatedHousesIdRoute: typeof AuthenticatedHousesIdRoute
   AuthenticatedResidentsIdRoute: typeof AuthenticatedResidentsIdRoute
+  AuthenticatedActivityLogsIndexRoute: typeof AuthenticatedActivityLogsIndexRoute
   AuthenticatedBillsIndexRoute: typeof AuthenticatedBillsIndexRoute
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
@@ -467,6 +488,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
   AuthenticatedHousesIdRoute: AuthenticatedHousesIdRoute,
   AuthenticatedResidentsIdRoute: AuthenticatedResidentsIdRoute,
+  AuthenticatedActivityLogsIndexRoute: AuthenticatedActivityLogsIndexRoute,
   AuthenticatedBillsIndexRoute: AuthenticatedBillsIndexRoute,
   AuthenticatedDueTypesIndexRoute: AuthenticatedDueTypesIndexRoute,
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,

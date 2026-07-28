@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -27,6 +28,8 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token', expiresAt: now()->addHours(24))->plainTextToken;
 
+        ActivityLog::record('login', "Login: {$user->name}", $user, actorId: $user->id);
+
         return response()->json([
             'data' => [
                 'user' => $user,
@@ -38,7 +41,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+
+        ActivityLog::record('logout', "Logout: {$user->name}", $user);
 
         return response()->json(['data' => null, 'message' => 'Logged out']);
     }

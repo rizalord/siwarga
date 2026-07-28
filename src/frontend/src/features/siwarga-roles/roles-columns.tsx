@@ -47,19 +47,23 @@ export function rolesColumns({
               <Pencil size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              setCurrentRow(row.original)
-              setOpen('delete')
-            }}
-            className='text-red-500!'
-          >
-            Hapus
-            <DropdownMenuShortcut>
-              <Trash2 size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
+          {!row.original.is_admin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('delete')
+                }}
+                className='text-red-500!'
+              >
+                Hapus
+                <DropdownMenuShortcut>
+                  <Trash2 size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     )
@@ -72,6 +76,14 @@ export function rolesColumns({
         <DataTableColumnHeader column={column} title='Nama Role' />
       ),
       accessorKey: 'name',
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
+          <span>{row.original.name}</span>
+          {row.original.is_admin && (
+            <Badge variant='secondary'>Sistem</Badge>
+          )}
+        </div>
+      ),
       meta: { label: 'Nama Role' },
     },
     {

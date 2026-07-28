@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\HouseResource;
+use App\Models\ActivityLog;
 use App\Models\House;
+use App\Models\Resident;
 use Illuminate\Http\Request;
 
 class HouseController extends Controller
@@ -126,6 +128,13 @@ class HouseController extends Controller
         // Update house status to occupied
         $house->update(['status' => 'dihuni']);
 
+        $resident = Resident::find($validated['resident_id']);
+        ActivityLog::record(
+            'assigned',
+            "Menempatkan penghuni {$resident?->full_name} ke rumah {$house->house_number}",
+            $house
+        );
+
         return response()->json(['data' => $houseResident], 201);
     }
 
@@ -146,6 +155,13 @@ class HouseController extends Controller
         $activeAssignment->update(['end_date' => $validated['end_date'] ?? now()->toDateString()]);
 
         $house->update(['status' => 'kosong']);
+
+        $resident = $activeAssignment->resident;
+        ActivityLog::record(
+            'vacated',
+            "Mencopot penghuni {$resident?->full_name} dari rumah {$house->house_number}",
+            $house
+        );
 
         return response()->json(['data' => null, 'message' => 'Penghuni berhasil dicopot dari rumah']);
     }

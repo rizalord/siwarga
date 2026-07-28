@@ -50,6 +50,12 @@ class RoleController extends Controller
             'permission_ids.*' => 'integer|exists:permissions,id',
         ]);
 
+        if ($role->isAdmin() && array_key_exists('name', $validated) && $validated['name'] !== Role::ADMIN_ROLE_NAME) {
+            return response()->json([
+                'message' => 'Role admin tidak bisa diganti namanya karena merupakan role khusus sistem.',
+            ], 422);
+        }
+
         $role->update($validated);
 
         if (array_key_exists('permission_ids', $validated)) {
@@ -61,6 +67,12 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
+        if ($role->isAdmin()) {
+            return response()->json([
+                'message' => 'Role admin tidak bisa dihapus karena merupakan role khusus sistem.',
+            ], 422);
+        }
+
         if ($role->users()->exists()) {
             return response()->json([
                 'message' => 'Role tidak bisa dihapus karena masih digunakan oleh pengguna.',

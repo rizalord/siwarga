@@ -33,6 +33,12 @@ export const roleHandlers = [
     const idx = roles.findIndex((r) => r.id === Number(params.id))
     if (idx === -1) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     const body = await request.json() as { name?: string; description?: string; permission_ids?: number[] }
+    if (roles[idx].is_admin && body.name !== undefined && body.name !== 'admin') {
+      return HttpResponse.json(
+        { message: 'Role admin tidak bisa diganti namanya karena merupakan role khusus sistem.' },
+        { status: 422 }
+      )
+    }
     roles[idx] = {
       ...roles[idx],
       ...(body.name !== undefined ? { name: body.name } : {}),
@@ -47,6 +53,12 @@ export const roleHandlers = [
   http.delete('/api/roles/:id', ({ params }) => {
     const role = roles.find((r) => r.id === Number(params.id))
     if (!role) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    if (role.is_admin) {
+      return HttpResponse.json(
+        { message: 'Role admin tidak bisa dihapus karena merupakan role khusus sistem.' },
+        { status: 422 }
+      )
+    }
     if ((role.users_count ?? 0) > 0) {
       return HttpResponse.json(
         { message: 'Role tidak bisa dihapus karena masih digunakan oleh pengguna.' },
