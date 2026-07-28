@@ -10,6 +10,8 @@ const residentsSearchSchema = z.object({
     .optional()
     .catch([]),
   search: z.string().optional().catch(''),
+  sort: z.string().optional().catch(undefined),
+  order: z.union([z.literal('asc'), z.literal('desc')]).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_authenticated/residents/')({

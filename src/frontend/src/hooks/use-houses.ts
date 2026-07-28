@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { housesService } from '@/services/houses'
 import type { HouseFilter, CreateHouseRequest, AssignResidentRequest } from '@/types/api'
 
@@ -24,7 +25,10 @@ export function useCreateHouse() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateHouseRequest) => housesService.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['houses'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['houses'] })
+      toast.success('Rumah berhasil ditambahkan')
+    },
   })
 }
 
@@ -32,7 +36,10 @@ export function useUpdateHouse(id: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<CreateHouseRequest>) => housesService.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['houses'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['houses'] })
+      toast.success('Rumah berhasil diperbarui')
+    },
   })
 }
 
@@ -40,7 +47,21 @@ export function useDeleteHouse() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => housesService.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['houses'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['houses'] })
+      toast.success('Rumah berhasil dihapus')
+    },
+  })
+}
+
+export function useBulkDeleteHouses() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => housesService.bulkDelete(ids),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['houses'] })
+      toast.success(res.data.message ?? 'Rumah terpilih berhasil dihapus')
+    },
   })
 }
 
@@ -49,7 +70,10 @@ export function useAssignResident() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: AssignResidentRequest }) =>
       housesService.assignResident(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['houses'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['houses'] })
+      toast.success('Penghuni berhasil ditempatkan')
+    },
   })
 }
 

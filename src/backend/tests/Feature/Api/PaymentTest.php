@@ -135,4 +135,32 @@ class PaymentTest extends TestCase
 
         $this->assertSoftDeleted($payment);
     }
+
+    public function test_can_sort_payments_by_amount_paid()
+    {
+        Payment::factory()->create(['amount_paid' => 200000]);
+        Payment::factory()->create(['amount_paid' => 100000]);
+
+        $response = $this->getJson('/api/payments?sort=amount_paid&order=asc');
+
+        $response->assertStatus(200);
+        $this->assertEquals(100000, $response->json('data.0.amount_paid'));
+        $this->assertEquals(200000, $response->json('data.1.amount_paid'));
+    }
+
+    public function test_can_bulk_delete_payments_and_recheck_bill_status()
+    {
+        $bill = Bill::factory()->create(['amount_due' => 100000, 'status' => 'lunas']);
+        $payment = Payment::factory()->create(['bill_id' => $bill->id, 'amount_paid' => 100000]);
+        $other = Payment::factory()->create();
+
+        $response = $this->postJson('/api/payments/bulk-delete', [
+            'ids' => [$payment->id, $other->id],
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted($payment);
+        $this->assertSoftDeleted($other);
+        $this->assertDatabaseHas('bills', ['id' => $bill->id, 'status' => 'belum_lunas']);
+    }
 }

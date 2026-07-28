@@ -107,4 +107,30 @@ class ResidentTest extends TestCase
 
         $this->assertSoftDeleted($resident);
     }
+
+    public function test_can_sort_residents_by_full_name()
+    {
+        Resident::factory()->create(['full_name' => 'Zulkifli']);
+        Resident::factory()->create(['full_name' => 'Ani']);
+
+        $response = $this->getJson('/api/residents?sort=full_name&order=asc');
+
+        $response->assertStatus(200);
+        $this->assertEquals('Ani', $response->json('data.0.full_name'));
+        $this->assertEquals('Zulkifli', $response->json('data.1.full_name'));
+    }
+
+    public function test_can_bulk_delete_residents()
+    {
+        $residents = Resident::factory()->count(3)->create();
+
+        $response = $this->postJson('/api/residents/bulk-delete', [
+            'ids' => $residents->pluck('id')->take(2)->toArray(),
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted($residents[0]);
+        $this->assertSoftDeleted($residents[1]);
+        $this->assertDatabaseHas('residents', ['id' => $residents[2]->id, 'deleted_at' => null]);
+    }
 }

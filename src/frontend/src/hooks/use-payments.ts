@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { paymentsService } from '@/services/payments'
 import type { CreatePaymentRequest, PaymentFilter } from '@/types/api'
 
@@ -24,7 +25,11 @@ export function useCreatePayment() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreatePaymentRequest) => paymentsService.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['payments'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['bills'] })
+      toast.success('Pembayaran berhasil dicatat')
+    },
   })
 }
 
@@ -32,6 +37,22 @@ export function useDeletePayment() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => paymentsService.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['payments'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['bills'] })
+      toast.success('Pembayaran berhasil dihapus')
+    },
+  })
+}
+
+export function useBulkDeletePayments() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => paymentsService.bulkDelete(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['bills'] })
+      toast.success('Pembayaran terpilih berhasil dihapus')
+    },
   })
 }

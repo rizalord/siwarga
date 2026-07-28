@@ -1,3 +1,4 @@
+import { TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { YearlySummary } from '@/types/api'
 
@@ -5,12 +6,21 @@ interface SummaryCardsProps {
   data?: YearlySummary
 }
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
 export function SummaryCards({ data }: SummaryCardsProps) {
   if (!data) return null
 
   const currentMonth = new Date().getMonth() + 1
   const currentMonthData = data.monthly_data.find(
-    (m) => m.month === currentMonth,
+    (m) => m.month === currentMonth
   )
 
   const currentMonthIncome = currentMonthData?.total_income ?? 0
@@ -27,19 +37,17 @@ export function SummaryCards({ data }: SummaryCardsProps) {
     .filter((m) => m.month <= currentMonth)
     .reduce((sum, m) => sum + m.balance, 0)
 
-  const formatCurrency = (value: number) =>
-    `Rp ${value.toLocaleString('id-ID')}`
-
   return (
     <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-      <Card className='border-l-4 border-l-green-500'>
+      <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
           <CardTitle className='text-sm font-medium'>
             Total Pemasukan
           </CardTitle>
+          <TrendingUp className='h-4 w-4 text-muted-foreground' />
         </CardHeader>
         <CardContent>
-          <div className='text-2xl font-bold text-green-600'>
+          <div className='text-2xl font-bold'>
             {formatCurrency(currentMonthIncome)}
           </div>
           <p className='text-xs text-muted-foreground'>
@@ -47,14 +55,15 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           </p>
         </CardContent>
       </Card>
-      <Card className='border-l-4 border-l-red-500'>
+      <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
           <CardTitle className='text-sm font-medium'>
             Total Pengeluaran
           </CardTitle>
+          <TrendingDown className='h-4 w-4 text-muted-foreground' />
         </CardHeader>
         <CardContent>
-          <div className='text-2xl font-bold text-red-600'>
+          <div className='text-2xl font-bold'>
             {formatCurrency(currentMonthExpense)}
           </div>
           <p className='text-xs text-muted-foreground'>
@@ -62,14 +71,15 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           </p>
         </CardContent>
       </Card>
-      <Card className='border-l-4 border-l-blue-500'>
+      <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
           <CardTitle className='text-sm font-medium'>
             Saldo Berjalan
           </CardTitle>
+          <Wallet className='h-4 w-4 text-muted-foreground' />
         </CardHeader>
         <CardContent>
-          <div className='text-2xl font-bold text-blue-600'>
+          <div className='text-2xl font-bold'>
             {formatCurrency(currentMonthBalance)}
           </div>
           <p className='text-xs text-muted-foreground'>

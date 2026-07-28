@@ -12,6 +12,8 @@ export const housesService = {
     api.put<ApiResponse<House>>(`/api/houses/${id}`, data),
   delete: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/houses/${id}`),
+  bulkDelete: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/houses/bulk-delete', { ids }),
   getResidents: (id: number) =>
     api.get<ApiResponse<HouseResident[]>>(`/api/houses/${id}/history`),
   assignResident: (id: number, data: AssignResidentRequest) =>

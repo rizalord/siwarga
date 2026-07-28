@@ -42,7 +42,14 @@ class BillController extends Controller
             });
         }
 
+        $this->applySorting($query, $request, ['period_start', 'period_end', 'amount_due', 'status', 'created_at']);
+
         return $this->paginated($query->paginate($request->per_page ?? 10), BillResource::class);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        return $this->bulkDelete($request, Bill::class);
     }
 
     public function show(Request $request, Bill $bill)

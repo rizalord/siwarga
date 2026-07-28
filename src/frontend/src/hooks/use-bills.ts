@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { billsService } from '@/services/bills'
 import type { BillFilter, GenerateBillsRequest } from '@/types/api'
 
@@ -24,7 +25,10 @@ export function useGenerateBills() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: GenerateBillsRequest) => billsService.generate(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['bills'] }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['bills'] })
+      toast.success(res.data.message ?? 'Tagihan berhasil dibuat')
+    },
   })
 }
 
@@ -32,6 +36,20 @@ export function useDeleteBill() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => billsService.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['bills'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bills'] })
+      toast.success('Tagihan berhasil dihapus')
+    },
+  })
+}
+
+export function useBulkDeleteBills() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => billsService.bulkDelete(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bills'] })
+      toast.success('Tagihan terpilih berhasil dihapus')
+    },
   })
 }

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import { useMonthlyReport } from '@/hooks/use-reports'
 import { Header } from '@/components/layout/header'
 import { ConfigDrawer } from '@/components/config-drawer'
@@ -34,7 +35,12 @@ interface Transaction {
 }
 
 function formatCurrency(value: number) {
-  return `Rp ${value.toLocaleString('id-ID')}`
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 function formatDate(dateStr: string) {
@@ -182,38 +188,39 @@ export function MonthlyReportPage() {
         {report && (
           <>
             <div className='grid gap-4 sm:grid-cols-3'>
-              <Card className='border-l-4 border-l-green-500'>
-                <CardHeader className='pb-2'>
+              <Card>
+                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
                     Total Pemasukan
                   </CardTitle>
+                  <TrendingUp className='h-4 w-4 text-muted-foreground' />
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold text-green-600'>
+                  <div className='text-2xl font-bold'>
                     {formatCurrency(report.total_income)}
                   </div>
                 </CardContent>
               </Card>
-              <Card className='border-l-4 border-l-red-500'>
-                <CardHeader className='pb-2'>
+              <Card>
+                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                   <CardTitle className='text-sm font-medium'>
                     Total Pengeluaran
                   </CardTitle>
+                  <TrendingDown className='h-4 w-4 text-muted-foreground' />
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold text-red-600'>
+                  <div className='text-2xl font-bold'>
                     {formatCurrency(report.total_expense)}
                   </div>
                 </CardContent>
               </Card>
-              <Card className='border-l-4 border-l-blue-500'>
-                <CardHeader className='pb-2'>
-                  <CardTitle className='text-sm font-medium'>
-                    Saldo
-                  </CardTitle>
+              <Card>
+                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                  <CardTitle className='text-sm font-medium'>Saldo</CardTitle>
+                  <Wallet className='h-4 w-4 text-muted-foreground' />
                 </CardHeader>
                 <CardContent>
-                  <div className='text-2xl font-bold text-blue-600'>
+                  <div className='text-2xl font-bold'>
                     {formatCurrency(report.balance)}
                   </div>
                 </CardContent>
@@ -259,17 +266,17 @@ export function MonthlyReportPage() {
                               {formatDate(tx.date)}
                             </TableCell>
                             <TableCell>{tx.description}</TableCell>
-                            <TableCell className='text-right font-medium text-green-600'>
+                            <TableCell className='text-right font-medium tabular-nums'>
                               {tx.income > 0
                                 ? formatCurrency(tx.income)
                                 : '-'}
                             </TableCell>
-                            <TableCell className='text-right font-medium text-red-600'>
+                            <TableCell className='text-right font-medium tabular-nums'>
                               {tx.expense > 0
                                 ? formatCurrency(tx.expense)
                                 : '-'}
                             </TableCell>
-                            <TableCell className='text-right font-medium'>
+                            <TableCell className='text-right font-medium tabular-nums'>
                               {formatCurrency(tx.balance)}
                             </TableCell>
                           </TableRow>

@@ -14,4 +14,6 @@ export const expensesService = {
     api.put<ApiResponse<Expense>>(`/api/expenses/${id}`, data),
   delete: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/expenses/${id}`),
+  bulkDelete: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/expenses/bulk-delete', { ids }),
 }

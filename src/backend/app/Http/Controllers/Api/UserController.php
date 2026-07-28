@@ -20,7 +20,14 @@ class UserController extends Controller
             });
         }
 
+        $this->applySorting($query, $request, ['name', 'email', 'is_active', 'created_at']);
+
         return $query->paginate($request->per_page ?? 10);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        return $this->bulkDelete($request, User::class);
     }
 
     public function store(Request $request)

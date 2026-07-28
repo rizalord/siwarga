@@ -34,7 +34,14 @@ class ExpenseController extends Controller
             });
         }
 
+        $this->applySorting($query, $request, ['category', 'amount', 'expense_date', 'created_at']);
+
         return $this->paginated($query->paginate($request->per_page ?? 10), ExpenseResource::class);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        return $this->bulkDelete($request, Expense::class);
     }
 
     public function categories()

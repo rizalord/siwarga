@@ -373,4 +373,93 @@ describe('useTableUrlState', () => {
       tag: 'x|y',
     })
   })
+
+  it('derives sorting from search sort/order', async () => {
+    const navigate = vi.fn() as Mock<NavigateFn>
+    const { result } = await renderHook(() =>
+      useTableUrlState({
+        search: { sort: 'name', order: 'desc' },
+        navigate,
+        pagination: { defaultPage: 1, defaultPageSize: 10 },
+        sorting: {},
+      })
+    )
+
+    expect(result.current.sorting).toEqual([{ id: 'name', desc: true }])
+  })
+
+  it('defaults sorting to empty when search omits sort', async () => {
+    const navigate = vi.fn() as Mock<NavigateFn>
+    const { result } = await renderHook(() =>
+      useTableUrlState({
+        search: {},
+        navigate,
+        pagination: { defaultPage: 1, defaultPageSize: 10 },
+        sorting: {},
+      })
+    )
+
+    expect(result.current.sorting).toEqual([])
+  })
+
+  it('onSortingChange writes sort/order into search and clears page', async () => {
+    const navigate = vi.fn() as Mock<NavigateFn>
+    const prev = { page: 2, filter: 'q' }
+    const { result, act } = await renderHook(() =>
+      useTableUrlState({
+        search: prev,
+        navigate,
+        pagination: { defaultPage: 1, defaultPageSize: 10 },
+        sorting: {},
+      })
+    )
+
+    await act(() => {
+      result.current.onSortingChange([{ id: 'amount', desc: true }])
+    })
+
+    expect(applyLastSearchFn(navigate, prev)).toEqual({
+      page: undefined,
+      filter: 'q',
+      sort: 'amount',
+      order: 'desc',
+    })
+  })
+
+  it('onSortingChange clears sort/order when sorting is removed', async () => {
+    const navigate = vi.fn() as Mock<NavigateFn>
+    const prev = { sort: 'amount', order: 'desc' }
+    const { result, act } = await renderHook(() =>
+      useTableUrlState({
+        search: prev,
+        navigate,
+        pagination: { defaultPage: 1, defaultPageSize: 10 },
+        sorting: {},
+      })
+    )
+
+    await act(() => {
+      result.current.onSortingChange([])
+    })
+
+    expect(applyLastSearchFn(navigate, prev)).toEqual({
+      page: undefined,
+      sort: undefined,
+      order: undefined,
+    })
+  })
+
+  it('supports custom sorting search keys', async () => {
+    const navigate = vi.fn() as Mock<NavigateFn>
+    const { result } = await renderHook(() =>
+      useTableUrlState({
+        search: { s: 'name', o: 'asc' },
+        navigate,
+        pagination: { defaultPage: 1, defaultPageSize: 10 },
+        sorting: { sortKey: 's', orderKey: 'o' },
+      })
+    )
+
+    expect(result.current.sorting).toEqual([{ id: 'name', desc: false }])
+  })
 })

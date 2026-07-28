@@ -17,7 +17,14 @@ class DueTypeController extends Controller
             $query->where('name', 'like', "%{$request->search}%");
         }
 
+        $this->applySorting($query, $request, ['name', 'amount', 'billing_cycle', 'created_at']);
+
         return $this->paginated($query->paginate($request->per_page ?? 10), DueTypeResource::class);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        return $this->bulkDelete($request, DueType::class);
     }
 
     public function store(Request $request)

@@ -79,4 +79,29 @@ class UserTest extends TestCase
 
         $this->assertSoftDeleted($user);
     }
+
+    public function test_can_sort_users_by_name()
+    {
+        User::factory()->create(['name' => 'Zzz Zulkifli']);
+        User::factory()->create(['name' => 'Aaa Ani']);
+
+        $response = $this->getJson('/api/users?sort=name&order=asc');
+
+        $response->assertStatus(200);
+        $names = collect($response->json('data'))->pluck('name')->toArray();
+        $this->assertTrue(array_search('Aaa Ani', $names) < array_search('Zzz Zulkifli', $names));
+    }
+
+    public function test_can_bulk_delete_users()
+    {
+        $users = User::factory()->count(2)->create();
+
+        $response = $this->postJson('/api/users/bulk-delete', [
+            'ids' => $users->pluck('id')->toArray(),
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted($users[0]);
+        $this->assertSoftDeleted($users[1]);
+    }
 }

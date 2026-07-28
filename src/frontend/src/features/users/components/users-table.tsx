@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import {
+  type RowSelectionState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
+import { useBulkDeleteUsers } from '@/hooks/use-users'
 import {
   Table,
   TableBody,
@@ -15,7 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { Button } from '@/components/ui/button'
+import {
+  DataTableBulkActions,
+  DataTablePagination,
+  DataTableToolbar,
+} from '@/components/data-table'
+import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import type { User } from '@/types/api'
 import { usersColumns as columns } from './users-columns'
 
@@ -38,8 +47,11 @@ export function UsersTable({
   setOpen,
   setCurrentRow,
 }: DataTableProps) {
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+
+  const bulkDeleteUsers = useBulkDeleteUsers()
 
   const {
     globalFilter,
@@ -48,12 +60,15 @@ export function UsersTable({
     onColumnFiltersChange,
     pagination,
     onPaginationChange,
+    sorting,
+    onSortingChange,
     ensurePageInRange,
   } = useTableUrlState({
     search,
     navigate,
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: true, key: 'search' },
+    sorting: {},
   })
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -66,10 +81,13 @@ export function UsersTable({
       columnFilters,
       globalFilter,
       pagination,
+      sorting,
     },
     pageCount,
     manualPagination: true,
     manualFiltering: true,
+    manualSorting: true,
+    getRowId: (row) => String(row.id),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
@@ -77,11 +95,16 @@ export function UsersTable({
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
+    onSortingChange,
   })
 
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
+
+  const selectedIds = Object.keys(rowSelection)
+    .filter((id) => rowSelection[id])
+    .map(Number)
 
   return (
     <div
@@ -166,6 +189,32 @@ export function UsersTable({
         </Table>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
+      <DataTableBulkActions table={table} entityName='pengguna'>
+        <Button
+          variant='destructive'
+          size='sm'
+          className='h-7'
+          onClick={() => setMultiDeleteOpen(true)}
+        >
+          <Trash2 />
+          Hapus
+        </Button>
+      </DataTableBulkActions>
+      <MultiDeleteDialog
+        open={multiDeleteOpen}
+        onOpenChange={setMultiDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='pengguna'
+        isLoading={bulkDeleteUsers.isPending}
+        onConfirm={() => {
+          bulkDeleteUsers.mutate(selectedIds, {
+            onSuccess: () => {
+              setMultiDeleteOpen(false)
+              table.resetRowSelection()
+            },
+          })
+        }}
+      />
     </div>
   )
 }

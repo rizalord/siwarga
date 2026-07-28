@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { expensesService } from '@/services/expenses'
 import type { ExpenseFilter, CreateExpenseRequest } from '@/types/api'
 
@@ -32,7 +33,10 @@ export function useCreateExpense() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateExpenseRequest) => expensesService.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      toast.success('Pengeluaran berhasil ditambahkan')
+    },
   })
 }
 
@@ -40,7 +44,10 @@ export function useUpdateExpense(id: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<CreateExpenseRequest>) => expensesService.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      toast.success('Pengeluaran berhasil diperbarui')
+    },
   })
 }
 
@@ -48,6 +55,20 @@ export function useDeleteExpense() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => expensesService.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      toast.success('Pengeluaran berhasil dihapus')
+    },
+  })
+}
+
+export function useBulkDeleteExpenses() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => expensesService.bulkDelete(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      toast.success('Pengeluaran terpilih berhasil dihapus')
+    },
   })
 }

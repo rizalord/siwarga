@@ -12,4 +12,6 @@ export const residentsService = {
     api.put<ApiResponse<Resident>>(`/api/residents/${id}`, data),
   delete: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/residents/${id}`),
+  bulkDelete: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/residents/bulk-delete', { ids }),
 }

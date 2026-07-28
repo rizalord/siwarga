@@ -11,6 +11,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 import type { DueType } from '@/types/api'
 
 function formatRupiah(amount: number) {
@@ -74,20 +75,29 @@ export function dueTypesColumns({
   }
 
   return [
+    selectColumn<DueType>(),
     {
       id: 'name',
-      header: 'Nama Jenis Iuran',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Nama Jenis Iuran' />
+      ),
       accessorKey: 'name',
+      meta: { label: 'Nama Jenis Iuran' },
     },
     {
       id: 'amount',
-      header: 'Nominal',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Nominal' />
+      ),
       accessorKey: 'amount',
       cell: ({ row }) => <span>{formatRupiah(row.original.amount)}</span>,
+      meta: { label: 'Nominal' },
     },
     {
       id: 'billing_cycle',
-      header: 'Siklus',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Siklus' />
+      ),
       accessorKey: 'billing_cycle',
       cell: ({ row }) => (
         <Badge
@@ -98,10 +108,12 @@ export function dueTypesColumns({
           {row.original.billing_cycle === 'bulanan' ? 'Bulanan' : 'Fleksibel'}
         </Badge>
       ),
+      meta: { label: 'Siklus' },
     },
     {
       id: 'actions',
       cell: DataTableRowActions,
+      enableSorting: false,
     },
   ]
 }

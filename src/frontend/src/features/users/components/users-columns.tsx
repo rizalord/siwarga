@@ -11,6 +11,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 import type { User } from '@/types/api'
 
 type UsersColumnsProps = {
@@ -65,20 +66,28 @@ export function usersColumns({
   }
 
   return [
+    selectColumn<User>(),
     {
       id: 'name',
-      header: 'Nama',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Nama' />
+      ),
       accessorKey: 'name',
+      meta: { label: 'Nama' },
     },
     {
       id: 'email',
-      header: 'Email',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Email' />
+      ),
       accessorKey: 'email',
+      meta: { label: 'Email' },
     },
     {
       id: 'roles',
       header: 'Roles',
       accessorKey: 'roles',
+      enableSorting: false,
       cell: ({ row }) => (
         <div className='flex flex-wrap gap-1'>
           {row.original.roles.length > 0
@@ -95,17 +104,21 @@ export function usersColumns({
     },
     {
       id: 'is_active',
-      header: 'Status',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Status' />
+      ),
       accessorKey: 'is_active',
       cell: ({ row }) => (
         <Badge variant={row.original.is_active ? 'default' : 'secondary'}>
           {row.original.is_active ? 'Aktif' : 'Tidak Aktif'}
         </Badge>
       ),
+      meta: { label: 'Status' },
     },
     {
       id: 'actions',
       cell: DataTableRowActions,
+      enableSorting: false,
     },
   ]
 }

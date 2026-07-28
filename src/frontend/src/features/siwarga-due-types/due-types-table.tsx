@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import {
+  type RowSelectionState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
+import { useBulkDeleteDueTypes } from '@/hooks/use-due-types'
 import {
   Table,
   TableBody,
@@ -15,7 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { Button } from '@/components/ui/button'
+import {
+  DataTableBulkActions,
+  DataTablePagination,
+  DataTableToolbar,
+} from '@/components/data-table'
+import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import type { DueType } from '@/types/api'
 import { dueTypesColumns as columns } from './due-types-columns'
 
@@ -38,8 +47,11 @@ export function DueTypesTable({
   setOpen,
   setCurrentRow,
 }: DataTableProps) {
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+
+  const bulkDeleteDueTypes = useBulkDeleteDueTypes()
 
   const {
     globalFilter,
@@ -48,12 +60,15 @@ export function DueTypesTable({
     onColumnFiltersChange,
     pagination,
     onPaginationChange,
+    sorting,
+    onSortingChange,
     ensurePageInRange,
   } = useTableUrlState({
     search,
     navigate,
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: true, key: 'search' },
+    sorting: {},
   })
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -66,10 +81,13 @@ export function DueTypesTable({
       columnFilters,
       globalFilter,
       pagination,
+      sorting,
     },
     pageCount,
     manualPagination: true,
     manualFiltering: true,
+    manualSorting: true,
+    getRowId: (row) => String(row.id),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
@@ -77,11 +95,16 @@ export function DueTypesTable({
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
+    onSortingChange,
   })
 
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
+
+  const selectedIds = Object.keys(rowSelection)
+    .filter((id) => rowSelection[id])
+    .map(Number)
 
   return (
     <div
@@ -166,6 +189,32 @@ export function DueTypesTable({
         </Table>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
+      <DataTableBulkActions table={table} entityName='jenis iuran'>
+        <Button
+          variant='destructive'
+          size='sm'
+          className='h-7'
+          onClick={() => setMultiDeleteOpen(true)}
+        >
+          <Trash2 />
+          Hapus
+        </Button>
+      </DataTableBulkActions>
+      <MultiDeleteDialog
+        open={multiDeleteOpen}
+        onOpenChange={setMultiDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='jenis iuran'
+        isLoading={bulkDeleteDueTypes.isPending}
+        onConfirm={() => {
+          bulkDeleteDueTypes.mutate(selectedIds, {
+            onSuccess: () => {
+              setMultiDeleteOpen(false)
+              table.resetRowSelection()
+            },
+          })
+        }}
+      />
     </div>
   )
 }

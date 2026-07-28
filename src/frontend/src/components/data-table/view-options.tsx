@@ -40,7 +40,9 @@ export function DataTableViewOptions<TData>({
           )
           .map((column) => {
             const header = column.columnDef.header
-            const label = typeof header === 'string' ? header : column.id
+            const label =
+              column.columnDef.meta?.label ??
+              (typeof header === 'string' ? header : column.id)
 
             return (
               <DropdownMenuCheckboxItem

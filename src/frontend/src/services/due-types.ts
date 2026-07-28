@@ -12,4 +12,6 @@ export const dueTypesService = {
     api.put<ApiResponse<DueType>>(`/api/due-types/${id}`, data),
   delete: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/due-types/${id}`),
+  bulkDelete: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/due-types/bulk-delete', { ids }),
 }

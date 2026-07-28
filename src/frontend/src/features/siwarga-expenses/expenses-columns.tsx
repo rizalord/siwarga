@@ -10,6 +10,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 import type { Expense } from '@/types/api'
 
 function formatRupiah(amount: number) {
@@ -81,10 +82,14 @@ export function expensesColumns({
   }
 
   return [
+    selectColumn<Expense>(),
     {
       id: 'category',
-      header: 'Kategori',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Kategori' />
+      ),
       accessorKey: 'category',
+      meta: { label: 'Kategori' },
     },
     {
       id: 'description',
@@ -93,22 +98,30 @@ export function expensesColumns({
       cell: ({ row }) => (
         <span>{row.original.description ?? '-'}</span>
       ),
+      enableSorting: false,
     },
     {
       id: 'amount',
-      header: 'Jumlah',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Jumlah' />
+      ),
       accessorKey: 'amount',
       cell: ({ row }) => <span>{formatRupiah(row.original.amount)}</span>,
+      meta: { label: 'Jumlah' },
     },
     {
       id: 'expense_date',
-      header: 'Tanggal',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Tanggal' />
+      ),
       accessorKey: 'expense_date',
       cell: ({ row }) => <span>{formatDate(row.original.expense_date)}</span>,
+      meta: { label: 'Tanggal' },
     },
     {
       id: 'actions',
       cell: DataTableRowActions,
+      enableSorting: false,
     },
   ]
 }

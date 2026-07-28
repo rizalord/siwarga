@@ -159,4 +159,30 @@ class BillTest extends TestCase
 
         $this->assertSoftDeleted($bill);
     }
+
+    public function test_can_sort_bills_by_amount_due()
+    {
+        Bill::factory()->create(['amount_due' => 200000]);
+        Bill::factory()->create(['amount_due' => 100000]);
+
+        $response = $this->getJson('/api/bills?sort=amount_due&order=asc');
+
+        $response->assertStatus(200);
+        $this->assertEquals(100000, $response->json('data.0.amount_due'));
+        $this->assertEquals(200000, $response->json('data.1.amount_due'));
+    }
+
+    public function test_can_bulk_delete_bills()
+    {
+        $bills = Bill::factory()->count(3)->create();
+
+        $response = $this->postJson('/api/bills/bulk-delete', [
+            'ids' => $bills->pluck('id')->take(2)->toArray(),
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted($bills[0]);
+        $this->assertSoftDeleted($bills[1]);
+        $this->assertDatabaseHas('bills', ['id' => $bills[2]->id, 'deleted_at' => null]);
+    }
 }

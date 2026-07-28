@@ -26,7 +26,32 @@ class HouseController extends Controller
                 : $query->where('status', $request->status);
         }
 
+        $this->applySorting($query, $request, ['house_number', 'address', 'status', 'created_at']);
+
         return $this->paginated($query->paginate($request->per_page ?? 10), HouseResource::class);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $deletableIds = House::whereIn('id', $validated['ids'])
+            ->whereDoesntHave('bills')
+            ->pluck('id');
+
+        $deleted = House::destroy($deletableIds);
+
+        if ($deleted < count($validated['ids'])) {
+            return response()->json([
+                'data' => null,
+                'message' => "{$deleted} rumah berhasil dihapus. Sisanya tidak bisa dihapus karena memiliki histori transaksi.",
+            ], 207);
+        }
+
+        return response()->json(['data' => null, 'message' => "{$deleted} rumah berhasil dihapus"]);
     }
 
     public function store(Request $request)

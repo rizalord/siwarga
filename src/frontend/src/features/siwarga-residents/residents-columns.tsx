@@ -11,6 +11,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 import type { Resident } from '@/types/api'
 import { useResidentsContext } from './residents-provider'
 
@@ -59,14 +60,20 @@ function DataTableRowActions({ row }: { row: Row<Resident> }) {
 
 export function residentsColumns(): ColumnDef<Resident>[] {
   return [
+    selectColumn<Resident>(),
     {
       id: 'full_name',
-      header: 'Nama Lengkap',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Nama Lengkap' />
+      ),
       accessorKey: 'full_name',
+      meta: { label: 'Nama Lengkap' },
     },
     {
       id: 'status',
-      header: 'Status',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Status' />
+      ),
       accessorKey: 'status',
       cell: ({ row }) => (
         <Badge
@@ -75,16 +82,23 @@ export function residentsColumns(): ColumnDef<Resident>[] {
           {row.original.status}
         </Badge>
       ),
+      meta: { label: 'Status' },
     },
     {
       id: 'phone_number',
-      header: 'No. Telepon',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='No. Telepon' />
+      ),
       accessorKey: 'phone_number',
+      meta: { label: 'No. Telepon' },
     },
     {
       id: 'marital_status',
-      header: 'Status Nikah',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Status Nikah' />
+      ),
       accessorKey: 'marital_status',
+      meta: { label: 'Status Nikah' },
       cell: ({ row }) => (
         <span>
           {row.original.marital_status === 'menikah' ? 'Menikah' : 'Belum Menikah'}
@@ -94,6 +108,7 @@ export function residentsColumns(): ColumnDef<Resident>[] {
     {
       id: 'actions',
       cell: DataTableRowActions,
+      enableSorting: false,
     },
   ]
 }

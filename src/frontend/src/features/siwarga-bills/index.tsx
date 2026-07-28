@@ -77,6 +77,8 @@ function BillsPageInner() {
     year: search.year ? Number(search.year) : undefined,
     status: search.status,
     search: search.search,
+    sort: search.sort,
+    order: search.order,
   })
 
   return (

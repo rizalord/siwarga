@@ -10,4 +10,6 @@ export const billsService = {
     api.post<ApiResponse<Bill[]>>('/api/bills/generate', data),
   delete: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/bills/${id}`),
+  bulkDelete: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/bills/bulk-delete', { ids }),
 }

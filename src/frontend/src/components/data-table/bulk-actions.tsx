@@ -32,8 +32,8 @@ export function DataTableBulkActions<TData>({
   entityName,
   children,
 }: DataTableBulkActionsProps<TData>): React.ReactNode | null {
-  const selectedRows = table.getFilteredSelectedRowModel().rows
-  const selectedCount = selectedRows.length
+  const rowSelection = table.getState().rowSelection
+  const selectedCount = Object.values(rowSelection).filter(Boolean).length
   const toolbarRef = useRef<HTMLDivElement>(null)
   const [announcement, setAnnouncement] = useState('')
 

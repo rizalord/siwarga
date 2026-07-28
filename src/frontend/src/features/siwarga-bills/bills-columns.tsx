@@ -10,6 +10,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 import type { Bill } from '@/types/api'
 import { useBillsContext } from './bills-provider'
 
@@ -63,43 +64,55 @@ function DataTableRowActions({ row }: { row: Row<Bill> }) {
 
 export function billsColumns(): ColumnDef<Bill>[] {
   return [
+    selectColumn<Bill>(),
     {
-      id: 'period',
-      header: 'Periode',
+      id: 'period_start',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Periode' />
+      ),
       accessorKey: 'period_start',
       cell: ({ row }) => (
         <span>
           {formatDate(row.original.period_start)} — {formatDate(row.original.period_end)}
         </span>
       ),
+      meta: { label: 'Periode' },
     },
     {
       id: 'house',
       header: 'Rumah',
       accessorKey: 'house.house_number',
       cell: ({ row }) => <span>{row.original.house.house_number}</span>,
+      enableSorting: false,
     },
     {
       id: 'resident',
       header: 'Penghuni',
       accessorKey: 'resident.full_name',
       cell: ({ row }) => <span>{row.original.resident.full_name}</span>,
+      enableSorting: false,
     },
     {
       id: 'due_type',
       header: 'Jenis Iuran',
       accessorKey: 'due_type.name',
       cell: ({ row }) => <span>{row.original.due_type.name}</span>,
+      enableSorting: false,
     },
     {
       id: 'amount_due',
-      header: 'Jumlah',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Jumlah' />
+      ),
       accessorKey: 'amount_due',
       cell: ({ row }) => <span>{formatRupiah(row.original.amount_due)}</span>,
+      meta: { label: 'Jumlah' },
     },
     {
       id: 'status',
-      header: 'Status',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Status' />
+      ),
       accessorKey: 'status',
       cell: ({ row }) => (
         <Badge
@@ -108,10 +121,12 @@ export function billsColumns(): ColumnDef<Bill>[] {
           {row.original.status === 'lunas' ? 'Lunas' : 'Belum Lunas'}
         </Badge>
       ),
+      meta: { label: 'Status' },
     },
     {
       id: 'actions',
       cell: DataTableRowActions,
+      enableSorting: false,
     },
   ]
 }

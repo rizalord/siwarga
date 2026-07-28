@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import {
+  type RowSelectionState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
+import { useBulkDeleteBills } from '@/hooks/use-bills'
 import {
   Table,
   TableBody,
@@ -15,7 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { Button } from '@/components/ui/button'
+import {
+  DataTableBulkActions,
+  DataTablePagination,
+  DataTableToolbar,
+} from '@/components/data-table'
+import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import type { Bill } from '@/types/api'
 import { billsColumns as columns } from './bills-columns'
 
@@ -50,8 +59,11 @@ export function BillsTable({
   search,
   navigate,
 }: DataTableProps) {
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+
+  const bulkDeleteBills = useBulkDeleteBills()
 
   const {
     globalFilter,
@@ -60,6 +72,8 @@ export function BillsTable({
     onColumnFiltersChange,
     pagination,
     onPaginationChange,
+    sorting,
+    onSortingChange,
     ensurePageInRange,
   } = useTableUrlState({
     search,
@@ -71,6 +85,7 @@ export function BillsTable({
       { columnId: 'month', searchKey: 'month', type: 'string' },
       { columnId: 'year', searchKey: 'year', type: 'string' },
     ],
+    sorting: {},
   })
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -83,10 +98,13 @@ export function BillsTable({
       columnFilters,
       globalFilter,
       pagination,
+      sorting,
     },
     pageCount,
     manualPagination: true,
     manualFiltering: true,
+    manualSorting: true,
+    getRowId: (row) => String(row.id),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
@@ -94,11 +112,16 @@ export function BillsTable({
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
+    onSortingChange,
   })
 
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
+
+  const selectedIds = Object.keys(rowSelection)
+    .filter((id) => rowSelection[id])
+    .map(Number)
 
   return (
     <div
@@ -200,6 +223,32 @@ export function BillsTable({
         </Table>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
+      <DataTableBulkActions table={table} entityName='tagihan'>
+        <Button
+          variant='destructive'
+          size='sm'
+          className='h-7'
+          onClick={() => setMultiDeleteOpen(true)}
+        >
+          <Trash2 />
+          Hapus
+        </Button>
+      </DataTableBulkActions>
+      <MultiDeleteDialog
+        open={multiDeleteOpen}
+        onOpenChange={setMultiDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='tagihan'
+        isLoading={bulkDeleteBills.isPending}
+        onConfirm={() => {
+          bulkDeleteBills.mutate(selectedIds, {
+            onSuccess: () => {
+              setMultiDeleteOpen(false)
+              table.resetRowSelection()
+            },
+          })
+        }}
+      />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { residentsService } from '@/services/residents'
 import type { ResidentFilter, CreateResidentRequest, UpdateResidentRequest } from '@/types/api'
 
@@ -24,7 +25,10 @@ export function useCreateResident() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateResidentRequest) => residentsService.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['residents'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['residents'] })
+      toast.success('Penghuni berhasil ditambahkan')
+    },
   })
 }
 
@@ -32,7 +36,10 @@ export function useUpdateResident(id: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: UpdateResidentRequest) => residentsService.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['residents'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['residents'] })
+      toast.success('Penghuni berhasil diperbarui')
+    },
   })
 }
 
@@ -40,6 +47,20 @@ export function useDeleteResident() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => residentsService.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['residents'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['residents'] })
+      toast.success('Penghuni berhasil dihapus')
+    },
+  })
+}
+
+export function useBulkDeleteResidents() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => residentsService.bulkDelete(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['residents'] })
+      toast.success('Penghuni terpilih berhasil dihapus')
+    },
   })
 }

@@ -1,12 +1,11 @@
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
+  BarChart,
   Legend,
   ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -43,6 +42,15 @@ function getMonthName(month: number): string {
   return MONTH_NAMES[month - 1] ?? ''
 }
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
 export function IncomeExpenseChart({
   data,
   year,
@@ -77,22 +85,44 @@ export function IncomeExpenseChart({
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
+      <CardContent className='ps-2'>
         <ResponsiveContainer width='100%' height={350}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray='3 3' />
-            <XAxis dataKey='name' />
-            <YAxis />
-            <Tooltip />
-            <Legend />
+            <XAxis
+              dataKey='name'
+              stroke='#888888'
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              stroke='#888888'
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value: number) =>
+                `${(value / 1000).toLocaleString('id-ID')}rb`
+              }
+            />
+            <Tooltip
+              cursor={{ fill: 'var(--muted)' }}
+              contentStyle={{
+                backgroundColor: 'var(--popover)',
+                color: 'var(--popover-foreground)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius)',
+              }}
+              formatter={(value) => formatCurrency(Number(value))}
+            />
+            <Legend wrapperStyle={{ fontSize: 13 }} />
             <Bar
               dataKey='Pemasukan'
-              fill='#22c55e'
+              fill='var(--color-primary)'
               radius={[4, 4, 0, 0]}
             />
             <Bar
               dataKey='Pengeluaran'
-              fill='#ef4444'
+              fill='var(--color-destructive)'
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

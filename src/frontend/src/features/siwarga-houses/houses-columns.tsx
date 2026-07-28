@@ -12,6 +12,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 import type { House } from '@/types/api'
 import { useHousesContext } from './houses-provider'
 
@@ -72,9 +73,12 @@ function DataTableRowActions({ row }: { row: Row<House> }) {
 
 export function housesColumns(): ColumnDef<House>[] {
   return [
+    selectColumn<House>(),
     {
       id: 'house_number',
-      header: 'Nomor Rumah',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Nomor Rumah' />
+      ),
       accessorKey: 'house_number',
       cell: ({ row }) => (
         <Link
@@ -85,20 +89,26 @@ export function housesColumns(): ColumnDef<House>[] {
           {row.original.house_number}
         </Link>
       ),
+      meta: { label: 'Nomor Rumah' },
     },
     {
       id: 'address',
-      header: 'Alamat',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Alamat' />
+      ),
       accessorKey: 'address',
       cell: ({ row }) => (
         <span className='text-muted-foreground'>
           {row.original.address || '-'}
         </span>
       ),
+      meta: { label: 'Alamat' },
     },
     {
       id: 'status',
-      header: 'Status',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Status' />
+      ),
       accessorKey: 'status',
       cell: ({ row }) => (
         <Badge
@@ -107,6 +117,7 @@ export function housesColumns(): ColumnDef<House>[] {
           {row.original.status === 'dihuni' ? 'Dihuni' : 'Kosong'}
         </Badge>
       ),
+      meta: { label: 'Status' },
     },
     {
       id: 'current_resident',
@@ -119,10 +130,12 @@ export function housesColumns(): ColumnDef<House>[] {
             : '-'}
         </span>
       ),
+      enableSorting: false,
     },
     {
       id: 'actions',
       cell: DataTableRowActions,
+      enableSorting: false,
     },
   ]
 }

@@ -26,7 +26,14 @@ class ResidentController extends Controller
             });
         }
 
+        $this->applySorting($query, $request, ['full_name', 'status', 'phone_number', 'marital_status', 'created_at']);
+
         return $this->paginated($query->paginate($request->per_page ?? 10), ResidentResource::class);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        return $this->bulkDelete($request, Resident::class);
     }
 
     public function store(Request $request)

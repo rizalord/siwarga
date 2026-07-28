@@ -10,4 +10,6 @@ export const paymentsService = {
     api.post<ApiResponse<Payment>>('/api/payments', data),
   delete: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/payments/${id}`),
+  bulkDelete: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/payments/bulk-delete', { ids }),
 }

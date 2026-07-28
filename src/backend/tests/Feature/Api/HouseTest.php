@@ -117,6 +117,47 @@ class HouseTest extends TestCase
         $response->assertStatus(201);
     }
 
+    public function test_can_sort_houses_by_house_number()
+    {
+        House::factory()->create(['house_number' => 'C03']);
+        House::factory()->create(['house_number' => 'A01']);
+
+        $response = $this->getJson('/api/houses?sort=house_number&order=asc');
+
+        $response->assertStatus(200);
+        $this->assertEquals('A01', $response->json('data.0.house_number'));
+        $this->assertEquals('C03', $response->json('data.1.house_number'));
+    }
+
+    public function test_can_bulk_delete_houses()
+    {
+        $houses = House::factory()->count(3)->create();
+
+        $response = $this->postJson('/api/houses/bulk-delete', [
+            'ids' => $houses->pluck('id')->take(2)->toArray(),
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted($houses[0]);
+        $this->assertSoftDeleted($houses[1]);
+        $this->assertDatabaseHas('houses', ['id' => $houses[2]->id, 'deleted_at' => null]);
+    }
+
+    public function test_bulk_delete_skips_houses_with_transaction_history()
+    {
+        $withHistory = House::factory()->create();
+        Bill::factory()->create(['house_id' => $withHistory->id]);
+        $withoutHistory = House::factory()->create();
+
+        $response = $this->postJson('/api/houses/bulk-delete', [
+            'ids' => [$withHistory->id, $withoutHistory->id],
+        ]);
+
+        $response->assertStatus(207);
+        $this->assertDatabaseHas('houses', ['id' => $withHistory->id, 'deleted_at' => null]);
+        $this->assertSoftDeleted($withoutHistory);
+    }
+
     public function test_can_show_house_history()
     {
         $house = House::factory()->create();

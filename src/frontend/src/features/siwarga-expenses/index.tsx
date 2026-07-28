@@ -112,6 +112,8 @@ function ExpensesPageInner() {
     year: search.year,
     category: search.category,
     search: search.search,
+    sort: search.sort,
+    order: search.order,
   })
 
   const [open, setOpen] = useDialogState<'create' | 'update' | 'delete'>(null)

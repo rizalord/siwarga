@@ -86,6 +86,8 @@ function HousesPageInner() {
     per_page: search.pageSize,
     status: search.status,
     search: search.search,
+    sort: search.sort,
+    order: search.order,
   })
 
   return (

@@ -3,6 +3,7 @@ import type {
   ColumnFiltersState,
   OnChangeFn,
   PaginationState,
+  SortingState,
 } from '@tanstack/react-table'
 
 type SearchRecord = Record<string, unknown>
@@ -46,6 +47,10 @@ type UseTableUrlStateParams = {
         deserialize?: (value: unknown) => unknown
       }
   >
+  sorting?: {
+    sortKey?: string
+    orderKey?: string
+  }
 }
 
 type UseTableUrlStateReturn = {
@@ -58,6 +63,9 @@ type UseTableUrlStateReturn = {
   // Pagination
   pagination: PaginationState
   onPaginationChange: OnChangeFn<PaginationState>
+  // Sorting
+  sorting: SortingState
+  onSortingChange: OnChangeFn<SortingState>
   // Helpers
   ensurePageInRange: (
     pageCount: number,
@@ -74,7 +82,11 @@ export function useTableUrlState(
     pagination: paginationCfg,
     globalFilter: globalFilterCfg,
     columnFilters: columnFiltersCfg = [],
+    sorting: sortingCfg,
   } = params
+
+  const sortKey = sortingCfg?.sortKey ?? ('sort' as string)
+  const orderKey = sortingCfg?.orderKey ?? ('order' as string)
 
   const pageKey = paginationCfg?.pageKey ?? ('page' as string)
   const pageSizeKey = paginationCfg?.pageSizeKey ?? ('pageSize' as string)
@@ -198,6 +210,27 @@ export function useTableUrlState(
     })
   }
 
+  const sorting: SortingState = useMemo(() => {
+    const rawSort = (search as SearchRecord)[sortKey]
+    const rawOrder = (search as SearchRecord)[orderKey]
+    if (typeof rawSort !== 'string' || rawSort === '') return []
+    return [{ id: rawSort, desc: rawOrder === 'desc' }]
+  }, [search, sortKey, orderKey])
+
+  const onSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const next = typeof updater === 'function' ? updater(sorting) : updater
+    const nextSort = next[0]
+
+    navigate({
+      search: (prev) => ({
+        ...(prev as SearchRecord),
+        [pageKey]: undefined,
+        [sortKey]: nextSort ? nextSort.id : undefined,
+        [orderKey]: nextSort ? (nextSort.desc ? 'desc' : 'asc') : undefined,
+      }),
+    })
+  }
+
   const ensurePageInRange = (
     pageCount: number,
     opts: { resetTo?: 'first' | 'last' } = { resetTo: 'first' }
@@ -222,6 +255,8 @@ export function useTableUrlState(
     onColumnFiltersChange,
     pagination,
     onPaginationChange,
+    sorting,
+    onSortingChange,
     ensurePageInRange,
   }
 }

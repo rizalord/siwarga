@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import {
+  type RowSelectionState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
+import { useBulkDeletePayments } from '@/hooks/use-payments'
 import {
   Table,
   TableBody,
@@ -22,7 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { Button } from '@/components/ui/button'
+import {
+  DataTableBulkActions,
+  DataTablePagination,
+  DataTableToolbar,
+} from '@/components/data-table'
+import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import type { Payment } from '@/types/api'
 import { paymentsColumns as columns } from './payments-columns'
 
@@ -49,8 +58,11 @@ export function PaymentsTable({
   search,
   navigate,
 }: DataTableProps) {
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+
+  const bulkDeletePayments = useBulkDeletePayments()
 
   const month = search.month as number | undefined
   const year = search.year as number | undefined
@@ -62,12 +74,15 @@ export function PaymentsTable({
     onColumnFiltersChange,
     pagination,
     onPaginationChange,
+    sorting,
+    onSortingChange,
     ensurePageInRange,
   } = useTableUrlState({
     search,
     navigate,
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: true, key: 'search' },
+    sorting: {},
   })
 
   const handleMonthChange = (value: string) => {
@@ -100,10 +115,13 @@ export function PaymentsTable({
       columnFilters,
       globalFilter,
       pagination,
+      sorting,
     },
     pageCount,
     manualPagination: true,
     manualFiltering: true,
+    manualSorting: true,
+    getRowId: (row) => String(row.id),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
@@ -111,11 +129,16 @@ export function PaymentsTable({
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
+    onSortingChange,
   })
 
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
+
+  const selectedIds = Object.keys(rowSelection)
+    .filter((id) => rowSelection[id])
+    .map(Number)
 
   return (
     <div
@@ -233,6 +256,32 @@ export function PaymentsTable({
         </Table>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
+      <DataTableBulkActions table={table} entityName='pembayaran'>
+        <Button
+          variant='destructive'
+          size='sm'
+          className='h-7'
+          onClick={() => setMultiDeleteOpen(true)}
+        >
+          <Trash2 />
+          Hapus
+        </Button>
+      </DataTableBulkActions>
+      <MultiDeleteDialog
+        open={multiDeleteOpen}
+        onOpenChange={setMultiDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='pembayaran'
+        isLoading={bulkDeletePayments.isPending}
+        onConfirm={() => {
+          bulkDeletePayments.mutate(selectedIds, {
+            onSuccess: () => {
+              setMultiDeleteOpen(false)
+              table.resetRowSelection()
+            },
+          })
+        }}
+      />
     </div>
   )
 }

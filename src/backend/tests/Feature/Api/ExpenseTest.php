@@ -116,4 +116,30 @@ class ExpenseTest extends TestCase
 
         $this->assertSoftDeleted($expense);
     }
+
+    public function test_can_sort_expenses_by_amount()
+    {
+        Expense::factory()->create(['amount' => 200000]);
+        Expense::factory()->create(['amount' => 100000]);
+
+        $response = $this->getJson('/api/expenses?sort=amount&order=asc');
+
+        $response->assertStatus(200);
+        $this->assertEquals(100000, $response->json('data.0.amount'));
+        $this->assertEquals(200000, $response->json('data.1.amount'));
+    }
+
+    public function test_can_bulk_delete_expenses()
+    {
+        $expenses = Expense::factory()->count(3)->create();
+
+        $response = $this->postJson('/api/expenses/bulk-delete', [
+            'ids' => $expenses->pluck('id')->take(2)->toArray(),
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted($expenses[0]);
+        $this->assertSoftDeleted($expenses[1]);
+        $this->assertDatabaseHas('expenses', ['id' => $expenses[2]->id, 'deleted_at' => null]);
+    }
 }

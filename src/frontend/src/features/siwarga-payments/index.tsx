@@ -40,6 +40,8 @@ function PaymentsPageInner() {
     month: search.month,
     year: search.year,
     search: search.search,
+    sort: search.sort,
+    order: search.order,
   })
 
   const { setOpen } = usePaymentsContext()

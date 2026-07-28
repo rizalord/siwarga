@@ -89,4 +89,30 @@ class DueTypeTest extends TestCase
 
         $this->assertSoftDeleted($dueType);
     }
+
+    public function test_can_sort_due_types_by_amount()
+    {
+        DueType::factory()->create(['amount' => 100000]);
+        DueType::factory()->create(['amount' => 50000]);
+
+        $response = $this->getJson('/api/due-types?sort=amount&order=asc');
+
+        $response->assertStatus(200);
+        $this->assertEquals(50000, $response->json('data.0.amount'));
+        $this->assertEquals(100000, $response->json('data.1.amount'));
+    }
+
+    public function test_can_bulk_delete_due_types()
+    {
+        $dueTypes = DueType::factory()->count(3)->create();
+
+        $response = $this->postJson('/api/due-types/bulk-delete', [
+            'ids' => $dueTypes->pluck('id')->take(2)->toArray(),
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted($dueTypes[0]);
+        $this->assertSoftDeleted($dueTypes[1]);
+        $this->assertDatabaseHas('due_types', ['id' => $dueTypes[2]->id, 'deleted_at' => null]);
+    }
 }

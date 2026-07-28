@@ -109,6 +109,8 @@ function DueTypesPageInner() {
     page: search.page,
     per_page: search.pageSize,
     search: search.search,
+    sort: search.sort,
+    order: search.order,
   })
 
   const [open, setOpen] = useDialogState<'create' | 'update' | 'delete'>(null)

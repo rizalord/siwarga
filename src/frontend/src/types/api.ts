@@ -207,6 +207,8 @@ export interface ResidentFilter {
   search?: string
   page?: number
   per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }
 
 export interface HouseFilter {
@@ -214,6 +216,8 @@ export interface HouseFilter {
   search?: string
   page?: number
   per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }
 
 export interface BillFilter {
@@ -224,6 +228,8 @@ export interface BillFilter {
   search?: string
   page?: number
   per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }
 
 export interface PaymentFilter {
@@ -233,6 +239,8 @@ export interface PaymentFilter {
   search?: string
   page?: number
   per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }
 
 export interface ExpenseFilter {
@@ -242,16 +250,22 @@ export interface ExpenseFilter {
   search?: string
   page?: number
   per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }
 
 export interface DueTypeFilter {
   search?: string
   page?: number
   per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }
 
 export interface UserFilter {
   search?: string
   page?: number
   per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }

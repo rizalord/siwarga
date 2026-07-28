@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import {
+  type RowSelectionState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
+import { useBulkDeleteResidents } from '@/hooks/use-residents'
 import {
   Table,
   TableBody,
@@ -15,7 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { Button } from '@/components/ui/button'
+import {
+  DataTableBulkActions,
+  DataTablePagination,
+  DataTableToolbar,
+} from '@/components/data-table'
+import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import type { Resident } from '@/types/api'
 import { residentsColumns as columns } from './residents-columns'
 
@@ -40,8 +49,11 @@ export function ResidentsTable({
   navigate,
 }: DataTableProps) {
   // Local UI-only states
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+
+  const bulkDeleteResidents = useBulkDeleteResidents()
 
   // Synced with URL states
   const {
@@ -51,6 +63,8 @@ export function ResidentsTable({
     onColumnFiltersChange,
     pagination,
     onPaginationChange,
+    sorting,
+    onSortingChange,
     ensurePageInRange,
   } = useTableUrlState({
     search,
@@ -60,6 +74,7 @@ export function ResidentsTable({
     columnFilters: [
       { columnId: 'status', searchKey: 'status', type: 'array' },
     ],
+    sorting: {},
   })
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -72,10 +87,13 @@ export function ResidentsTable({
       columnFilters,
       globalFilter,
       pagination,
+      sorting,
     },
     pageCount,
     manualPagination: true,
     manualFiltering: true,
+    manualSorting: true,
+    getRowId: (row) => String(row.id),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
@@ -83,11 +101,16 @@ export function ResidentsTable({
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
+    onSortingChange,
   })
 
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
+
+  const selectedIds = Object.keys(rowSelection)
+    .filter((id) => rowSelection[id])
+    .map(Number)
 
   return (
     <div
@@ -179,6 +202,32 @@ export function ResidentsTable({
         </Table>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
+      <DataTableBulkActions table={table} entityName='penghuni'>
+        <Button
+          variant='destructive'
+          size='sm'
+          className='h-7'
+          onClick={() => setMultiDeleteOpen(true)}
+        >
+          <Trash2 />
+          Hapus
+        </Button>
+      </DataTableBulkActions>
+      <MultiDeleteDialog
+        open={multiDeleteOpen}
+        onOpenChange={setMultiDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='penghuni'
+        isLoading={bulkDeleteResidents.isPending}
+        onConfirm={() => {
+          bulkDeleteResidents.mutate(selectedIds, {
+            onSuccess: () => {
+              setMultiDeleteOpen(false)
+              table.resetRowSelection()
+            },
+          })
+        }}
+      />
     </div>
   )
 }

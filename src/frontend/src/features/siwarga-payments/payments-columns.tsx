@@ -9,6 +9,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 import type { Payment } from '@/types/api'
 import { usePaymentsContext } from './payments-provider'
 
@@ -62,9 +63,11 @@ function DataTableRowActions({ row }: { row: Row<Payment> }) {
 
 export function paymentsColumns(): ColumnDef<Payment>[] {
   return [
+    selectColumn<Payment>(),
     {
       id: 'bill',
       header: 'Tagihan',
+      enableSorting: false,
       cell: ({ row }) => {
         const bill = row.original.bill
         if (!bill) {
@@ -89,15 +92,21 @@ export function paymentsColumns(): ColumnDef<Payment>[] {
     },
     {
       id: 'amount_paid',
-      header: 'Jumlah Dibayar',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Jumlah Dibayar' />
+      ),
       accessorKey: 'amount_paid',
       cell: ({ row }) => <span>{formatRupiah(row.original.amount_paid)}</span>,
+      meta: { label: 'Jumlah Dibayar' },
     },
     {
       id: 'payment_date',
-      header: 'Tanggal Bayar',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Tanggal Bayar' />
+      ),
       accessorKey: 'payment_date',
       cell: ({ row }) => <span>{formatDate(row.original.payment_date)}</span>,
+      meta: { label: 'Tanggal Bayar' },
     },
     {
       id: 'notes',
@@ -108,10 +117,12 @@ export function paymentsColumns(): ColumnDef<Payment>[] {
           {row.original.notes || '-'}
         </span>
       ),
+      enableSorting: false,
     },
     {
       id: 'actions',
       cell: DataTableRowActions,
+      enableSorting: false,
     },
   ]
 }

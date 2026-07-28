@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
+use App\Models\Bill;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 
@@ -43,7 +44,29 @@ class PaymentController extends Controller
             });
         }
 
+        $this->applySorting($query, $request, ['amount_paid', 'payment_date', 'created_at']);
+
         return $this->paginated($query->paginate($request->per_page ?? 10), PaymentResource::class);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $payments = Payment::whereIn('id', $validated['ids'])->get();
+        $billIds = $payments->pluck('bill_id')->unique();
+
+        $deleted = Payment::destroy($payments->pluck('id'));
+
+        Bill::whereIn('id', $billIds)->each(function (Bill $bill) {
+            $totalPaid = $bill->payments()->sum('amount_paid');
+            $bill->update(['status' => $totalPaid >= $bill->amount_due ? 'lunas' : 'belum_lunas']);
+        });
+
+        return response()->json(['data' => null, 'message' => "{$deleted} pembayaran berhasil dihapus"]);
     }
 
     public function store(Request $request)
