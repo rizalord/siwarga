@@ -1,13 +1,13 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
+import { usePayments } from '@/hooks/use-payments'
 import { Button } from '@/components/ui/button'
-import { Header } from '@/components/layout/header'
 import { ConfigDrawer } from '@/components/config-drawer'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { Main } from '@/components/layout/main'
-import { usePayments } from '@/hooks/use-payments'
 import { PaymentDeleteDialog } from './payment-delete-dialog'
 import { PaymentFormDialog } from './payment-form'
 import { PaymentsProvider, usePaymentsContext } from './payments-provider'
@@ -55,7 +55,7 @@ function PaymentsPageInner() {
         <ProfileDropdown />
       </Header>
 
-      <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
+      <Main fixed className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>Pembayaran</h2>

@@ -1,13 +1,13 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { AlertTriangle } from 'lucide-react'
+import { useBills, useDeleteBill } from '@/hooks/use-bills'
+import { ConfigDrawer } from '@/components/config-drawer'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Header } from '@/components/layout/header'
-import { ConfigDrawer } from '@/components/config-drawer'
+import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { Main } from '@/components/layout/main'
-import { useBills, useDeleteBill } from '@/hooks/use-bills'
 import { BillsGenerateButton } from './bills-generate-button'
 import { BillsProvider, useBillsContext } from './bills-provider'
 import { BillsTable } from './bills-table'
@@ -55,8 +55,8 @@ function BillsDialogs() {
             <p>
               Apakah Anda yakin ingin menghapus tagihan ini?
               <br />
-              Tindakan ini akan menghapus tagihan secara permanen dan
-              tidak dapat dibatalkan.
+              Tindakan ini akan menghapus tagihan secara permanen dan tidak
+              dapat dibatalkan.
             </p>
           }
           confirmText='Hapus'
@@ -90,12 +90,10 @@ function BillsPageInner() {
         <ProfileDropdown />
       </Header>
 
-      <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
+      <Main fixed className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>
-              Tagihan
-            </h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Tagihan</h2>
             <p className='text-muted-foreground'>
               Kelola tagihan iuran di sini.
             </p>

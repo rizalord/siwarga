@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
+import type { Expense } from '@/types/api'
 import { AlertTriangle, Plus } from 'lucide-react'
+import useDialogState from '@/hooks/use-dialog-state'
+import { useExpenses, useDeleteExpense } from '@/hooks/use-expenses'
 import { Button } from '@/components/ui/button'
-import { Header } from '@/components/layout/header'
 import { ConfigDrawer } from '@/components/config-drawer'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { Main } from '@/components/layout/main'
-import { ConfirmDialog } from '@/components/confirm-dialog'
-import useDialogState from '@/hooks/use-dialog-state'
-import { useExpenses, useDeleteExpense } from '@/hooks/use-expenses'
-import type { Expense } from '@/types/api'
 import { ExpenseFormDialog } from './expense-form'
 import { ExpensesTable } from './expenses-table'
 
@@ -128,12 +128,10 @@ function ExpensesPageInner() {
         <ProfileDropdown />
       </Header>
 
-      <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
+      <Main fixed className='flex flex-1 flex-col gap-4 sm:gap-6'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>
-              Pengeluaran
-            </h2>
+            <h2 className='text-2xl font-bold tracking-tight'>Pengeluaran</h2>
             <p className='text-muted-foreground'>
               Kelola pengeluaran kas RT di sini.
             </p>
