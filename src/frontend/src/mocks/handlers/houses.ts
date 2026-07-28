@@ -57,4 +57,16 @@ export const houseHandlers = [
     }
     return HttpResponse.json({ data: houses[houseIdx] })
   }),
+
+  http.post('/api/houses/:id/vacate-resident', ({ params }) => {
+    const houseIdx = houses.findIndex((h) => h.id === Number(params.id))
+    if (houseIdx === -1) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    houses[houseIdx] = {
+      ...houses[houseIdx],
+      status: 'kosong',
+      current_resident: undefined,
+      updated_at: new Date().toISOString(),
+    }
+    return HttpResponse.json({ data: null, message: 'Penghuni berhasil dicopot dari rumah' })
+  }),
 ]

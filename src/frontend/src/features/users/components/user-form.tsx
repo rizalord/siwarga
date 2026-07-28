@@ -53,8 +53,8 @@ export function UserFormDialog({
   const isUpdate = !!currentRow
   const createUser = useCreateUser()
   const updateUser = useUpdateUser(currentRow?.id ?? 0)
-  const { data: roles } = useRoles()
-  const roleOptions = (roles ?? []).map((role) => ({
+  const { data: roles } = useRoles({ per_page: 100 })
+  const roleOptions = (roles?.data ?? []).map((role) => ({
     label: role.description || role.name,
     value: String(role.id),
   }))

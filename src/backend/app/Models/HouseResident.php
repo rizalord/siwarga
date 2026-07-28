@@ -37,6 +37,6 @@ class HouseResident extends Model
 
     public function resident()
     {
-        return $this->belongsTo(Resident::class);
+        return $this->belongsTo(Resident::class)->withTrashed();
     }
 }

@@ -10,6 +10,7 @@ import type { Bill } from '@/types/api'
 import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBulkDeleteBills } from '@/hooks/use-bills'
+import { useDueTypes } from '@/hooks/use-due-types'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import {
@@ -65,6 +66,12 @@ export function BillsTable({
 
   const bulkDeleteBills = useBulkDeleteBills()
 
+  const { data: dueTypesData } = useDueTypes({ per_page: 100 })
+  const dueTypeOptions = (dueTypesData?.data ?? []).map((dueType) => ({
+    label: dueType.name,
+    value: String(dueType.id),
+  }))
+
   const {
     globalFilter,
     onGlobalFilterChange,
@@ -84,6 +91,7 @@ export function BillsTable({
       { columnId: 'status', searchKey: 'status', type: 'array' },
       { columnId: 'month', searchKey: 'month', type: 'string' },
       { columnId: 'year', searchKey: 'year', type: 'string' },
+      { columnId: 'due_type', searchKey: 'due_type_id', type: 'array' },
     ],
     sorting: {},
   })
@@ -148,6 +156,11 @@ export function BillsTable({
             columnId: 'status',
             title: 'Status',
             options: statusOptions,
+          },
+          {
+            columnId: 'due_type',
+            title: 'Jenis Iuran',
+            options: dueTypeOptions,
           },
         ]}
       />

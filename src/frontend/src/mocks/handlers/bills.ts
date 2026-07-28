@@ -10,9 +10,11 @@ export const billHandlers = [
     const url = new URL(request.url)
     const status = url.searchParams.get('status')
     const houseId = url.searchParams.get('house_id')
+    const dueTypeId = url.searchParams.get('due_type_id')
     let filtered = [...bills]
     if (status) filtered = filtered.filter((b) => b.status === status)
     if (houseId) filtered = filtered.filter((b) => b.house.id === Number(houseId))
+    if (dueTypeId) filtered = filtered.filter((b) => b.due_type.id === Number(dueTypeId))
     return HttpResponse.json({
       data: filtered,
       current_page: 1,

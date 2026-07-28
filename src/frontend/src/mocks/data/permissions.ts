@@ -1,0 +1,26 @@
+import type { Permission } from '@/types/api'
+
+export const mockPermissions: Permission[] = [
+  { id: 1, name: 'residents.view', description: 'Lihat data penghuni', is_system: true },
+  { id: 2, name: 'residents.create', description: 'Tambah penghuni', is_system: true },
+  { id: 3, name: 'residents.edit', description: 'Ubah penghuni', is_system: true },
+  { id: 4, name: 'residents.delete', description: 'Hapus penghuni', is_system: true },
+  { id: 5, name: 'houses.view', description: 'Lihat data rumah', is_system: true },
+  { id: 6, name: 'houses.create', description: 'Tambah rumah', is_system: true },
+  { id: 7, name: 'houses.edit', description: 'Ubah rumah', is_system: true },
+  { id: 8, name: 'houses.delete', description: 'Hapus rumah', is_system: true },
+  { id: 9, name: 'houses.assign', description: 'Assign penghuni ke rumah', is_system: true },
+  { id: 10, name: 'due-types.view', description: 'Lihat jenis iuran', is_system: true },
+  { id: 11, name: 'due-types.manage', description: 'Kelola jenis iuran', is_system: true },
+  { id: 12, name: 'bills.view', description: 'Lihat tagihan', is_system: true },
+  { id: 13, name: 'bills.generate', description: 'Generate tagihan', is_system: true },
+  { id: 14, name: 'payments.view', description: 'Lihat pembayaran', is_system: true },
+  { id: 15, name: 'payments.create', description: 'Catat pembayaran', is_system: true },
+  { id: 16, name: 'expenses.view', description: 'Lihat pengeluaran', is_system: true },
+  { id: 17, name: 'expenses.create', description: 'Catat pengeluaran', is_system: true },
+  { id: 18, name: 'expenses.edit', description: 'Ubah pengeluaran', is_system: true },
+  { id: 19, name: 'expenses.delete', description: 'Hapus pengeluaran', is_system: true },
+  { id: 20, name: 'reports.view', description: 'Lihat laporan', is_system: true },
+  { id: 21, name: 'users.view', description: 'Lihat data user', is_system: true },
+  { id: 22, name: 'users.manage', description: 'Kelola user', is_system: true },
+]

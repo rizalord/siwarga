@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DueTypeController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\HouseController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\RoleController;
@@ -36,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('houses/{house}', [HouseController::class, 'destroy'])->middleware('can:houses.delete');
     Route::get('houses/{house}/history', [HouseController::class, 'history'])->middleware('can:houses.view');
     Route::post('houses/{house}/assign-resident', [HouseController::class, 'assignResident'])->middleware('can:houses.assign');
+    Route::post('houses/{house}/vacate-resident', [HouseController::class, 'vacateResident'])->middleware('can:houses.assign');
 
     // Due Types
     Route::get('due-types', [DueTypeController::class, 'index'])->middleware('can:due-types.view');
@@ -83,4 +85,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Roles
     Route::get('roles', [RoleController::class, 'index'])->middleware('can:users.view');
+    Route::post('roles', [RoleController::class, 'store'])->middleware('can:users.manage');
+    Route::get('roles/{role}', [RoleController::class, 'show'])->middleware('can:users.view');
+    Route::put('roles/{role}', [RoleController::class, 'update'])->middleware('can:users.manage');
+    Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('can:users.manage');
+
+    // Permissions
+    Route::get('permissions', [PermissionController::class, 'index'])->middleware('can:users.view');
+    Route::post('permissions', [PermissionController::class, 'store'])->middleware('can:users.manage');
+    Route::get('permissions/{permission}', [PermissionController::class, 'show'])->middleware('can:users.view');
+    Route::put('permissions/{permission}', [PermissionController::class, 'update'])->middleware('can:users.manage');
+    Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])->middleware('can:users.manage');
 });

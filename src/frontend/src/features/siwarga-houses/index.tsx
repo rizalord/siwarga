@@ -11,6 +11,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { HouseAssignDialog } from './house-assign-dialog'
 import { HouseDeleteDialog } from './house-delete-dialog'
 import { HouseFormDialog } from './house-form'
+import { HouseVacateDialog } from './house-vacate-dialog'
 import { HousesProvider, useHousesContext } from './houses-provider'
 import { HousesTable } from './houses-table'
 
@@ -66,6 +67,18 @@ function HousesDialogs() {
             open={open === 'assign'}
             onOpenChange={() => {
               setOpen('assign')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            currentRow={currentRow}
+          />
+
+          <HouseVacateDialog
+            key={`house-vacate-${currentRow.id}`}
+            open={open === 'vacate'}
+            onOpenChange={() => {
+              setOpen('vacate')
               setTimeout(() => {
                 setCurrentRow(null)
               }, 500)

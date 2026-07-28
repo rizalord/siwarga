@@ -77,6 +77,17 @@ export function useAssignResident() {
   })
 }
 
+export function useVacateResident() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => housesService.vacateResident(id),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['houses'] })
+      toast.success(res.data.message ?? 'Penghuni berhasil dicopot')
+    },
+  })
+}
+
 export function useHouseResidents(id: number) {
   return useQuery({
     queryKey: ['houses', id, 'residents'],

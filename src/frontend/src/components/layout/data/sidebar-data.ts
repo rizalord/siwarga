@@ -8,6 +8,8 @@ import {
   FileText,
   UserCog,
   Banknote,
+  ShieldCheck,
+  KeyRound,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -45,6 +47,8 @@ export const sidebarData: SidebarData = {
       title: 'Pengaturan',
       items: [
         { title: 'User', url: '/users', icon: UserCog, permission: 'users.view' },
+        { title: 'Role', url: '/roles', icon: ShieldCheck, permission: 'users.view' },
+        { title: 'Permission', url: '/permissions', icon: KeyRound, permission: 'users.view' },
       ],
     },
   ],

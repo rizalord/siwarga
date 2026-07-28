@@ -11,7 +11,7 @@ class HouseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = House::query();
+        $query = House::query()->with('currentResident');
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -127,5 +127,26 @@ class HouseController extends Controller
         $house->update(['status' => 'dihuni']);
 
         return response()->json(['data' => $houseResident], 201);
+    }
+
+    public function vacateResident(Request $request, House $house)
+    {
+        $validated = $request->validate([
+            'end_date' => 'nullable|date',
+        ]);
+
+        $activeAssignment = $house->houseResidents()->whereNull('end_date')->first();
+
+        if (! $activeAssignment) {
+            return response()->json([
+                'message' => 'Rumah ini tidak memiliki penghuni aktif.',
+            ], 422);
+        }
+
+        $activeAssignment->update(['end_date' => $validated['end_date'] ?? now()->toDateString()]);
+
+        $house->update(['status' => 'kosong']);
+
+        return response()->json(['data' => null, 'message' => 'Penghuni berhasil dicopot dari rumah']);
     }
 }

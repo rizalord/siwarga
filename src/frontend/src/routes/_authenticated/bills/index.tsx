@@ -11,6 +11,7 @@ const billsSearchSchema = z.object({
     .array(z.union([z.literal('lunas'), z.literal('belum_lunas')]))
     .optional()
     .catch([]),
+  due_type_id: z.array(z.string()).optional().catch([]),
   search: z.string().optional().catch(''),
   sort: z.string().optional().catch(undefined),
   order: z.union([z.literal('asc'), z.literal('desc')]).optional().catch(undefined),

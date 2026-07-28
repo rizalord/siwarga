@@ -2,7 +2,7 @@ import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { Link } from '@tanstack/react-router'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import type { House } from '@/types/api'
-import { Trash2, UserPen, UserPlus } from 'lucide-react'
+import { Trash2, UserMinus, UserPen, UserPlus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -53,6 +53,19 @@ function DataTableRowActions({ row }: { row: Row<House> }) {
             <UserPlus size={16} />
           </DropdownMenuShortcut>
         </DropdownMenuItem>
+        {row.original.current_resident && (
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original)
+              setOpen('vacate')
+            }}
+          >
+            Kosongkan
+            <DropdownMenuShortcut>
+              <UserMinus size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {

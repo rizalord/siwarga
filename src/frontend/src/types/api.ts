@@ -39,13 +39,46 @@ export interface User {
 export interface Role {
   id: number
   name: string
-  description: string
+  description: string | null
+  permissions?: Permission[]
+  users_count?: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Permission {
   id: number
   name: string
-  description: string
+  description: string | null
+  is_system?: boolean
+  created_at?: string
+}
+
+export interface CreateRoleRequest {
+  name: string
+  description?: string | null
+  permission_ids?: number[]
+}
+
+export interface RoleFilter {
+  search?: string
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+export interface CreatePermissionRequest {
+  name: string
+  description?: string | null
+}
+
+export interface PermissionFilter {
+  search?: string
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }
 
 // Residents
@@ -91,7 +124,7 @@ export interface CreateHouseRequest {
 export interface HouseResident {
   id: number
   house_id: number
-  resident: Resident
+  resident: Resident | null
   start_date: string
   end_date: string | null
 }
@@ -204,6 +237,7 @@ export interface YearlySummary {
 // DTOs for list filters
 export interface ResidentFilter {
   status?: string | string[]
+  marital_status?: string | string[]
   search?: string
   page?: number
   per_page?: number
@@ -225,6 +259,7 @@ export interface BillFilter {
   year?: number
   status?: string | string[]
   house_id?: number
+  due_type_id?: string | string[]
   search?: string
   page?: number
   per_page?: number

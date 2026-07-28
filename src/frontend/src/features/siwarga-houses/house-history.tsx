@@ -16,6 +16,26 @@ function formatDate(dateString: string): string {
   })
 }
 
+function formatDuration(startDate: string, endDate: string | null): string {
+  const start = new Date(startDate)
+  const end = endDate ? new Date(endDate) : new Date()
+
+  let months =
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth())
+  if (end.getDate() < start.getDate()) months -= 1
+  months = Math.max(months, 0)
+
+  const years = Math.floor(months / 12)
+  const remainingMonths = months % 12
+
+  const parts: string[] = []
+  if (years > 0) parts.push(`${years} tahun`)
+  if (remainingMonths > 0 || years === 0) parts.push(`${remainingMonths} bulan`)
+
+  return parts.join(' ')
+}
+
 function TimelineItem({ record }: { record: HouseResident }) {
   const isActive = record.end_date === null
 
@@ -39,17 +59,25 @@ function TimelineItem({ record }: { record: HouseResident }) {
       <div className='flex-1 space-y-1'>
         <div className='flex items-center gap-2'>
           <p className='font-medium'>
-            {record.resident.full_name}
+            {record.resident?.full_name ?? 'Penghuni tidak ditemukan'}
           </p>
           {isActive && (
             <Badge variant='default' className='text-xs'>
               Aktif
             </Badge>
           )}
+          {record.resident?.deleted_at && (
+            <Badge variant='secondary' className='text-xs'>
+              Dihapus
+            </Badge>
+          )}
         </div>
         <p className='text-sm text-muted-foreground'>
           {formatDate(record.start_date)}
           {record.end_date ? ` - ${formatDate(record.end_date)}` : ' - Sekarang'}
+        </p>
+        <p className='text-xs text-muted-foreground'>
+          Lama menghuni: {formatDuration(record.start_date, record.end_date)}
         </p>
       </div>
     </div>

@@ -1,17 +1,13 @@
 import { useEffect, useState } from 'react'
 import {
-  type RowSelectionState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { Resident } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import type { Permission } from '@/types/api'
 import { cn } from '@/lib/utils'
-import { useBulkDeleteResidents } from '@/hooks/use-residents'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -20,47 +16,30 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  DataTableBulkActions,
-  DataTablePagination,
-  DataTableToolbar,
-} from '@/components/data-table'
-import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
-import { residentsColumns as columns } from './residents-columns'
-
-const statusOptions = [
-  { label: 'Tetap', value: 'tetap' },
-  { label: 'Kontrak', value: 'kontrak' },
-]
-
-const maritalStatusOptions = [
-  { label: 'Menikah', value: 'menikah' },
-  { label: 'Belum Menikah', value: 'belum_menikah' },
-]
+import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
+import { permissionsColumns as columns } from './permissions-columns'
 
 type DataTableProps = {
-  data: Resident[]
+  data: Permission[]
   pageCount: number
   isFetching?: boolean
   search: Record<string, unknown>
   navigate: NavigateFn
+  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  setCurrentRow: (row: Permission | null) => void
 }
 
-export function ResidentsTable({
+export function PermissionsTable({
   data,
   pageCount,
   isFetching,
   search,
   navigate,
+  setOpen,
+  setCurrentRow,
 }: DataTableProps) {
-  // Local UI-only states
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
 
-  const bulkDeleteResidents = useBulkDeleteResidents()
-
-  // Synced with URL states
   const {
     globalFilter,
     onGlobalFilterChange,
@@ -76,24 +55,15 @@ export function ResidentsTable({
     navigate,
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: true, key: 'search' },
-    columnFilters: [
-      { columnId: 'status', searchKey: 'status', type: 'array' },
-      {
-        columnId: 'marital_status',
-        searchKey: 'marital_status',
-        type: 'array',
-      },
-    ],
     sorting: {},
   })
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
-    columns: columns(),
+    columns: columns({ setOpen, setCurrentRow }),
     state: {
       columnVisibility,
-      rowSelection,
       columnFilters,
       globalFilter,
       pagination,
@@ -104,8 +74,6 @@ export function ResidentsTable({
     manualFiltering: true,
     manualSorting: true,
     getRowId: (row) => String(row.id),
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     onPaginationChange,
@@ -118,10 +86,6 @@ export function ResidentsTable({
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
 
-  const selectedIds = Object.keys(rowSelection)
-    .filter((id) => rowSelection[id])
-    .map(Number)
-
   return (
     <div
       className={cn(
@@ -129,22 +93,7 @@ export function ResidentsTable({
         'flex flex-1 flex-col gap-4 overflow-hidden'
       )}
     >
-      <DataTableToolbar
-        table={table}
-        searchPlaceholder='Cari nama atau nomor telepon...'
-        filters={[
-          {
-            columnId: 'status',
-            title: 'Status',
-            options: statusOptions,
-          },
-          {
-            columnId: 'marital_status',
-            title: 'Status Nikah',
-            options: maritalStatusOptions,
-          },
-        ]}
-      />
+      <DataTableToolbar table={table} searchPlaceholder='Cari permission...' />
       <div className='flex-1 overflow-auto'>
         <div
           className={cn(
@@ -207,7 +156,7 @@ export function ResidentsTable({
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={columns().length}
+                    colSpan={columns({ setOpen, setCurrentRow }).length}
                     className='h-24 text-center'
                   >
                     Tidak ada data.
@@ -219,32 +168,6 @@ export function ResidentsTable({
         </div>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
-      <DataTableBulkActions table={table} entityName='penghuni'>
-        <Button
-          variant='destructive'
-          size='sm'
-          className='h-7'
-          onClick={() => setMultiDeleteOpen(true)}
-        >
-          <Trash2 />
-          Hapus
-        </Button>
-      </DataTableBulkActions>
-      <MultiDeleteDialog
-        open={multiDeleteOpen}
-        onOpenChange={setMultiDeleteOpen}
-        selectedCount={selectedIds.length}
-        entityLabel='penghuni'
-        isLoading={bulkDeleteResidents.isPending}
-        onConfirm={() => {
-          bulkDeleteResidents.mutate(selectedIds, {
-            onSuccess: () => {
-              setMultiDeleteOpen(false)
-              table.resetRowSelection()
-            },
-          })
-        }}
-      />
     </div>
   )
 }

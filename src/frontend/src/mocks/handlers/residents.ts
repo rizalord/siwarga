@@ -8,9 +8,11 @@ export const residentHandlers = [
   http.get('/api/residents', ({ request }) => {
     const url = new URL(request.url)
     const status = url.searchParams.get('status')
+    const maritalStatus = url.searchParams.get('marital_status')
     const search = url.searchParams.get('search')
     let filtered = [...residents]
     if (status) filtered = filtered.filter((r) => r.status === status)
+    if (maritalStatus) filtered = filtered.filter((r) => r.marital_status === maritalStatus)
     if (search) filtered = filtered.filter((r) =>
       r.full_name.toLowerCase().includes(search.toLowerCase()),
     )

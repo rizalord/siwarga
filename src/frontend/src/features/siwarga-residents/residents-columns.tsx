@@ -79,7 +79,7 @@ export function residentsColumns(): ColumnDef<Resident>[] {
         <Badge
           variant={row.original.status === 'tetap' ? 'default' : 'secondary'}
         >
-          {row.original.status}
+          {row.original.status === 'tetap' ? 'Tetap' : 'Kontrak'}
         </Badge>
       ),
       meta: { label: 'Status' },

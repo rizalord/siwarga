@@ -72,6 +72,7 @@ function ResidentsPageInner() {
     page: search.page,
     per_page: search.pageSize,
     status: search.status,
+    marital_status: search.marital_status,
     search: search.search,
     sort: search.sort,
     order: search.order,

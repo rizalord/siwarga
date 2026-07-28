@@ -158,6 +158,35 @@ class HouseTest extends TestCase
         $this->assertSoftDeleted($withoutHistory);
     }
 
+    public function test_can_vacate_resident_from_house()
+    {
+        $house = House::factory()->create();
+        $resident = Resident::factory()->create();
+        $house->houseResidents()->create([
+            'resident_id' => $resident->id,
+            'start_date' => '2026-01-01',
+        ]);
+
+        $response = $this->postJson("/api/houses/{$house->id}/vacate-resident");
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('houses', ['id' => $house->id, 'status' => 'kosong']);
+        $this->assertDatabaseMissing('house_residents', [
+            'house_id' => $house->id,
+            'resident_id' => $resident->id,
+            'end_date' => null,
+        ]);
+    }
+
+    public function test_cannot_vacate_house_without_active_resident()
+    {
+        $house = House::factory()->create(['status' => 'kosong']);
+
+        $response = $this->postJson("/api/houses/{$house->id}/vacate-resident");
+
+        $response->assertStatus(422);
+    }
+
     public function test_can_show_house_history()
     {
         $house = House::factory()->create();
@@ -171,5 +200,23 @@ class HouseTest extends TestCase
         $response = $this->getJson("/api/houses/{$house->id}/history");
 
         $response->assertStatus(200);
+    }
+
+    public function test_house_history_still_shows_resident_deleted_after_assignment()
+    {
+        $house = House::factory()->create();
+        $resident = Resident::factory()->create();
+
+        $house->houseResidents()->create([
+            'resident_id' => $resident->id,
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-02-01',
+        ]);
+        $resident->delete();
+
+        $response = $this->getJson("/api/houses/{$house->id}/history");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.0.resident.id', $resident->id);
     }
 }

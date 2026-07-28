@@ -7,6 +7,8 @@ import { paymentHandlers } from './payments'
 import { expenseHandlers } from './expenses'
 import { reportHandlers } from './reports'
 import { userHandlers } from './users'
+import { roleHandlers } from './roles'
+import { permissionHandlers } from './permissions'
 
 export const handlers = [
   ...authHandlers,
@@ -18,4 +20,6 @@ export const handlers = [
   ...expenseHandlers,
   ...reportHandlers,
   ...userHandlers,
+  ...roleHandlers,
+  ...permissionHandlers,
 ]

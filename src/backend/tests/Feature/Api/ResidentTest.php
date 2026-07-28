@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\House;
 use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
@@ -106,6 +107,21 @@ class ResidentTest extends TestCase
         $this->deleteJson("/api/residents/{$resident->id}");
 
         $this->assertSoftDeleted($resident);
+    }
+
+    public function test_cannot_delete_resident_actively_assigned_to_a_house()
+    {
+        $resident = Resident::factory()->create();
+        $house = House::factory()->create();
+        $house->houseResidents()->create([
+            'resident_id' => $resident->id,
+            'start_date' => '2026-01-01',
+        ]);
+
+        $response = $this->deleteJson("/api/residents/{$resident->id}");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('residents', ['id' => $resident->id, 'deleted_at' => null]);
     }
 
     public function test_can_sort_residents_by_full_name()

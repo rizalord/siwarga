@@ -11,8 +11,52 @@ class Permission extends Model
 
     protected $fillable = ['name', 'description'];
 
+    protected $appends = ['is_system'];
+
+    /**
+     * Permissions the application's Gates/Policies rely on by name.
+     * These cannot be renamed or deleted through the API, since doing so
+     * would silently strip that ability from every role that has it.
+     *
+     * @var array<string, string>
+     */
+    public const SYSTEM_PERMISSIONS = [
+        'residents.view' => 'Lihat data penghuni',
+        'residents.create' => 'Tambah penghuni',
+        'residents.edit' => 'Ubah penghuni',
+        'residents.delete' => 'Hapus penghuni',
+        'houses.view' => 'Lihat data rumah',
+        'houses.create' => 'Tambah rumah',
+        'houses.edit' => 'Ubah rumah',
+        'houses.delete' => 'Hapus rumah',
+        'houses.assign' => 'Assign penghuni ke rumah',
+        'due-types.view' => 'Lihat jenis iuran',
+        'due-types.manage' => 'Kelola jenis iuran',
+        'bills.view' => 'Lihat tagihan',
+        'bills.generate' => 'Generate tagihan',
+        'payments.view' => 'Lihat pembayaran',
+        'payments.create' => 'Catat pembayaran',
+        'expenses.view' => 'Lihat pengeluaran',
+        'expenses.create' => 'Catat pengeluaran',
+        'expenses.edit' => 'Ubah pengeluaran',
+        'expenses.delete' => 'Hapus pengeluaran',
+        'reports.view' => 'Lihat laporan',
+        'users.view' => 'Lihat data user',
+        'users.manage' => 'Kelola user',
+    ];
+
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_permissions');
+    }
+
+    public function isSystem(): bool
+    {
+        return array_key_exists($this->name, self::SYSTEM_PERMISSIONS);
+    }
+
+    protected function getIsSystemAttribute(): bool
+    {
+        return $this->isSystem();
     }
 }

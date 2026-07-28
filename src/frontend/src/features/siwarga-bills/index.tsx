@@ -76,6 +76,7 @@ function BillsPageInner() {
     month: search.month ? Number(search.month) : undefined,
     year: search.year ? Number(search.year) : undefined,
     status: search.status,
+    due_type_id: search.due_type_id,
     search: search.search,
     sort: search.sort,
     order: search.order,

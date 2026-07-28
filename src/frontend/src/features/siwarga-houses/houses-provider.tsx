@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
 import type { House } from '@/types/api'
 
-type HousesDialogType = 'create' | 'update' | 'delete' | 'assign'
+type HousesDialogType = 'create' | 'update' | 'delete' | 'assign' | 'vacate'
 
 type HousesContextType = {
   open: HousesDialogType | null

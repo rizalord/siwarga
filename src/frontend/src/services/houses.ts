@@ -18,4 +18,6 @@ export const housesService = {
     api.get<ApiResponse<HouseResident[]>>(`/api/houses/${id}/history`),
   assignResident: (id: number, data: AssignResidentRequest) =>
     api.post<ApiResponse<HouseResident>>(`/api/houses/${id}/assign-resident`, data),
+  vacateResident: (id: number) =>
+    api.post<ApiResponse<null>>(`/api/houses/${id}/vacate-resident`),
 }

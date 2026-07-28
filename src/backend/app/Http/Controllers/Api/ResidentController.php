@@ -19,6 +19,12 @@ class ResidentController extends Controller
                 : $query->where('status', $request->status);
         }
 
+        if ($request->filled('marital_status')) {
+            is_array($request->marital_status)
+                ? $query->whereIn('marital_status', $request->marital_status)
+                : $query->where('marital_status', $request->marital_status);
+        }
+
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('full_name', 'like', "%{$request->search}%")
@@ -33,7 +39,25 @@ class ResidentController extends Controller
 
     public function bulkDestroy(Request $request)
     {
-        return $this->bulkDelete($request, Resident::class);
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $deletableIds = Resident::whereIn('id', $validated['ids'])
+            ->whereDoesntHave('activeHouse')
+            ->pluck('id');
+
+        $deleted = Resident::destroy($deletableIds);
+
+        if ($deleted < count($validated['ids'])) {
+            return response()->json([
+                'data' => null,
+                'message' => "{$deleted} penghuni berhasil dihapus. Sisanya tidak bisa dihapus karena masih ditempatkan di sebuah rumah.",
+            ], 207);
+        }
+
+        return response()->json(['data' => null, 'message' => "{$deleted} penghuni berhasil dihapus"]);
     }
 
     public function store(Request $request)
@@ -81,6 +105,12 @@ class ResidentController extends Controller
 
     public function destroy(Resident $resident)
     {
+        if ($resident->activeHouse()->exists()) {
+            return response()->json([
+                'message' => 'Penghuni tidak bisa dihapus karena masih ditempatkan di sebuah rumah. Kosongkan rumah terlebih dahulu.',
+            ], 422);
+        }
+
         $resident->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);

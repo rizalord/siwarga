@@ -21,14 +21,16 @@ class House extends Model
     {
         return $this->belongsToMany(Resident::class, 'house_residents')
             ->withPivot(['start_date', 'end_date'])
-            ->withTimestamps();
+            ->withTimestamps()
+            ->withTrashed();
     }
 
     public function currentResident()
     {
         return $this->belongsToMany(Resident::class, 'house_residents')
             ->withPivot(['start_date', 'end_date'])
-            ->wherePivotNull('end_date');
+            ->wherePivotNull('end_date')
+            ->withTrashed();
     }
 
     public function houseResidents()

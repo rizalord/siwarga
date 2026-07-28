@@ -9,6 +9,10 @@ const residentsSearchSchema = z.object({
     .array(z.union([z.literal('tetap'), z.literal('kontrak')]))
     .optional()
     .catch([]),
+  marital_status: z
+    .array(z.union([z.literal('menikah'), z.literal('belum_menikah')]))
+    .optional()
+    .catch([]),
   search: z.string().optional().catch(''),
   sort: z.string().optional().catch(undefined),
   order: z.union([z.literal('asc'), z.literal('desc')]).optional().catch(undefined),

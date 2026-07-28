@@ -24,9 +24,11 @@ import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedHousesIndexRouteImport } from './routes/_authenticated/houses/index'
 import { Route as AuthenticatedHousesIdRouteImport } from './routes/_authenticated/houses/$id'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
+import { Route as AuthenticatedPermissionsIndexRouteImport } from './routes/_authenticated/permissions/index'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports/index'
 import { Route as AuthenticatedResidentsIndexRouteImport } from './routes/_authenticated/residents/index'
 import { Route as AuthenticatedResidentsIdRouteImport } from './routes/_authenticated/residents/$id'
+import { Route as AuthenticatedRolesIndexRouteImport } from './routes/_authenticated/roles/index'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -108,6 +110,12 @@ const AuthenticatedPaymentsIndexRoute =
     path: '/payments/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPermissionsIndexRoute =
+  AuthenticatedPermissionsIndexRouteImport.update({
+    id: '/permissions/',
+    path: '/permissions/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedReportsIndexRoute =
   AuthenticatedReportsIndexRouteImport.update({
     id: '/reports/',
@@ -126,6 +134,11 @@ const AuthenticatedResidentsIdRoute =
     path: '/residents/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRolesIndexRoute = AuthenticatedRolesIndexRouteImport.update({
+  id: '/roles/',
+  path: '/roles/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -148,8 +161,10 @@ export interface FileRoutesByFullPath {
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/houses/': typeof AuthenticatedHousesIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
+  '/permissions/': typeof AuthenticatedPermissionsIndexRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/residents/': typeof AuthenticatedResidentsIndexRoute
+  '/roles/': typeof AuthenticatedRolesIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -168,8 +183,10 @@ export interface FileRoutesByTo {
   '/expenses': typeof AuthenticatedExpensesIndexRoute
   '/houses': typeof AuthenticatedHousesIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
+  '/permissions': typeof AuthenticatedPermissionsIndexRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/residents': typeof AuthenticatedResidentsIndexRoute
+  '/roles': typeof AuthenticatedRolesIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
 }
 export interface FileRoutesById {
@@ -190,8 +207,10 @@ export interface FileRoutesById {
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
+  '/_authenticated/permissions/': typeof AuthenticatedPermissionsIndexRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/residents/': typeof AuthenticatedResidentsIndexRoute
+  '/_authenticated/roles/': typeof AuthenticatedRolesIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
 }
 export interface FileRouteTypes {
@@ -212,8 +231,10 @@ export interface FileRouteTypes {
     | '/expenses/'
     | '/houses/'
     | '/payments/'
+    | '/permissions/'
     | '/reports/'
     | '/residents/'
+    | '/roles/'
     | '/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -232,8 +253,10 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/houses'
     | '/payments'
+    | '/permissions'
     | '/reports'
     | '/residents'
+    | '/roles'
     | '/users'
   id:
     | '__root__'
@@ -253,8 +276,10 @@ export interface FileRouteTypes {
     | '/_authenticated/expenses/'
     | '/_authenticated/houses/'
     | '/_authenticated/payments/'
+    | '/_authenticated/permissions/'
     | '/_authenticated/reports/'
     | '/_authenticated/residents/'
+    | '/_authenticated/roles/'
     | '/_authenticated/users/'
   fileRoutesById: FileRoutesById
 }
@@ -375,6 +400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/permissions/': {
+      id: '/_authenticated/permissions/'
+      path: '/permissions'
+      fullPath: '/permissions/'
+      preLoaderRoute: typeof AuthenticatedPermissionsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reports/': {
       id: '/_authenticated/reports/'
       path: '/reports'
@@ -394,6 +426,13 @@ declare module '@tanstack/react-router' {
       path: '/residents/$id'
       fullPath: '/residents/$id'
       preLoaderRoute: typeof AuthenticatedResidentsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/roles/': {
+      id: '/_authenticated/roles/'
+      path: '/roles'
+      fullPath: '/roles/'
+      preLoaderRoute: typeof AuthenticatedRolesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/users/': {
@@ -416,8 +455,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
+  AuthenticatedPermissionsIndexRoute: typeof AuthenticatedPermissionsIndexRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
   AuthenticatedResidentsIndexRoute: typeof AuthenticatedResidentsIndexRoute
+  AuthenticatedRolesIndexRoute: typeof AuthenticatedRolesIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
 }
 
@@ -431,8 +472,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
+  AuthenticatedPermissionsIndexRoute: AuthenticatedPermissionsIndexRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
   AuthenticatedResidentsIndexRoute: AuthenticatedResidentsIndexRoute,
+  AuthenticatedRolesIndexRoute: AuthenticatedRolesIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
 }
 

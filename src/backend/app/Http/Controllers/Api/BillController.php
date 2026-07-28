@@ -32,6 +32,12 @@ class BillController extends Controller
                 : $query->where('status', $request->status);
         }
 
+        if ($request->filled('due_type_id')) {
+            is_array($request->due_type_id)
+                ? $query->whereIn('due_type_id', $request->due_type_id)
+                : $query->where('due_type_id', $request->due_type_id);
+        }
+
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->whereHas('resident', function ($r) use ($request) {
