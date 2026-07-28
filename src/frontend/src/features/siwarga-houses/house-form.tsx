@@ -88,9 +88,8 @@ export function HouseFormDialog({
           </DialogTitle>
           <DialogDescription>
             {isUpdate
-              ? 'Perbarui data rumah di sini.'
-              : 'Tambahkan rumah baru ke dalam sistem.'}
-            Klik simpan setelah selesai.
+              ? 'Perbarui data rumah di sini. Klik simpan setelah selesai.'
+              : 'Tambahkan rumah baru ke dalam sistem. Klik simpan setelah selesai.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

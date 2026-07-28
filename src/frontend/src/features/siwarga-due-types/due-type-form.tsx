@@ -93,9 +93,8 @@ export function DueTypeFormDialog({
           </DialogTitle>
           <DialogDescription>
             {isUpdate
-              ? 'Perbarui data jenis iuran di sini.'
-              : 'Tambahkan jenis iuran baru ke dalam sistem.'}
-            Klik simpan setelah selesai.
+              ? 'Perbarui data jenis iuran di sini. Klik simpan setelah selesai.'
+              : 'Tambahkan jenis iuran baru ke dalam sistem. Klik simpan setelah selesai.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

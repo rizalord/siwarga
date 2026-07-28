@@ -110,9 +110,8 @@ export function ResidentFormDialog({
           </DialogTitle>
           <DialogDescription>
             {isUpdate
-              ? 'Perbarui data penghuni di sini.'
-              : 'Tambahkan penghuni baru ke dalam sistem.'}
-            Klik simpan setelah selesai.
+              ? 'Perbarui data penghuni di sini. Klik simpan setelah selesai.'
+              : 'Tambahkan penghuni baru ke dalam sistem. Klik simpan setelah selesai.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

@@ -130,9 +130,8 @@ export function UserFormDialog({
           </DialogTitle>
           <DialogDescription>
             {isUpdate
-              ? 'Perbarui data pengguna di sini.'
-              : 'Tambahkan pengguna baru ke dalam sistem.'}
-            Klik simpan setelah selesai.
+              ? 'Perbarui data pengguna di sini. Klik simpan setelah selesai.'
+              : 'Tambahkan pengguna baru ke dalam sistem. Klik simpan setelah selesai.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

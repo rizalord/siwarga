@@ -116,9 +116,8 @@ export function ExpenseFormDialog({
           </DialogTitle>
           <DialogDescription>
             {isUpdate
-              ? 'Perbarui data pengeluaran di sini.'
-              : 'Catat pengeluaran baru ke dalam sistem.'}
-            Klik simpan setelah selesai.
+              ? 'Perbarui data pengeluaran di sini. Klik simpan setelah selesai.'
+              : 'Catat pengeluaran baru ke dalam sistem. Klik simpan setelah selesai.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
