@@ -52,8 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('payments', [PaymentController::class, 'index'])->middleware('can:payments.view');
     Route::post('payments', [PaymentController::class, 'store'])->middleware('can:payments.create');
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->middleware('can:payments.view');
-    Route::put('payments/{payment}', [PaymentController::class, 'update']);
-    Route::delete('payments/{payment}', [PaymentController::class, 'destroy']);
+    Route::put('payments/{payment}', [PaymentController::class, 'update'])->middleware('can:payments.view');
+    Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->middleware('can:payments.view');
 
     // Expenses
     Route::get('expenses', [ExpenseController::class, 'index'])->middleware('can:expenses.view');
