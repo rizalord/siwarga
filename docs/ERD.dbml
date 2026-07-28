@@ -12,6 +12,7 @@ Table residents {
   marital_status    enum('menikah', 'belum_menikah') [not null]
   created_at        timestamp
   updated_at        timestamp
+  deleted_at        timestamp     [note: 'soft delete']
 
   Note: 'Data master penghuni. Satu penghuni bisa punya histori tinggal di beberapa rumah (lihat house_residents).'
 }
@@ -23,8 +24,9 @@ Table houses {
   status        enum('dihuni', 'kosong') [not null, default: 'kosong']
   created_at    timestamp
   updated_at    timestamp
+  deleted_at    timestamp     [note: 'soft delete']
 
-  Note: 'Status dihuni/kosong bisa disinkron otomatis dari house_residents (ada relasi aktif atau tidak), disimpan di sini untuk query cepat.'
+  Note: 'Status dihuni/kosong disinkron otomatis dari house_residents (ada relasi aktif atau tidak) lewat model event, disimpan di sini untuk query cepat.'
 }
 
 Table house_residents {
@@ -35,6 +37,7 @@ Table house_residents {
   end_date      date      [note: 'null = masih tinggal / masih aktif sampai sekarang']
   created_at    timestamp
   updated_at    timestamp
+  deleted_at    timestamp [note: 'soft delete']
 
   Note: 'Pivot table + histori. Setiap kali penghuni pindah/keluar, end_date diisi dan baris baru dibuat untuk penghuni berikutnya. Ini yang menjawab kriteria "catatan historical siapa penghuninya".'
 }
@@ -43,9 +46,10 @@ Table due_types {
   id            bigint          [pk, increment]
   name          varchar(50)     [not null, note: 'contoh: Satpam, Kebersihan']
   amount        decimal(12,2)   [not null, note: 'nominal per bulan, contoh 100000 / 15000']
-  billing_cycle enum('bulanan', 'fleksibel') [not null, default: 'bulanan', note: 'satpam biasanya bulanan, kebersihan bisa dibayar tahunan sekaligus']
+  billing_cycle enum('bulanan', 'fleksibel') [not null, default: 'bulanan', note: 'satpam biasanya bulanan, kebersihan (fleksibel) bisa ditagih tahunan sekaligus (12x nominal)']
   created_at    timestamp
   updated_at    timestamp
+  deleted_at    timestamp       [note: 'soft delete']
 
   Note: 'Master jenis iuran. Dibuat sebagai tabel (bukan hardcode) supaya nominal bisa diubah tanpa ubah kode, dan gampang nambah jenis iuran baru di masa depan.'
 }
@@ -56,15 +60,20 @@ Table bills {
   resident_id       bigint        [not null, note: 'penghuni yang wajib bayar pada periode ini']
   due_type_id       bigint        [not null]
   period_start      date          [not null]
-  period_end        date          [not null, note: 'untuk bulanan = period_start + 1 bulan, untuk tahunan = period_start + 1 tahun']
+  period_end        date          [not null, note: 'untuk bulanan = akhir bulan period_start, untuk tahunan (fleksibel) = 31 Des tahun period_start']
   amount_due        decimal(12,2) [not null]
   status            enum('lunas', 'belum_lunas') [not null, default: 'belum_lunas']
   generated_at      timestamp     [note: 'kapan tagihan ini dibuat oleh sistem/RT']
   generated_by      bigint        [note: 'user (admin/bendahara) yang generate tagihan ini']
   created_at        timestamp
   updated_at        timestamp
+  deleted_at        timestamp     [note: 'soft delete']
 
-  Note: 'Tagihan per penghuni per jenis iuran per periode. Untuk 15 rumah tetap dibuat rutin tiap bulan; untuk 5 rumah lainnya hanya dibuat kalau ada penghuni aktif (dicek dari house_residents).'
+  indexes {
+    (house_id, due_type_id, period_start) [unique, name: 'bills_unique']
+  }
+
+  Note: 'Tagihan per penghuni per jenis iuran per periode. Untuk 15 rumah tetap dibuat rutin tiap bulan; untuk 5 rumah lainnya hanya dibuat kalau ada penghuni aktif (dicek dari house_residents). Unique index mencegah generate ganda untuk kombinasi rumah + jenis iuran + periode yang sama.'
 }
 
 Table payments {
@@ -76,6 +85,7 @@ Table payments {
   created_by    bigint        [note: 'user (bendahara/admin) yang input pembayaran ini']
   created_at    timestamp
   updated_at    timestamp
+  deleted_at    timestamp     [note: 'soft delete']
 
   Note: 'Transaksi pembayaran aktual terhadap sebuah tagihan. Dipisah dari bills supaya bisa handle histori pembayaran & cicilan/partial payment jika diperlukan nanti.'
 }
@@ -89,6 +99,7 @@ Table expenses {
   created_by      bigint        [note: 'user (bendahara/admin) yang input pengeluaran ini']
   created_at      timestamp
   updated_at      timestamp
+  deleted_at      timestamp     [note: 'soft delete']
 
   Note: 'Pengeluaran bulanan RT, dipakai untuk laporan saldo pemasukan vs pengeluaran.'
 }
@@ -98,14 +109,17 @@ Table expenses {
 // ============================================================
 
 Table users {
-  id            bigint        [pk, increment]
-  resident_id   bigint        [note: 'opsional, isi kalau user ini juga terdaftar sebagai penghuni (login warga)']
-  name          varchar(150)  [not null]
-  email         varchar(150)  [not null, unique]
-  password      varchar(255)  [not null]
-  is_active     boolean       [not null, default: true]
-  created_at    timestamp
-  updated_at    timestamp
+  id                  bigint        [pk, increment]
+  resident_id         bigint        [note: 'opsional, isi kalau user ini juga terdaftar sebagai penghuni (login warga)']
+  name                varchar(150)  [not null]
+  email               varchar(150)  [not null, unique]
+  email_verified_at   timestamp
+  password            varchar(255)  [not null]
+  is_active           boolean       [not null, default: true]
+  remember_token      varchar(100)
+  created_at          timestamp
+  updated_at          timestamp
+  deleted_at          timestamp     [note: 'soft delete']
 }
 
 Table roles {
@@ -148,6 +162,33 @@ Table user_roles {
 }
 
 // ============================================================
+// Audit Trail
+// ============================================================
+
+Table activity_logs {
+  id            bigint        [pk, increment]
+  user_id       bigint        [note: 'null jika aksi dilakukan sistem / tanpa user teridentifikasi']
+  action        varchar(255)  [not null, note: 'contoh: login, logout, create, update, delete']
+  subject_type  varchar(255)  [note: 'nama model terkait, misal App\\Models\\Bill']
+  subject_id    bigint
+  description   varchar(255)  [not null]
+  changes       json          [note: 'snapshot before/after untuk keperluan audit']
+  ip_address    varchar(45)
+  user_agent    varchar(255)
+  url           varchar(255)
+  created_at    timestamp
+  updated_at    timestamp
+
+  indexes {
+    (subject_type, subject_id)
+    action
+    created_at
+  }
+
+  Note: 'Log aktivitas/audit trail untuk semua aksi penting di aplikasi (login, CRUD, generate tagihan, dsb).'
+}
+
+// ============================================================
 // Relationships
 // ============================================================
 
@@ -170,3 +211,5 @@ Ref: payments.bill_id > bills.id
 Ref: payments.created_by > users.id
 Ref: expenses.created_by > users.id
 Ref: bills.generated_by > users.id
+
+Ref: activity_logs.user_id > users.id

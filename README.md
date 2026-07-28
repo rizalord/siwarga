@@ -1,172 +1,69 @@
-# SIWarga — Sistem Informasi Manajemen Administrasi RT
+<div align="center">
 
-Aplikasi web untuk mengelola administrasi RT: penghuni, rumah, iuran bulanan, pembayaran, pengeluaran, dan laporan keuangan. Dibangun dengan arsitektur **API-first (decoupled)** — backend Laravel dan frontend React SPA terpisah.
+# SIWarga
+### Sistem Informasi Manajemen Administrasi RT
+
+🇮🇩 Bahasa Indonesia&nbsp;&nbsp;|&nbsp;&nbsp;🇬🇧 [English](README.en.md)
+
+</div>
+
+Aplikasi web untuk mengelola administrasi RT: penghuni, rumah, iuran bulanan, pembayaran, pengeluaran, dan laporan keuangan. Dibangun dengan arsitektur **API-first (decoupled)** — backend Laravel dan frontend React SPA yang terpisah sepenuhnya.
 
 ![SIWarga Dashboard](docs/screenshots/dashboard.png)
 
+## Daftar Isi
+
+- [Fitur Utama](#fitur-utama)
+- [Tech Stack](#tech-stack)
+- [Struktur Repository](#struktur-repository)
+- [Instalasi](#instalasi)
+  - [Opsi 1 — Docker (Direkomendasikan)](#opsi-1--docker-direkomendasikan)
+  - [Opsi 2 — Native / Manual (untuk VPS Production)](#opsi-2--native--manual-untuk-vps-production)
+- [Akun Demo](#akun-demo)
+- [API Endpoints](#api-endpoints)
+- [Testing](#testing)
+- [Screenshots](#screenshots)
+- [Lisensi](#lisensi)
+
 ## Fitur Utama
 
-- **Manajemen Penghuni** — CRUD penghuni dengan foto KTP, status kontrak/tetap
-- **Manajemen Rumah** — CRUD rumah, histori penghuni (timeline), assign penghuni
-- **Iuran & Tagihan** — Master jenis iuran, generate tagihan bulanan (idempotent)
-- **Pembayaran** — Catat pembayaran, status tagihan otomatis lunas
-- **Pengeluaran** — Catat pengeluaran operasional RT
-- **Dashboard & Laporan** — Grafik pemasukan vs pengeluaran, laporan bulanan
-- **RBAC** — 3 role: Admin, Bendahara, Warga dengan permission granular
-- **Autentikasi** — Login/Logout via Laravel Sanctum (token-based, refresh token)
+| Modul | Deskripsi |
+|---|---|
+| 👤 **Manajemen Penghuni** | CRUD penghuni dengan foto KTP, status kontrak/tetap, status pernikahan |
+| 🏠 **Manajemen Rumah** | CRUD rumah, histori penghuni (timeline), assign/pindah penghuni |
+| 💵 **Iuran & Tagihan** | Master jenis iuran, generate tagihan bulanan (idempotent), dukungan iuran tahunan |
+| 💳 **Pembayaran** | Catat pembayaran, status tagihan otomatis jadi lunas |
+| 🧾 **Pengeluaran** | Catat pengeluaran operasional RT dengan kategori bebas |
+| 📊 **Dashboard & Laporan** | Grafik pemasukan vs pengeluaran per tahun, laporan detail per bulan |
+| 🔐 **RBAC Granular** | 3 role (Admin, Bendahara, Warga), permission per-aksi, bukan hardcode |
+| 🔑 **Autentikasi** | Login/logout via Laravel Sanctum (token, 24 jam, refresh) |
+| 📝 **Activity Log** | Audit trail untuk aksi-aksi penting di aplikasi |
 
 ## Tech Stack
 
-### Backend
-- **Framework:** Laravel 13.x
-- **Auth:** Laravel Sanctum (token-based, 24h expiry)
-- **Database:** MySQL 8.x
-- **Testing:** PHPUnit (Unit + Feature)
-
-### Frontend
-- **Framework:** React 19 + TypeScript + Vite
-- **UI Kit:** shadcn/ui (shadcn-admin template)
-- **State Management:** Zustand (auth) + TanStack Query (data fetching)
-- **Routing:** TanStack Router
-- **Chart:** Recharts
-- **Forms:** React Hook Form + Zod
-- **Mock API (dev):** MSW (Mock Service Worker)
-
-### Testing
-- **Backend:** PHPUnit (Unit + Feature)
-- **Frontend:** Vitest + React Testing Library (unit/integration)
-- **E2E:** Playwright
-
-## Prerequisites
-
-- PHP 8.3+ dengan ekstensi: `bcmath`, `ctype`, `curl`, `dom`, `fileinfo`, `gd`, `json`, `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip`
-- Composer 2.x
-- Node.js 20+ dan npm/pnpm
-- MySQL 8.x
-- Git
-
-## Instalasi & Setup
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/rizalord/siwarga.git
-cd siwarga
-```
-
-### 2. Backend Setup
-
-```bash
-cd src/backend
-
-# Install dependencies
-composer install
-
-# Copy environment file
-cp .env.example .env
-
-# Generate application key
-php artisan key:generate
-
-# Konfigurasi database di .env (default: MySQL)
-# DB_CONNECTION=mysql
-# DB_HOST=127.0.0.1
-# DB_PORT=3306
-# DB_DATABASE=siwarga
-# DB_USERNAME=root
-# DB_PASSWORD=
-
-# Run migrations & seeders
-php artisan migrate --seed
-
-# Buat symlink storage (wajib agar foto KTP yang diupload bisa diakses publik)
-php artisan storage:link
-
-# Jalankan server development
-php artisan serve
-```
-
-Backend akan berjalan di `http://localhost:8000`.
-
-### 3. Frontend Setup
-
-```bash
-cd src/frontend
-
-# Install dependencies
-npm install
-
-# Copy environment file (opsional, sudah ada .env)
-cp .env.example .env
-
-# Edit .env untuk backend URL:
-# VITE_API_URL=http://localhost:8000
-# VITE_USE_MOCK=false  # Ubah ke false untuk real API
-
-# Jalankan development server
-npm run dev
-```
-
-Frontend akan berjalan di `http://localhost:5173`.
-
-### 4. Akun & Data Demo
-
-`php artisan migrate --seed` otomatis membuat 3 akun (satu per role) dan data demo yang realistis: 20 rumah (15 tetap dihuni, 3 kontrak dihuni, 2 kosong), 18 penghuni, tagihan 3 bulan terakhir (sebagian sudah lunas), serta pengeluaran operasional — supaya dashboard, laporan, dan setiap modul langsung terlihat terisi begitu login pertama kali, tidak perlu input manual dulu.
-
-| Role | Email | Password | Catatan |
-|------|-------|----------|---------|
-| Admin | `admin@siwarga.test` | `password` | Akses penuh |
-| Bendahara | `bendahara@siwarga.test` | `password` | Kelola pembayaran, pengeluaran, laporan |
-| Warga | `warga@siwarga.test` | `password` | Hanya lihat tagihan & pembayaran miliknya sendiri |
-
-## Menjalankan dengan Docker (Opsional)
-
-Selain instalasi native di atas, tersedia juga setup Docker Compose untuk development dan production. Backend dan frontend masing-masing punya image sendiri (`Dockerfile` untuk dev, `Dockerfile.prd` untuk production), dan satu file `.env` di root project mengonfigurasi semuanya.
-
-> Catatan: setup native di atas tetap jadi acuan utama untuk kriteria "tanpa Docker" pada skill test ini. Docker Compose ini disediakan sebagai kenyamanan tambahan untuk pemakaian sehari-hari (termasuk sebagai aplikasi produksi di perumahan penulis).
-
-### Development
-
-Source code di-mount ke dalam container, jadi perubahan kode langsung ke-reload (Vite HMR di frontend, PHP re-interpret setiap request di backend) tanpa rebuild image.
-
-```bash
-cp .env.example .env   # sesuaikan bila perlu
-
-docker compose up --build
-```
-
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:5173`
-- MySQL: `localhost:3306`
-
-Migration jalan otomatis saat container backend start. Seed data (akun demo, dsb.) perlu dijalankan sekali secara manual:
-
-```bash
-docker compose exec backend php artisan db:seed
-```
-
-### Production
-
-Image production berisi build teroptimasi: backend jadi satu image php-fpm + nginx (tanpa bind mount), frontend di-build jadi static asset lalu di-serve nginx.
-
-```bash
-cp .env.example .env
-# Wajib set APP_KEY untuk production:
-docker compose run --rm backend php artisan key:generate --show
-# tempel hasilnya ke APP_KEY= di .env, lalu:
-
-docker compose -f docker-compose.prd.yml up --build -d
-```
-
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:8080`
-
-`VITE_API_URL`/`VITE_USE_MOCK` di-bake ke frontend saat build image (build arg) — kalau nilainya berubah, rebuild ulang frontend: `docker compose -f docker-compose.prd.yml build frontend`.
+| Layer | Teknologi |
+|---|---|
+| Backend | Laravel 13.x, PHP 8.3 |
+| Auth | Laravel Sanctum (token-based) |
+| Database | MySQL 8.x |
+| Testing backend | PHPUnit (Unit + Feature) |
+| Frontend | React 19 + TypeScript + Vite |
+| UI Kit | shadcn/ui (template shadcn-admin) |
+| State/Data | Zustand (auth) + TanStack Query (server state) |
+| Routing | TanStack Router |
+| Chart | Recharts |
+| Form | React Hook Form + Zod |
+| Mock API (dev) | MSW (Mock Service Worker) |
+| Testing frontend | Vitest + React Testing Library |
+| E2E | Playwright |
 
 ## Struktur Repository
 
 ```
 siwarga/
+├── docker-compose.yml           # Stack development (Docker)
+├── docker-compose.prd.yml       # Stack production (Docker)
+├── .env.example                 # Env untuk kedua docker-compose di atas
 ├── src/
 │   ├── backend/                 # Laravel API
 │   │   ├── app/
@@ -174,154 +71,400 @@ siwarga/
 │   │   │   ├── Http/Resources/         # API Resources
 │   │   │   ├── Models/                 # Eloquent Models
 │   │   │   ├── Policies/               # Authorization Policies
-│   │   │   └── Services/               # Business Logic
+│   │   │   └── Services/               # Business logic (generate tagihan, laporan, dsb.)
 │   │   ├── database/
-│   │   │   ├── migrations/             # Schema migrations
-│   │   │   └── seeders/                # Default data (roles, permissions)
-│   │   ├── routes/
-│   │   │   └── api.php                 # All API routes
-│   │   └── tests/
-│   │       ├── Feature/Api/            # Feature tests
-│   │       └── Unit/                   # Unit tests
+│   │   │   ├── migrations/
+│   │   │   └── seeders/
+│   │   ├── routes/api.php
+│   │   ├── tests/{Feature,Unit}/
+│   │   ├── Dockerfile                  # Image development
+│   │   └── Dockerfile.prd              # Image production
 │   └── frontend/                 # React SPA (shadcn-admin)
-│       ├── e2e/                         # Playwright E2E tests
+│       ├── e2e/                        # Playwright specs
 │       ├── src/
-│       │   ├── features/                # Feature modules (residents, houses, bills, etc.)
-│       │   ├── hooks/                   # TanStack Query hooks
-│       │   ├── services/                # API client layer
-│       │   ├── mocks/                   # MSW mock handlers
-│       │   ├── routes/                  # TanStack Router routes
-│       │   ├── stores/                  # Zustand stores
-│       │   └── types/                   # TypeScript API contracts
-│       └── tests/                       # Vitest tests
-├── docs/
-│   ├── PRD.md                          # Product Requirements Document
-│   ├── siwarga-erd.dbml                # ERD diagram
-│   └── superpowers/                    # Design & implementation plans
-└── README.md
+│       │   ├── features/               # Modul per domain (residents, houses, bills, dst.)
+│       │   ├── hooks/                  # TanStack Query hooks
+│       │   ├── services/               # API client layer
+│       │   ├── mocks/                  # MSW handlers
+│       │   ├── routes/                 # TanStack Router
+│       │   └── stores/                 # Zustand
+│       ├── Dockerfile                  # Image development
+│       └── Dockerfile.prd              # Image production
+└── docs/
+    ├── PRD.md
+    └── ERD.dbml
 ```
 
-## API Endpoints Summary
+## Instalasi
 
-### Authentication (Public)
+Ada dua cara menjalankan SIWarga. **Docker direkomendasikan** untuk kebanyakan kasus karena tidak perlu install PHP/MySQL/Node langsung di mesin. Panduan native cocok untuk deploy langsung ke VPS tanpa Docker.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/login` | Login → token (24h) + user |
+### Opsi 1 — Docker (Direkomendasikan)
 
-### Protected (auth:sanctum)
+**Prasyarat:** [Docker Engine](https://docs.docker.com/engine/install/) & Docker Compose v2.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/logout` | Revoke current token |
-| POST | `/api/auth/refresh` | Refresh token |
-| GET | `/api/auth/me` | Current user + permissions |
-| GET/POST/PUT/DELETE | `/api/residents` | CRUD penghuni |
-| GET/POST/PUT/DELETE | `/api/houses` | CRUD rumah |
-| GET | `/api/houses/{id}/history` | Histori penghuni |
-| POST | `/api/houses/{id}/assign-resident` | Assign penghuni ke rumah |
-| GET/POST/PUT/DELETE | `/api/due-types` | CRUD jenis iuran |
-| GET/POST/DELETE | `/api/bills` | List, generate, delete tagihan |
-| GET/POST/DELETE | `/api/payments` | List, create, delete pembayaran |
-| GET/POST/PUT/DELETE | `/api/expenses` | CRUD pengeluaran |
-| GET | `/api/reports/summary/{year}` | Ringkasan tahunan |
-| GET | `/api/reports/monthly/{year}/{month}` | Laporan bulanan |
-| GET/POST/PUT/DELETE | `/api/users` | CRUD user (Admin only) |
+#### Development
 
-## Testing
-
-### Backend (PHPUnit)
+Source code di-mount ke dalam container, jadi perubahan kode langsung ter-reload (Vite HMR di frontend, PHP re-interpret setiap request di backend) tanpa rebuild image.
 
 ```bash
-cd src/backend
-php artisan test
+git clone https://github.com/rizalord/siwarga.git
+cd siwarga
+
+cp .env.example .env
+# generate APP_KEY dulu (opsional untuk dev, tapi disarankan):
+docker compose run --rm backend php artisan key:generate --show
+# tempel hasilnya ke APP_KEY= di .env
+
+docker compose up --build
 ```
 
-### Frontend (Vitest)
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| MySQL | localhost:3306 |
+
+Migration jalan otomatis saat container backend start. Jalankan seed data demo sekali secara manual:
 
 ```bash
-cd src/frontend
-npm run test          # Run all tests
-npm run test:watch    # Watch mode
-npm run test:coverage # Coverage report
+docker compose exec backend php artisan db:seed
 ```
 
-### E2E (Playwright)
+#### Production
+
+Image production membangun backend jadi satu image php-fpm + nginx yang teroptimasi, dan frontend jadi static asset yang di-serve nginx — tidak ada bind mount, semuanya sudah di-bake ke image saat build.
 
 ```bash
-cd src/frontend
+cp .env.example .env
+# APP_KEY WAJIB di-set untuk production:
+docker compose run --rm backend php artisan key:generate --show
+# tempel hasilnya ke APP_KEY= di .env, lalu sesuaikan kredensial DB & domain
 
-# Install Playwright browsers (once)
-npx playwright install
-
-# Run E2E tests (backend & frontend harus running)
-npx playwright test
-
-# Run specific test
-npx playwright test e2e/siwarga/auth.spec.ts
+docker compose -f docker-compose.prd.yml up --build -d
 ```
 
-## Screenshots
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| Backend API | http://localhost:8000 |
 
-> 📸 Screenshot setiap fitur akan ditambahkan di folder `docs/screenshots/`.
+> `VITE_API_URL` dan `VITE_USE_MOCK` di-bake ke bundle frontend saat **build image** (build arg), bukan saat runtime. Kalau nilainya berubah (misal ganti domain API), rebuild ulang: `docker compose -f docker-compose.prd.yml build frontend`.
 
-- [Dashboard](docs/screenshots/dashboard.png)
-- [Daftar Penghuni](docs/screenshots/residents.png)
-- [Daftar Rumah](docs/screenshots/houses.png)
-- [Detail Rumah + Histori](docs/screenshots/house-detail.png)
-- [Tagihan](docs/screenshots/bills.png)
-- [Pembayaran](docs/screenshots/payments.png)
-- [Pengeluaran](docs/screenshots/expenses.png)
-- [Manajemen User](docs/screenshots/users.png)
+Perintah operasional yang umum dipakai:
 
-## Development Notes
+```bash
+# Lihat log
+docker compose -f docker-compose.prd.yml logs -f backend
 
-### Environment Variables
+# Jalankan artisan command
+docker compose -f docker-compose.prd.yml exec backend php artisan migrate --force
 
-**Backend (`.env`)**
+# Seed data awal (sekali saja)
+docker compose -f docker-compose.prd.yml exec backend php artisan db:seed --force
+```
+
+---
+
+### Opsi 2 — Native / Manual (untuk VPS Production)
+
+Panduan ini untuk deploy langsung di server (VPS) tanpa Docker: PHP-FPM + Nginx + MySQL native. Setiap langkah runtut dari server kosong sampai aplikasi bisa diakses. Contoh di bawah pakai Ubuntu 22.04/24.04; sesuaikan nama package kalau pakai distro lain.
+
+> Untuk development di laptop sendiri, ikuti langkah 1–7 lalu jalankan `php artisan serve` & `npm run dev` langsung (lewati bagian Nginx/systemd) — lihat catatan di setiap langkah.
+
+#### 1. Update sistem & install dependency dasar
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl git unzip software-properties-common
+```
+
+#### 2. Install PHP 8.3 + ekstensi yang dibutuhkan
+
+```bash
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+sudo apt install -y php8.3 php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring \
+    php8.3-xml php8.3-bcmath php8.3-curl php8.3-zip php8.3-gd php8.3-tokenizer
+
+php -v   # pastikan PHP 8.3.x
+```
+
+#### 3. Install Composer
+
+```bash
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+composer --version
+```
+
+#### 4. Install Node.js 20+ & npm
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v && npm -v
+```
+
+#### 5. Install & setup MySQL 8
+
+```bash
+sudo apt install -y mysql-server
+sudo mysql_secure_installation
+
+sudo mysql -u root -p
+```
+
+Di dalam prompt MySQL:
+
+```sql
+CREATE DATABASE siwarga CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'siwarga'@'localhost' IDENTIFIED BY 'GANTI_DENGAN_PASSWORD_KUAT';
+GRANT ALL PRIVILEGES ON siwarga.* TO 'siwarga'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+#### 6. Install Nginx
+
+```bash
+sudo apt install -y nginx
+```
+
+#### 7. Clone repository & setup backend
+
+```bash
+sudo mkdir -p /var/www/siwarga
+sudo chown $USER:$USER /var/www/siwarga
+git clone https://github.com/rizalord/siwarga.git /var/www/siwarga
+cd /var/www/siwarga/src/backend
+
+composer install --no-dev --optimize-autoloader
+
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit `.env`, sesuaikan minimal bagian berikut:
+
 ```ini
-APP_URL=http://localhost:8000
+APP_NAME=SIWarga
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.domain-anda.com
+
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=siwarga
-DB_USERNAME=root
-DB_PASSWORD=
+DB_USERNAME=siwarga
+DB_PASSWORD=GANTI_DENGAN_PASSWORD_KUAT
 ```
 
-**Frontend (`.env`)**
-```ini
-VITE_API_URL=http://localhost:8000
-VITE_USE_MOCK=false   # true = MSW mock, false = real API
-```
+> Untuk development lokal (bukan VPS): cukup set `APP_ENV=local`, `APP_DEBUG=true`, `APP_URL=http://localhost:8000`, lalu lewati langkah 8–9 dan langsung jalankan `php artisan serve` di akhir langkah ini.
 
-### Mock API Development
-
-Jika backend belum siap, frontend bisa dijalankan dengan MSW mock:
+Lanjutkan setup:
 
 ```bash
-cd src/frontend
-VITE_USE_MOCK=true npm run dev
+php artisan migrate --seed
+php artisan storage:link
+
+# Cache config/route untuk production (skip untuk development)
+php artisan config:cache
+php artisan route:cache
+
+# Permission agar Nginx/PHP-FPM bisa menulis storage & cache
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
 ```
 
-Semua API akan di-mock dengan data dummy.
+#### 8. Konfigurasi PHP-FPM pool (opsional, disesuaikan kapasitas server)
 
-## Deployment
+Pool default `www` biasanya sudah cukup untuk skala RT (puluhan rumah). Kalau perlu isolasi user, buat pool baru di `/etc/php/8.3/fpm/pool.d/siwarga.conf` mengikuti contoh pool `www.conf`, lalu:
 
-Aplikasi siap dideploy secara **native (tanpa Docker)** sesuai ketentuan skill test:
+```bash
+sudo systemctl restart php8.3-fpm
+```
 
-1. Setup backend di server (PHP 8.3 + MySQL) — ikuti langkah Backend Setup di atas
-2. Build frontend: `npm run build` → hasil di `dist/`
-3. Serve frontend dengan web server (Nginx/Apache) atau gunakan Vite preview
+#### 9. Konfigurasi Nginx untuk backend (API)
+
+Buat `/etc/nginx/sites-available/siwarga-api`:
+
+```nginx
+server {
+    listen 80;
+    server_name api.domain-anda.com;
+    root /var/www/siwarga/src/backend/public;
+    index index.php;
+
+    client_max_body_size 20m;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
+
+Aktifkan:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/siwarga-api /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### 10. Build & deploy frontend
+
+```bash
+cd /var/www/siwarga/src/frontend
+npm install
+
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```ini
+VITE_API_URL=https://api.domain-anda.com
+VITE_USE_MOCK=false
+```
+
+Build untuk production:
+
+```bash
+npm run build   # hasil static di ./dist
+```
+
+> Untuk development lokal: lewati `npm run build`, cukup jalankan `npm run dev` — otomatis membuka dev server dengan hot reload di `http://localhost:5173`.
+
+Buat `/etc/nginx/sites-available/siwarga-app`:
+
+```nginx
+server {
+    listen 80;
+    server_name app.domain-anda.com;
+    root /var/www/siwarga/src/frontend/dist;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(?:css|js|svg|png|jpg|jpeg|gif|ico|woff2?)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+Aktifkan:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/siwarga-app /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### 11. HTTPS dengan Let's Encrypt (sangat disarankan untuk production)
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d api.domain-anda.com -d app.domain-anda.com
+```
+
+Certbot otomatis mengubah konfigurasi Nginx di atas untuk redirect ke HTTPS dan setup auto-renewal.
+
+#### 12. Selesai — verifikasi
+
+```bash
+curl -I https://api.domain-anda.com/api/auth/login
+```
+
+Buka `https://app.domain-anda.com` di browser dan login dengan [akun demo](#akun-demo) (segera ganti password setelah login pertama untuk penggunaan production).
+
+## Akun Demo
+
+Seeder (`php artisan migrate --seed` atau `db:seed`) otomatis membuat 3 akun (satu per role) beserta data demo yang realistis: 20 rumah (15 tetap dihuni, 3 kontrak dihuni, 2 kosong), 18 penghuni, tagihan 3 bulan terakhir (sebagian sudah lunas), serta pengeluaran operasional.
+
+| Role | Email | Password | Akses |
+|---|---|---|---|
+| Admin | `admin@siwarga.test` | `password` | Akses penuh |
+| Bendahara | `bendahara@siwarga.test` | `password` | Kelola pembayaran, pengeluaran, laporan |
+| Warga | `warga@siwarga.test` | `password` | Hanya lihat tagihan & pembayaran miliknya sendiri |
+
+## API Endpoints
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| POST | `/api/auth/login` | Login → token (24 jam) + user + permissions |
+| POST | `/api/auth/logout` | Revoke token aktif |
+| POST | `/api/auth/refresh` | Refresh token |
+| GET | `/api/auth/me` | User saat ini + permissions |
+| `GET/POST/PUT/DELETE` | `/api/residents` | CRUD penghuni |
+| `GET/POST/PUT/DELETE` | `/api/houses` | CRUD rumah |
+| GET | `/api/houses/{id}/history` | Histori penghuni rumah |
+| POST | `/api/houses/{id}/assign-resident` | Assign penghuni ke rumah |
+| POST | `/api/houses/{id}/vacate-resident` | Kosongkan rumah (tutup histori hunian) |
+| `GET/POST/PUT/DELETE` | `/api/due-types` | CRUD jenis iuran |
+| `GET/POST/DELETE` | `/api/bills` | List, generate, hapus tagihan |
+| `GET/POST/PUT/DELETE` | `/api/payments` | List, catat, hapus pembayaran |
+| `GET/POST/PUT/DELETE` | `/api/expenses` | CRUD pengeluaran |
+| GET | `/api/reports/summary/{year}` | Ringkasan grafik tahunan + saldo |
+| GET | `/api/reports/monthly/{year}/{month}` | Laporan detail bulanan |
+| `GET/POST/PUT/DELETE` | `/api/users` | CRUD user (Admin only) |
+| `GET/POST/PUT/DELETE` | `/api/roles`, `/api/permissions` | Kelola role & permission (Admin only) |
+| GET | `/api/activity-logs` | Audit trail |
+
+## Testing
+
+```bash
+# Backend (PHPUnit)
+cd src/backend
+php artisan test
+
+# Frontend (Vitest)
+cd src/frontend
+npm run test              # sekali jalan
+npm run test:watch        # watch mode
+npm run test:coverage     # dengan coverage report
+
+# E2E (Playwright) — backend & frontend harus jalan
+npx playwright install    # sekali saja
+npx playwright test
+npx playwright test e2e/siwarga/auth.spec.ts   # satu spec saja
+```
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) Dashboard | ![Penghuni](docs/screenshots/residents.png) Daftar Penghuni |
+| ![Rumah](docs/screenshots/houses.png) Daftar Rumah | ![Histori Rumah](docs/screenshots/house-detail.png) Detail Rumah + Histori |
+| ![Tagihan](docs/screenshots/bills.png) Tagihan | ![Pembayaran](docs/screenshots/payments.png) Pembayaran |
+| ![Pengeluaran](docs/screenshots/expenses.png) Pengeluaran | ![User](docs/screenshots/users.png) Manajemen User |
 
 ## Lisensi
 
-Proyek ini dibuat untuk keperluan **Skill Fit Test — PT Beon Intermedia (JagoanHosting)** dan juga sebagai aplikasi produksi untuk perumahan pribadi.
-
-## Kontribusi
-
-Untuk laporan bug atau saran fitur, silakan buka issue di repository.
+Proyek ini dibuat untuk keperluan **Skill Fit Test — PT Beon Intermedia (JagoanHosting)**, dan dilanjutkan sebagai aplikasi produksi untuk perumahan pribadi penulis.
 
 ---
 
+<div align="center">
+
 **Dibuat dengan ❤️ oleh Ahmad Rizal Khamdani**
+
+</div>

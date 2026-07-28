@@ -1,0 +1,470 @@
+<div align="center">
+
+# SIWarga
+### Neighborhood Association (RT) Administration System
+
+🇮🇩 [Bahasa Indonesia](README.md)&nbsp;&nbsp;|&nbsp;&nbsp;🇬🇧 English
+
+</div>
+
+A web application for managing RT (Indonesian neighborhood association) administration: residents, houses, monthly dues, payments, expenses, and financial reports. Built with an **API-first (decoupled)** architecture — a Laravel API backend and a React SPA frontend, fully independent of each other.
+
+![SIWarga Dashboard](docs/screenshots/dashboard.png)
+
+## Table of Contents
+
+- [Key Features](#key-features)
+- [Tech Stack](#tech-stack)
+- [Repository Structure](#repository-structure)
+- [Installation](#installation)
+  - [Option 1 — Docker (Recommended)](#option-1--docker-recommended)
+  - [Option 2 — Native / Manual (for VPS Production)](#option-2--native--manual-for-vps-production)
+- [Demo Accounts](#demo-accounts)
+- [API Endpoints](#api-endpoints)
+- [Testing](#testing)
+- [Screenshots](#screenshots)
+- [License](#license)
+
+## Key Features
+
+| Module | Description |
+|---|---|
+| 👤 **Resident Management** | CRUD residents with ID photo, contract/permanent status, marital status |
+| 🏠 **House Management** | CRUD houses, resident history (timeline), assign/transfer residents |
+| 💵 **Dues & Bills** | Due-type master data, monthly bill generation (idempotent), annual due support |
+| 💳 **Payments** | Record payments against bills, bill status auto-updates to paid |
+| 🧾 **Expenses** | Record RT operational expenses with free-form categories |
+| 📊 **Dashboard & Reports** | Yearly income vs. expense chart, monthly detail report |
+| 🔐 **Granular RBAC** | 3 roles (Admin, Treasurer, Resident), per-action permissions, not hardcoded |
+| 🔑 **Authentication** | Login/logout via Laravel Sanctum (token-based, 24h expiry, refresh) |
+| 📝 **Activity Log** | Audit trail for important actions across the application |
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 13.x, PHP 8.3 |
+| Auth | Laravel Sanctum (token-based) |
+| Database | MySQL 8.x |
+| Backend testing | PHPUnit (Unit + Feature) |
+| Frontend | React 19 + TypeScript + Vite |
+| UI Kit | shadcn/ui (shadcn-admin template) |
+| State/Data | Zustand (auth) + TanStack Query (server state) |
+| Routing | TanStack Router |
+| Charts | Recharts |
+| Forms | React Hook Form + Zod |
+| Mock API (dev) | MSW (Mock Service Worker) |
+| Frontend testing | Vitest + React Testing Library |
+| E2E | Playwright |
+
+## Repository Structure
+
+```
+siwarga/
+├── docker-compose.yml           # Development stack (Docker)
+├── docker-compose.prd.yml       # Production stack (Docker)
+├── .env.example                 # Env for both docker-compose files above
+├── src/
+│   ├── backend/                 # Laravel API
+│   │   ├── app/
+│   │   │   ├── Http/Controllers/Api/   # API Controllers
+│   │   │   ├── Http/Resources/         # API Resources
+│   │   │   ├── Models/                 # Eloquent Models
+│   │   │   ├── Policies/               # Authorization Policies
+│   │   │   └── Services/               # Business logic (bill generation, reports, etc.)
+│   │   ├── database/
+│   │   │   ├── migrations/
+│   │   │   └── seeders/
+│   │   ├── routes/api.php
+│   │   ├── tests/{Feature,Unit}/
+│   │   ├── Dockerfile                  # Development image
+│   │   └── Dockerfile.prd              # Production image
+│   └── frontend/                 # React SPA (shadcn-admin)
+│       ├── e2e/                        # Playwright specs
+│       ├── src/
+│       │   ├── features/               # Per-domain modules (residents, houses, bills, etc.)
+│       │   ├── hooks/                  # TanStack Query hooks
+│       │   ├── services/               # API client layer
+│       │   ├── mocks/                  # MSW handlers
+│       │   ├── routes/                 # TanStack Router
+│       │   └── stores/                 # Zustand
+│       ├── Dockerfile                  # Development image
+│       └── Dockerfile.prd              # Production image
+└── docs/
+    ├── PRD.md
+    └── ERD.dbml
+```
+
+## Installation
+
+There are two ways to run SIWarga. **Docker is recommended** for most cases since it doesn't require installing PHP/MySQL/Node directly on your machine. The native guide is for deploying straight to a VPS without Docker.
+
+### Option 1 — Docker (Recommended)
+
+**Prerequisites:** [Docker Engine](https://docs.docker.com/engine/install/) & Docker Compose v2.
+
+#### Development
+
+Source code is bind-mounted into the containers, so code changes are reflected live (Vite HMR on the frontend, PHP re-interprets every request on the backend) without rebuilding the image.
+
+```bash
+git clone https://github.com/rizalord/siwarga.git
+cd siwarga
+
+cp .env.example .env
+# generate an APP_KEY first (optional for dev, but recommended):
+docker compose run --rm backend php artisan key:generate --show
+# paste the result into APP_KEY= in .env
+
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| MySQL | localhost:3306 |
+
+Migrations run automatically when the backend container starts. Seed demo data once, manually:
+
+```bash
+docker compose exec backend php artisan db:seed
+```
+
+#### Production
+
+The production images build the backend into a single optimized php-fpm + nginx image, and the frontend into a static bundle served by nginx — no bind mounts, everything is baked into the image at build time.
+
+```bash
+cp .env.example .env
+# APP_KEY MUST be set for production:
+docker compose run --rm backend php artisan key:generate --show
+# paste the result into APP_KEY= in .env, then adjust DB credentials & domain
+
+docker compose -f docker-compose.prd.yml up --build -d
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| Backend API | http://localhost:8000 |
+
+> `VITE_API_URL` and `VITE_USE_MOCK` are baked into the frontend bundle at **image build time** (build arg), not at runtime. If the value changes (e.g. a different API domain), rebuild: `docker compose -f docker-compose.prd.yml build frontend`.
+
+Common operational commands:
+
+```bash
+# Tail logs
+docker compose -f docker-compose.prd.yml logs -f backend
+
+# Run an artisan command
+docker compose -f docker-compose.prd.yml exec backend php artisan migrate --force
+
+# Seed initial data (once)
+docker compose -f docker-compose.prd.yml exec backend php artisan db:seed --force
+```
+
+---
+
+### Option 2 — Native / Manual (for VPS Production)
+
+This guide deploys directly on a server (VPS) without Docker: native PHP-FPM + Nginx + MySQL. Every step is sequential, from a clean server to a reachable application. Examples below use Ubuntu 22.04/24.04; adjust package names for other distros.
+
+> For local development on your own machine, follow steps 1–7, then run `php artisan serve` & `npm run dev` directly (skip the Nginx/systemd parts) — see the notes inline.
+
+#### 1. Update the system & install base dependencies
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl git unzip software-properties-common
+```
+
+#### 2. Install PHP 8.3 + required extensions
+
+```bash
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+sudo apt install -y php8.3 php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring \
+    php8.3-xml php8.3-bcmath php8.3-curl php8.3-zip php8.3-gd php8.3-tokenizer
+
+php -v   # confirm PHP 8.3.x
+```
+
+#### 3. Install Composer
+
+```bash
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+composer --version
+```
+
+#### 4. Install Node.js 20+ & npm
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v && npm -v
+```
+
+#### 5. Install & set up MySQL 8
+
+```bash
+sudo apt install -y mysql-server
+sudo mysql_secure_installation
+
+sudo mysql -u root -p
+```
+
+Inside the MySQL prompt:
+
+```sql
+CREATE DATABASE siwarga CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'siwarga'@'localhost' IDENTIFIED BY 'REPLACE_WITH_A_STRONG_PASSWORD';
+GRANT ALL PRIVILEGES ON siwarga.* TO 'siwarga'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+#### 6. Install Nginx
+
+```bash
+sudo apt install -y nginx
+```
+
+#### 7. Clone the repository & set up the backend
+
+```bash
+sudo mkdir -p /var/www/siwarga
+sudo chown $USER:$USER /var/www/siwarga
+git clone https://github.com/rizalord/siwarga.git /var/www/siwarga
+cd /var/www/siwarga/src/backend
+
+composer install --no-dev --optimize-autoloader
+
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit `.env`, adjusting at least the following:
+
+```ini
+APP_NAME=SIWarga
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.your-domain.com
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=siwarga
+DB_USERNAME=siwarga
+DB_PASSWORD=REPLACE_WITH_A_STRONG_PASSWORD
+```
+
+> For local development (not a VPS): just set `APP_ENV=local`, `APP_DEBUG=true`, `APP_URL=http://localhost:8000`, skip steps 8–9, and run `php artisan serve` right after this step.
+
+Continue setup:
+
+```bash
+php artisan migrate --seed
+php artisan storage:link
+
+# Cache config/routes for production (skip for development)
+php artisan config:cache
+php artisan route:cache
+
+# Permissions so Nginx/PHP-FPM can write to storage & cache
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
+```
+
+#### 8. Configure the PHP-FPM pool (optional, adjust to server capacity)
+
+The default `www` pool is usually enough for RT-scale usage (a few dozen houses). If you need user isolation, create a new pool at `/etc/php/8.3/fpm/pool.d/siwarga.conf` following the `www.conf` example, then:
+
+```bash
+sudo systemctl restart php8.3-fpm
+```
+
+#### 9. Configure Nginx for the backend (API)
+
+Create `/etc/nginx/sites-available/siwarga-api`:
+
+```nginx
+server {
+    listen 80;
+    server_name api.your-domain.com;
+    root /var/www/siwarga/src/backend/public;
+    index index.php;
+
+    client_max_body_size 20m;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
+
+Enable it:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/siwarga-api /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### 10. Build & deploy the frontend
+
+```bash
+cd /var/www/siwarga/src/frontend
+npm install
+
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```ini
+VITE_API_URL=https://api.your-domain.com
+VITE_USE_MOCK=false
+```
+
+Build for production:
+
+```bash
+npm run build   # static output in ./dist
+```
+
+> For local development: skip `npm run build` and just run `npm run dev` — it starts a dev server with hot reload at `http://localhost:5173`.
+
+Create `/etc/nginx/sites-available/siwarga-app`:
+
+```nginx
+server {
+    listen 80;
+    server_name app.your-domain.com;
+    root /var/www/siwarga/src/frontend/dist;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(?:css|js|svg|png|jpg|jpeg|gif|ico|woff2?)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+Enable it:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/siwarga-app /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### 11. HTTPS with Let's Encrypt (strongly recommended for production)
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d api.your-domain.com -d app.your-domain.com
+```
+
+Certbot automatically updates the Nginx configs above to redirect to HTTPS and sets up auto-renewal.
+
+#### 12. Done — verify
+
+```bash
+curl -I https://api.your-domain.com/api/auth/login
+```
+
+Open `https://app.your-domain.com` in a browser and log in with a [demo account](#demo-accounts) (change the password right after first login for production use).
+
+## Demo Accounts
+
+The seeder (`php artisan migrate --seed` or `db:seed`) automatically creates 3 accounts (one per role) plus realistic demo data: 20 houses (15 permanently occupied, 3 occupied on contract, 2 vacant), 18 residents, bills for the last 3 months (some already paid), and operational expenses.
+
+| Role | Email | Password | Access |
+|---|---|---|---|
+| Admin | `admin@siwarga.test` | `password` | Full access |
+| Treasurer (Bendahara) | `bendahara@siwarga.test` | `password` | Manage payments, expenses, reports |
+| Resident (Warga) | `warga@siwarga.test` | `password` | View only their own bills & payments |
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/login` | Login → token (24h) + user + permissions |
+| POST | `/api/auth/logout` | Revoke the active token |
+| POST | `/api/auth/refresh` | Refresh the token |
+| GET | `/api/auth/me` | Current user + permissions |
+| `GET/POST/PUT/DELETE` | `/api/residents` | Resident CRUD |
+| `GET/POST/PUT/DELETE` | `/api/houses` | House CRUD |
+| GET | `/api/houses/{id}/history` | House resident history |
+| POST | `/api/houses/{id}/assign-resident` | Assign a resident to a house |
+| POST | `/api/houses/{id}/vacate-resident` | Vacate a house (close residency history) |
+| `GET/POST/PUT/DELETE` | `/api/due-types` | Due-type CRUD |
+| `GET/POST/DELETE` | `/api/bills` | List, generate, delete bills |
+| `GET/POST/PUT/DELETE` | `/api/payments` | List, record, delete payments |
+| `GET/POST/PUT/DELETE` | `/api/expenses` | Expense CRUD |
+| GET | `/api/reports/summary/{year}` | Yearly chart summary + balance |
+| GET | `/api/reports/monthly/{year}/{month}` | Monthly detail report |
+| `GET/POST/PUT/DELETE` | `/api/users` | User CRUD (Admin only) |
+| `GET/POST/PUT/DELETE` | `/api/roles`, `/api/permissions` | Manage roles & permissions (Admin only) |
+| GET | `/api/activity-logs` | Audit trail |
+
+## Testing
+
+```bash
+# Backend (PHPUnit)
+cd src/backend
+php artisan test
+
+# Frontend (Vitest)
+cd src/frontend
+npm run test              # single run
+npm run test:watch        # watch mode
+npm run test:coverage     # with coverage report
+
+# E2E (Playwright) — backend & frontend must be running
+npx playwright install    # once
+npx playwright test
+npx playwright test e2e/siwarga/auth.spec.ts   # single spec
+```
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) Dashboard | ![Residents](docs/screenshots/residents.png) Resident List |
+| ![Houses](docs/screenshots/houses.png) House List | ![House History](docs/screenshots/house-detail.png) House Detail + History |
+| ![Bills](docs/screenshots/bills.png) Bills | ![Payments](docs/screenshots/payments.png) Payments |
+| ![Expenses](docs/screenshots/expenses.png) Expenses | ![Users](docs/screenshots/users.png) User Management |
+
+## License
+
+This project was built for the **Skill Fit Test — PT Beon Intermedia (JagoanHosting)**, and continues as a production application for the author's own housing complex.
+
+---
+
+<div align="center">
+
+**Built with ❤️ by Ahmad Rizal Khamdani**
+
+</div>
