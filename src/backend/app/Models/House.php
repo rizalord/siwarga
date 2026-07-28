@@ -35,4 +35,21 @@ class House extends Model
     {
         return $this->hasMany(HouseResident::class);
     }
+
+    protected static function booted(): void
+    {
+        static::saved(function (House $house) {
+            $hasActiveResident = $house->houseResidents()
+                ->whereNull('end_date')
+                ->exists();
+
+            $correctStatus = $hasActiveResident ? 'dihuni' : 'kosong';
+
+            if ($house->status !== $correctStatus) {
+                House::withoutEvents(function () use ($house, $correctStatus) {
+                    $house->updateQuietly(['status' => $correctStatus]);
+                });
+            }
+        });
+    }
 }
