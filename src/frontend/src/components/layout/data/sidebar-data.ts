@@ -6,7 +6,6 @@ import {
   Wallet,
   ShoppingCart,
   FileText,
-  Settings,
   UserCog,
   Banknote,
 } from 'lucide-react'
@@ -18,13 +17,6 @@ export const sidebarData: SidebarData = {
     email: 'admin@siwarga.test',
     avatar: '/avatars/shadcn.jpg',
   },
-  teams: [
-    {
-      name: 'SIWarga',
-      logo: Home,
-      plan: 'Sistem Informasi RT',
-    },
-  ],
   navGroups: [
     {
       title: 'Utama',
@@ -53,7 +45,6 @@ export const sidebarData: SidebarData = {
       title: 'Pengaturan',
       items: [
         { title: 'User', url: '/users', icon: UserCog, permission: 'users.view' },
-        { title: 'Pengaturan', url: '/settings', icon: Settings },
       ],
     },
   ],
