@@ -52,6 +52,17 @@ class User extends Authenticatable implements PasskeyUser
 
     public function getAllPermissions(): array
     {
+        if ($this->relationLoaded('roles')) {
+            return $this->roles
+                ->pluck('permissions')
+                ->flatten()
+                ->pluck('name')
+                ->unique()
+                ->sort()
+                ->values()
+                ->toArray();
+        }
+
         return $this->roles()
             ->with('permissions')
             ->get()

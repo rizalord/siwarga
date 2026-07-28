@@ -74,7 +74,6 @@ class BillTest extends TestCase
             'resident_id' => $resident->id,
             'start_date' => '2026-01-01',
         ]);
-        $house->update(['status' => 'dihuni']);
 
         $response = $this->postJson('/api/bills/generate', [
             'month' => 1,
@@ -98,7 +97,6 @@ class BillTest extends TestCase
             'resident_id' => $resident->id,
             'start_date' => '2026-01-01',
         ]);
-        $house->update(['status' => 'dihuni']);
 
         $this->postJson('/api/bills/generate', ['month' => 1, 'year' => 2026]);
         $this->postJson('/api/bills/generate', ['month' => 1, 'year' => 2026]);

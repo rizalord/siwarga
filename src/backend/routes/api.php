@@ -46,14 +46,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('bills', [BillController::class, 'index'])->middleware('can:bills.view');
     Route::post('bills/generate', [BillController::class, 'generate'])->middleware('can:bills.generate');
     Route::get('bills/{bill}', [BillController::class, 'show'])->middleware('can:bills.view');
-    Route::delete('bills/{bill}', [BillController::class, 'destroy'])->middleware('can:bills.view');
+    Route::delete('bills/{bill}', [BillController::class, 'destroy'])->middleware('can:bills.generate');
 
     // Payments
     Route::get('payments', [PaymentController::class, 'index'])->middleware('can:payments.view');
     Route::post('payments', [PaymentController::class, 'store'])->middleware('can:payments.create');
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->middleware('can:payments.view');
-    Route::put('payments/{payment}', [PaymentController::class, 'update'])->middleware('can:payments.view');
-    Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->middleware('can:payments.view');
+    Route::put('payments/{payment}', [PaymentController::class, 'update'])->middleware('can:payments.create');
+    Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->middleware('can:payments.create');
 
     // Expenses
     Route::get('expenses', [ExpenseController::class, 'index'])->middleware('can:expenses.view');

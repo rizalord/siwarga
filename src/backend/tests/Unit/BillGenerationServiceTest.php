@@ -22,7 +22,6 @@ class BillGenerationServiceTest extends TestCase
             'resident_id' => $resident->id,
             'start_date' => '2026-01-01',
         ]);
-        $house->update(['status' => 'dihuni']);
 
         $service = new BillGenerationService;
         $bills = $service->generate(1, 2026);
@@ -63,7 +62,6 @@ class BillGenerationServiceTest extends TestCase
             'resident_id' => $resident->id,
             'start_date' => '2026-01-01',
         ]);
-        $house->update(['status' => 'dihuni']);
 
         $service = new BillGenerationService;
         $service->generate(1, 2026);

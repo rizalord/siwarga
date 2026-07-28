@@ -20,6 +20,16 @@ class HouseResident extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::saved(function (HouseResident $houseResident) {
+            $houseResident->house->save();
+        });
+        static::deleted(function (HouseResident $houseResident) {
+            $houseResident->house->save();
+        });
+    }
+
     public function house()
     {
         return $this->belongsTo(House::class);
