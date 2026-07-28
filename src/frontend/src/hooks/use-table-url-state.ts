@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type {
   ColumnFiltersState,
   OnChangeFn,
@@ -139,6 +139,11 @@ export function useTableUrlState(
     return typeof raw === 'string' ? raw : ''
   })
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => {
+    return () => clearTimeout(debounceRef.current)
+  }, [])
+
   const onGlobalFilterChange: OnChangeFn<string> | undefined =
     globalFilterEnabled
       ? (updater) => {
@@ -148,13 +153,16 @@ export function useTableUrlState(
               : updater
           const value = trimGlobal ? next.trim() : next
           setGlobalFilter(value)
-          navigate({
-            search: (prev) => ({
-              ...(prev as SearchRecord),
-              [pageKey]: undefined,
-              [globalFilterKey]: value ? value : undefined,
-            }),
-          })
+          clearTimeout(debounceRef.current)
+          debounceRef.current = setTimeout(() => {
+            navigate({
+              search: (prev) => ({
+                ...(prev as SearchRecord),
+                [pageKey]: undefined,
+                [globalFilterKey]: value ? value : undefined,
+              }),
+            })
+          }, 400)
         }
       : undefined
 

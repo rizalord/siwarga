@@ -76,7 +76,7 @@ export function PaymentFormDialog({
   onOpenChange,
 }: PaymentFormDialogProps) {
   const createPayment = useCreatePayment()
-  const { data: billsData } = useBills({ status: 'belum_lunas' })
+  const { data: billsData } = useBills({ status: 'belum_lunas', per_page: 100 })
   const bills = billsData?.data ?? []
   const [billSearchOpen, setBillSearchOpen] = useState(false)
 

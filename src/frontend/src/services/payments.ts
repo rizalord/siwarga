@@ -1,8 +1,8 @@
 import api from './api'
-import type { ApiResponse, PaginatedResponse, Payment, CreatePaymentRequest } from '@/types/api'
+import type { ApiResponse, PaginatedResponse, Payment, PaymentFilter, CreatePaymentRequest } from '@/types/api'
 
 export const paymentsService = {
-  getAll: (params?: { bill_id?: number; page?: number; per_page?: number }) =>
+  getAll: (params?: PaymentFilter) =>
     api.get<PaginatedResponse<Payment>>('/api/payments', { params }),
   getById: (id: number) =>
     api.get<ApiResponse<Payment>>(`/api/payments/${id}`),

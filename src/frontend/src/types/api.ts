@@ -203,14 +203,15 @@ export interface YearlySummary {
 
 // DTOs for list filters
 export interface ResidentFilter {
-  status?: string
+  status?: string | string[]
   search?: string
   page?: number
   per_page?: number
 }
 
 export interface HouseFilter {
-  status?: string
+  status?: string | string[]
+  search?: string
   page?: number
   per_page?: number
 }
@@ -218,8 +219,18 @@ export interface HouseFilter {
 export interface BillFilter {
   month?: number
   year?: number
-  status?: string
+  status?: string | string[]
   house_id?: number
+  search?: string
+  page?: number
+  per_page?: number
+}
+
+export interface PaymentFilter {
+  bill_id?: number
+  month?: number
+  year?: number
+  search?: string
   page?: number
   per_page?: number
 }
@@ -227,7 +238,20 @@ export interface BillFilter {
 export interface ExpenseFilter {
   month?: number
   year?: number
-  category?: string
+  category?: string | string[]
+  search?: string
+  page?: number
+  per_page?: number
+}
+
+export interface DueTypeFilter {
+  search?: string
+  page?: number
+  per_page?: number
+}
+
+export interface UserFilter {
+  search?: string
   page?: number
   per_page?: number
 }

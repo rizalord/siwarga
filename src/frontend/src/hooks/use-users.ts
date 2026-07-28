@@ -1,11 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersService } from '@/services/users'
+import type { UserFilter } from '@/types/api'
 
-export function useUsers() {
+export function useUsers(params?: UserFilter) {
   return useQuery({
-    queryKey: ['users'],
-    queryFn: () => usersService.getAll({ per_page: 1000 }),
+    queryKey: ['users', params],
+    queryFn: () => usersService.getAll(params),
     select: (res) => res.data,
+    placeholderData: (prev) => prev,
   })
 }
 

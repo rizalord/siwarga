@@ -1,8 +1,8 @@
 import api from './api'
-import type { ApiResponse, PaginatedResponse, DueType, CreateDueTypeRequest } from '@/types/api'
+import type { ApiResponse, PaginatedResponse, DueType, DueTypeFilter, CreateDueTypeRequest } from '@/types/api'
 
 export const dueTypesService = {
-  getAll: (params?: { page?: number; per_page?: number }) =>
+  getAll: (params?: DueTypeFilter) =>
     api.get<PaginatedResponse<DueType>>('/api/due-types', { params }),
   getById: (id: number) =>
     api.get<ApiResponse<DueType>>(`/api/due-types/${id}`),

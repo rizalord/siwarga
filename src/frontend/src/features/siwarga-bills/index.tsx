@@ -2,6 +2,10 @@ import { getRouteApi } from '@tanstack/react-router'
 import { AlertTriangle } from 'lucide-react'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Header } from '@/components/layout/header'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { Main } from '@/components/layout/main'
 import { useBills, useDeleteBill } from '@/hooks/use-bills'
 import { BillsGenerateButton } from './bills-generate-button'
@@ -66,12 +70,22 @@ function BillsDialogs() {
 function BillsPageInner() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { data, isLoading } = useBills()
+  const { data, isLoading, isFetching } = useBills({
+    page: search.page,
+    per_page: search.pageSize,
+    month: search.month ? Number(search.month) : undefined,
+    year: search.year ? Number(search.year) : undefined,
+    status: search.status,
+    search: search.search,
+  })
 
   return (
     <>
       <Header fixed>
-        {/* Empty header: matches shadcn-admin pattern */}
+        <Search className='me-auto' />
+        <ThemeSwitch />
+        <ConfigDrawer />
+        <ProfileDropdown />
       </Header>
 
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
@@ -93,6 +107,8 @@ function BillsPageInner() {
         ) : (
           <BillsTable
             data={data?.data ?? []}
+            pageCount={data?.last_page ?? 1}
+            isFetching={isFetching}
             search={search}
             navigate={navigate}
           />

@@ -5,8 +5,9 @@ import type { ResidentFilter, CreateResidentRequest, UpdateResidentRequest } fro
 export function useResidents(params?: ResidentFilter) {
   return useQuery({
     queryKey: ['residents', params],
-    queryFn: () => residentsService.getAll({ per_page: 1000, ...params }),
+    queryFn: () => residentsService.getAll(params),
     select: (res) => res.data,
+    placeholderData: (prev) => prev,
   })
 }
 

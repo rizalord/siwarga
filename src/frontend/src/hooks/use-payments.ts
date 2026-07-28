@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { paymentsService } from '@/services/payments'
-import type { CreatePaymentRequest } from '@/types/api'
+import type { CreatePaymentRequest, PaymentFilter } from '@/types/api'
 
-export function usePayments(params?: { bill_id?: number; page?: number; per_page?: number }) {
+export function usePayments(params?: PaymentFilter) {
   return useQuery({
     queryKey: ['payments', params],
-    queryFn: () => paymentsService.getAll({ per_page: 1000, ...params }),
+    queryFn: () => paymentsService.getAll(params),
     select: (res) => res.data,
+    placeholderData: (prev) => prev,
   })
 }
 

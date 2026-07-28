@@ -2,6 +2,10 @@ import { getRouteApi } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/header'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { Main } from '@/components/layout/main'
 import { usePayments } from '@/hooks/use-payments'
 import { PaymentDeleteDialog } from './payment-delete-dialog'
@@ -30,14 +34,23 @@ function PaymentsDialogs() {
 function PaymentsPageInner() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { data, isLoading } = usePayments()
+  const { data, isLoading, isFetching } = usePayments({
+    page: search.page,
+    per_page: search.pageSize,
+    month: search.month,
+    year: search.year,
+    search: search.search,
+  })
 
   const { setOpen } = usePaymentsContext()
 
   return (
     <>
       <Header fixed>
-        {/* Empty header: matches shadcn-admin pattern */}
+        <Search className='me-auto' />
+        <ThemeSwitch />
+        <ConfigDrawer />
+        <ProfileDropdown />
       </Header>
 
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
@@ -59,6 +72,8 @@ function PaymentsPageInner() {
         ) : (
           <PaymentsTable
             data={data?.data ?? []}
+            pageCount={data?.last_page ?? 1}
+            isFetching={isFetching}
             search={search}
             navigate={navigate}
           />

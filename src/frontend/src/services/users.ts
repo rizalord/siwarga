@@ -1,8 +1,8 @@
 import api from './api'
-import type { ApiResponse, PaginatedResponse, User } from '@/types/api'
+import type { ApiResponse, PaginatedResponse, User, UserFilter } from '@/types/api'
 
 export const usersService = {
-  getAll: (params?: { page?: number; per_page?: number }) =>
+  getAll: (params?: UserFilter) =>
     api.get<PaginatedResponse<User>>('/api/users', { params }),
   getById: (id: number) =>
     api.get<ApiResponse<User>>(`/api/users/${id}`),

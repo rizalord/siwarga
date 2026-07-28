@@ -5,8 +5,17 @@ import type { ExpenseFilter, CreateExpenseRequest } from '@/types/api'
 export function useExpenses(params?: ExpenseFilter) {
   return useQuery({
     queryKey: ['expenses', params],
-    queryFn: () => expensesService.getAll({ per_page: 1000, ...params }),
+    queryFn: () => expensesService.getAll(params),
     select: (res) => res.data,
+    placeholderData: (prev) => prev,
+  })
+}
+
+export function useExpenseCategories() {
+  return useQuery({
+    queryKey: ['expenses', 'categories'],
+    queryFn: () => expensesService.getCategories(),
+    select: (res) => res.data.data,
   })
 }
 

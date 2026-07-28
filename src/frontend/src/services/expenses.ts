@@ -4,6 +4,8 @@ import type { ApiResponse, PaginatedResponse, Expense, CreateExpenseRequest, Exp
 export const expensesService = {
   getAll: (params?: ExpenseFilter) =>
     api.get<PaginatedResponse<Expense>>('/api/expenses', { params }),
+  getCategories: () =>
+    api.get<ApiResponse<string[]>>('/api/expenses/categories'),
   getById: (id: number) =>
     api.get<ApiResponse<Expense>>(`/api/expenses/${id}`),
   create: (data: CreateExpenseRequest) =>

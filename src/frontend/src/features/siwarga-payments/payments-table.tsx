@@ -1,14 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-  type SortingState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
@@ -42,26 +36,24 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
 
 type DataTableProps = {
   data: Payment[]
+  pageCount: number
+  isFetching?: boolean
   search: Record<string, unknown>
   navigate: NavigateFn
 }
 
-export function PaymentsTable({ data, search, navigate }: DataTableProps) {
+export function PaymentsTable({
+  data,
+  pageCount,
+  isFetching,
+  search,
+  navigate,
+}: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting] = useState<SortingState>([])
 
   const month = search.month as number | undefined
   const year = search.year as number | undefined
-
-  const filteredData = useMemo(() => {
-    return data.filter((payment) => {
-      const date = new Date(payment.payment_date)
-      if (month && date.getMonth() + 1 !== month) return false
-      if (year && date.getFullYear() !== year) return false
-      return true
-    })
-  }, [data, month, year])
 
   const {
     globalFilter,
@@ -100,47 +92,27 @@ export function PaymentsTable({ data, search, navigate }: DataTableProps) {
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: filteredData,
+    data,
     columns: columns(),
     state: {
-      sorting,
       columnVisibility,
       rowSelection,
       columnFilters,
       globalFilter,
       pagination,
     },
+    pageCount,
+    manualPagination: true,
+    manualFiltering: true,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const bill = row.original.bill
-      const searchValue = String(filterValue).toLowerCase()
-      if (bill) {
-        const residentName = bill.resident.full_name.toLowerCase()
-        const houseNumber = bill.house.house_number.toLowerCase()
-        const dueTypeName = bill.due_type.name.toLowerCase()
-        return (
-          residentName.includes(searchValue) ||
-          houseNumber.includes(searchValue) ||
-          dueTypeName.includes(searchValue)
-        )
-      }
-      return String(row.original.bill_id).includes(searchValue)
-    },
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
   })
 
-  const pageCount = table.getPageCount()
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
@@ -152,11 +124,10 @@ export function PaymentsTable({ data, search, navigate }: DataTableProps) {
         'flex flex-1 flex-col gap-4'
       )}
     >
-      <div className='flex flex-wrap items-center gap-2'>
-        <DataTableToolbar
-          table={table}
-          searchPlaceholder='Cari penghuni atau rumah...'
-        />
+      <DataTableToolbar
+        table={table}
+        searchPlaceholder='Cari penghuni atau rumah...'
+      >
         <Select
           value={month ? String(month) : ''}
           onValueChange={handleMonthChange}
@@ -189,8 +160,13 @@ export function PaymentsTable({ data, search, navigate }: DataTableProps) {
             ))}
           </SelectContent>
         </Select>
-      </div>
-      <div className='overflow-hidden rounded-md border'>
+      </DataTableToolbar>
+      <div
+        className={cn(
+          'overflow-hidden rounded-md border transition-opacity',
+          isFetching && 'opacity-60'
+        )}
+      >
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

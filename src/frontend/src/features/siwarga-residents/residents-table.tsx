@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
-  type SortingState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
@@ -32,15 +26,22 @@ const statusOptions = [
 
 type DataTableProps = {
   data: Resident[]
+  pageCount: number
+  isFetching?: boolean
   search: Record<string, unknown>
   navigate: NavigateFn
 }
 
-export function ResidentsTable({ data, search, navigate }: DataTableProps) {
+export function ResidentsTable({
+  data,
+  pageCount,
+  isFetching,
+  search,
+  navigate,
+}: DataTableProps) {
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting] = useState<SortingState>([])
 
   // Synced with URL states
   const {
@@ -66,38 +67,24 @@ export function ResidentsTable({ data, search, navigate }: DataTableProps) {
     data,
     columns: columns(),
     state: {
-      sorting,
       columnVisibility,
       rowSelection,
       columnFilters,
       globalFilter,
       pagination,
     },
+    pageCount,
+    manualPagination: true,
+    manualFiltering: true,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const fullName = String(row.getValue('full_name')).toLowerCase()
-      const phoneNumber = String(row.getValue('phone_number')).toLowerCase()
-      const searchValue = String(filterValue).toLowerCase()
-
-      return (
-        fullName.includes(searchValue) || phoneNumber.includes(searchValue)
-      )
-    },
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
   })
 
-  const pageCount = table.getPageCount()
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
@@ -120,7 +107,12 @@ export function ResidentsTable({ data, search, navigate }: DataTableProps) {
           },
         ]}
       />
-      <div className='overflow-hidden rounded-md border'>
+      <div
+        className={cn(
+          'overflow-hidden rounded-md border transition-opacity',
+          isFetching && 'opacity-60'
+        )}
+      >
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

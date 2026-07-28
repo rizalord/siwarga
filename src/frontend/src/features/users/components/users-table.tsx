@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
-  type SortingState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
@@ -27,6 +21,8 @@ import { usersColumns as columns } from './users-columns'
 
 type DataTableProps = {
   data: User[]
+  pageCount: number
+  isFetching?: boolean
   search: Record<string, unknown>
   navigate: NavigateFn
   setOpen: (open: 'create' | 'update' | 'delete' | null) => void
@@ -35,6 +31,8 @@ type DataTableProps = {
 
 export function UsersTable({
   data,
+  pageCount,
+  isFetching,
   search,
   navigate,
   setOpen,
@@ -42,7 +40,6 @@ export function UsersTable({
 }: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting] = useState<SortingState>([])
 
   const {
     globalFilter,
@@ -64,35 +61,24 @@ export function UsersTable({
     data,
     columns: columns({ setOpen, setCurrentRow }),
     state: {
-      sorting,
       columnVisibility,
       rowSelection,
       columnFilters,
       globalFilter,
       pagination,
     },
+    pageCount,
+    manualPagination: true,
+    manualFiltering: true,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const name = String(row.getValue('name')).toLowerCase()
-      const email = String(row.getValue('email')).toLowerCase()
-      const searchText = String(filterValue).toLowerCase()
-      return name.includes(searchText) || email.includes(searchText)
-    },
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
   })
 
-  const pageCount = table.getPageCount()
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
@@ -108,7 +94,12 @@ export function UsersTable({
         table={table}
         searchPlaceholder='Cari pengguna...'
       />
-      <div className='overflow-hidden rounded-md border'>
+      <div
+        className={cn(
+          'overflow-hidden rounded-md border transition-opacity',
+          isFetching && 'opacity-60'
+        )}
+      >
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

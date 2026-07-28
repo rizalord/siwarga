@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { dueTypesService } from '@/services/due-types'
-import type { CreateDueTypeRequest } from '@/types/api'
+import type { CreateDueTypeRequest, DueTypeFilter } from '@/types/api'
 
-export function useDueTypes() {
+export function useDueTypes(params?: DueTypeFilter) {
   return useQuery({
-    queryKey: ['due-types'],
-    queryFn: () => dueTypesService.getAll({ per_page: 1000 }),
+    queryKey: ['due-types', params],
+    queryFn: () => dueTypesService.getAll(params),
     select: (res) => res.data,
+    placeholderData: (prev) => prev,
   })
 }
 

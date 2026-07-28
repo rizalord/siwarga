@@ -5,8 +5,9 @@ import type { BillFilter, GenerateBillsRequest } from '@/types/api'
 export function useBills(params?: BillFilter) {
   return useQuery({
     queryKey: ['bills', params],
-    queryFn: () => billsService.getAll({ per_page: 1000, ...params }),
+    queryFn: () => billsService.getAll(params),
     select: (res) => res.data,
+    placeholderData: (prev) => prev,
   })
 }
 

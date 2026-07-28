@@ -3,8 +3,13 @@ import { getRouteApi } from '@tanstack/react-router'
 import { AlertTriangle, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/header'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { Main } from '@/components/layout/main'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import useDialogState from '@/hooks/use-dialog-state'
 import { useUsers, useDeleteUser } from '@/hooks/use-users'
 import type { User } from '@/types/api'
 import { UserFormDialog } from './components/user-form'
@@ -100,15 +105,22 @@ function UsersDialogs({
 function UsersPageInner() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { data, isLoading } = useUsers()
+  const { data, isLoading, isFetching } = useUsers({
+    page: search.page,
+    per_page: search.pageSize,
+    search: search.search,
+  })
 
-  const [open, setOpen] = useState<'create' | 'update' | 'delete' | null>(null)
+  const [open, setOpen] = useDialogState<'create' | 'update' | 'delete'>(null)
   const [currentRow, setCurrentRow] = useState<User | null>(null)
 
   return (
     <>
       <Header fixed>
-        {/* Empty header: matches shadcn-admin pattern */}
+        <Search className='me-auto' />
+        <ThemeSwitch />
+        <ConfigDrawer />
+        <ProfileDropdown />
       </Header>
 
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
@@ -132,6 +144,8 @@ function UsersPageInner() {
         ) : (
           <UsersTable
             data={data?.data ?? []}
+            pageCount={data?.last_page ?? 1}
+            isFetching={isFetching}
             search={search}
             navigate={navigate}
             setOpen={setOpen}

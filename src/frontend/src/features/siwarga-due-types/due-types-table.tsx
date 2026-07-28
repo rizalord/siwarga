@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
-  type SortingState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
@@ -27,6 +21,8 @@ import { dueTypesColumns as columns } from './due-types-columns'
 
 type DataTableProps = {
   data: DueType[]
+  pageCount: number
+  isFetching?: boolean
   search: Record<string, unknown>
   navigate: NavigateFn
   setOpen: (open: 'create' | 'update' | 'delete' | null) => void
@@ -35,6 +31,8 @@ type DataTableProps = {
 
 export function DueTypesTable({
   data,
+  pageCount,
+  isFetching,
   search,
   navigate,
   setOpen,
@@ -42,7 +40,6 @@ export function DueTypesTable({
 }: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting] = useState<SortingState>([])
 
   const {
     globalFilter,
@@ -64,33 +61,24 @@ export function DueTypesTable({
     data,
     columns: columns({ setOpen, setCurrentRow }),
     state: {
-      sorting,
       columnVisibility,
       rowSelection,
       columnFilters,
       globalFilter,
       pagination,
     },
+    pageCount,
+    manualPagination: true,
+    manualFiltering: true,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const name = String(row.getValue('name')).toLowerCase()
-      return name.includes(String(filterValue).toLowerCase())
-    },
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
   })
 
-  const pageCount = table.getPageCount()
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
@@ -106,7 +94,12 @@ export function DueTypesTable({
         table={table}
         searchPlaceholder='Cari jenis iuran...'
       />
-      <div className='overflow-hidden rounded-md border'>
+      <div
+        className={cn(
+          'overflow-hidden rounded-md border transition-opacity',
+          isFetching && 'opacity-60'
+        )}
+      >
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

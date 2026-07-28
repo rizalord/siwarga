@@ -5,8 +5,9 @@ import type { HouseFilter, CreateHouseRequest, AssignResidentRequest } from '@/t
 export function useHouses(params?: HouseFilter) {
   return useQuery({
     queryKey: ['houses', params],
-    queryFn: () => housesService.getAll({ per_page: 1000, ...params }),
+    queryFn: () => housesService.getAll(params),
     select: (res) => res.data,
+    placeholderData: (prev) => prev,
   })
 }
 

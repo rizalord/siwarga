@@ -2,6 +2,10 @@ import { getRouteApi } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/header'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 import { Main } from '@/components/layout/main'
 import { useResidents } from '@/hooks/use-residents'
 import { ResidentDeleteDialog } from './resident-delete-dialog'
@@ -64,12 +68,20 @@ function ResidentsDialogs() {
 function ResidentsPageInner() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { data, isLoading } = useResidents()
+  const { data, isLoading, isFetching } = useResidents({
+    page: search.page,
+    per_page: search.pageSize,
+    status: search.status,
+    search: search.search,
+  })
 
   return (
     <>
       <Header fixed>
-        {/* Empty header: matches shadcn-admin pattern but without extra buttons */}
+        <Search className='me-auto' />
+        <ThemeSwitch />
+        <ConfigDrawer />
+        <ProfileDropdown />
       </Header>
 
       <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
@@ -91,6 +103,8 @@ function ResidentsPageInner() {
         ) : (
           <ResidentsTable
             data={data?.data ?? []}
+            pageCount={data?.last_page ?? 1}
+            isFetching={isFetching}
             search={search}
             navigate={navigate}
           />

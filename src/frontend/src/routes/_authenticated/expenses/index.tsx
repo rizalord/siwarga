@@ -8,6 +8,7 @@ const searchSchema = z.object({
   month: z.coerce.number().optional(),
   year: z.coerce.number().optional(),
   category: z.string().optional(),
+  search: z.string().optional().catch(''),
 })
 
 export const Route = createFileRoute('/_authenticated/expenses/')({

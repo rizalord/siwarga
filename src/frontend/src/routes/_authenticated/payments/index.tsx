@@ -7,6 +7,7 @@ const searchSchema = z.object({
   pageSize: z.coerce.number().default(10),
   month: z.coerce.number().optional(),
   year: z.coerce.number().optional(),
+  search: z.string().optional().catch(''),
 })
 
 export const Route = createFileRoute('/_authenticated/payments/')({

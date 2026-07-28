@@ -1,18 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-  type SortingState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
+import { useExpenseCategories } from '@/hooks/use-expenses'
 import {
   Table,
   TableBody,
@@ -42,6 +37,8 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
 
 type DataTableProps = {
   data: Expense[]
+  pageCount: number
+  isFetching?: boolean
   search: Record<string, unknown>
   navigate: NavigateFn
   setOpen: (open: 'create' | 'update' | 'delete' | null) => void
@@ -50,6 +47,8 @@ type DataTableProps = {
 
 export function ExpensesTable({
   data,
+  pageCount,
+  isFetching,
   search,
   navigate,
   setOpen,
@@ -57,25 +56,12 @@ export function ExpensesTable({
 }: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [sorting, setSorting] = useState<SortingState>([])
 
   const month = search.month as number | undefined
   const year = search.year as number | undefined
   const category = search.category as string | undefined
 
-  const categories = useMemo(() => {
-    return [...new Set(data.map((e) => e.category))].sort()
-  }, [data])
-
-  const filteredData = useMemo(() => {
-    return data.filter((expense) => {
-      const date = new Date(expense.expense_date)
-      if (month && date.getMonth() + 1 !== month) return false
-      if (year && date.getFullYear() !== year) return false
-      if (category && expense.category !== category) return false
-      return true
-    })
-  }, [data, month, year, category])
+  const { data: categories = [] } = useExpenseCategories()
 
   const {
     globalFilter,
@@ -124,40 +110,27 @@ export function ExpensesTable({
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: filteredData,
+    data,
     columns: columns({ setOpen, setCurrentRow }),
     state: {
-      sorting,
       columnVisibility,
       rowSelection,
       columnFilters,
       globalFilter,
       pagination,
     },
+    pageCount,
+    manualPagination: true,
+    manualFiltering: true,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const category = String(row.getValue('category')).toLowerCase()
-      const description = String(row.getValue('description') ?? '').toLowerCase()
-      const searchValue = String(filterValue).toLowerCase()
-      return (
-        category.includes(searchValue) || description.includes(searchValue)
-      )
-    },
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     onPaginationChange,
     onGlobalFilterChange,
     onColumnFiltersChange,
   })
 
-  const pageCount = table.getPageCount()
   useEffect(() => {
     ensurePageInRange(pageCount)
   }, [pageCount, ensurePageInRange])
@@ -169,11 +142,10 @@ export function ExpensesTable({
         'flex flex-1 flex-col gap-4'
       )}
     >
-      <div className='flex flex-wrap items-center gap-2'>
-        <DataTableToolbar
-          table={table}
-          searchPlaceholder='Cari pengeluaran...'
-        />
+      <DataTableToolbar
+        table={table}
+        searchPlaceholder='Cari pengeluaran...'
+      >
         <Select
           value={category ?? ''}
           onValueChange={handleCategoryChange}
@@ -222,8 +194,13 @@ export function ExpensesTable({
             ))}
           </SelectContent>
         </Select>
-      </div>
-      <div className='overflow-hidden rounded-md border'>
+      </DataTableToolbar>
+      <div
+        className={cn(
+          'overflow-hidden rounded-md border transition-opacity',
+          isFetching && 'opacity-60'
+        )}
+      >
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
