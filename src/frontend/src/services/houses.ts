@@ -13,7 +13,7 @@ export const housesService = {
   delete: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/houses/${id}`),
   getResidents: (id: number) =>
-    api.get<ApiResponse<HouseResident[]>>(`/api/houses/${id}/residents`),
+    api.get<ApiResponse<HouseResident[]>>(`/api/houses/${id}/history`),
   assignResident: (id: number, data: AssignResidentRequest) =>
-    api.post<ApiResponse<HouseResident>>(`/api/houses/${id}/residents`, data),
+    api.post<ApiResponse<HouseResident>>(`/api/houses/${id}/assign-resident`, data),
 }
