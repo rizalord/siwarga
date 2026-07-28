@@ -8,16 +8,18 @@ export function ForbiddenError() {
     <div className='h-svh'>
       <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-2'>
         <h1 className='text-[7rem] leading-tight font-bold'>403</h1>
-        <span className='font-medium'>Access Forbidden</span>
+        <span className='font-medium'>Akses Ditolak</span>
         <p className='text-center text-muted-foreground'>
-          You don't have necessary permission <br />
-          to view this resource.
+          Anda tidak memiliki izin yang diperlukan <br />
+          untuk melihat sumber daya ini.
         </p>
         <div className='mt-6 flex gap-4'>
           <Button variant='outline' onClick={() => history.go(-1)}>
-            Go Back
+            Kembali
           </Button>
-          <Button onClick={() => navigate({ to: '/' })}>Back to Home</Button>
+          <Button onClick={() => navigate({ to: '/' })}>
+            Kembali ke Beranda
+          </Button>
         </div>
       </div>
     </div>

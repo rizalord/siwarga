@@ -1,7 +1,18 @@
 import { useState } from 'react'
+import type { House, Resident } from '@/types/api'
 import { Search, X } from 'lucide-react'
+import { useAssignResident } from '@/hooks/use-houses'
+import { useResidents } from '@/hooks/use-residents'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import {
   Dialog,
   DialogContent,
@@ -13,21 +24,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { useAssignResident } from '@/hooks/use-houses'
-import { useResidents } from '@/hooks/use-residents'
-import type { House, Resident } from '@/types/api'
 
 type HouseAssignDialogProps = {
   currentRow: House
@@ -40,7 +40,9 @@ export function HouseAssignDialog({
   open,
   onOpenChange,
 }: HouseAssignDialogProps) {
-  const [selectedResident, setSelectedResident] = useState<Resident | null>(null)
+  const [selectedResident, setSelectedResident] = useState<Resident | null>(
+    null
+  )
   const [startDate, setStartDate] = useState(
     new Date().toISOString().split('T')[0]
   )
@@ -48,7 +50,10 @@ export function HouseAssignDialog({
   const assignResident = useAssignResident()
 
   // Fetch residents for search
-  const { data: residentsData } = useResidents({ status: 'tetap', per_page: 50 })
+  const { data: residentsData } = useResidents({
+    status: 'tetap',
+    per_page: 50,
+  })
   const residents = residentsData?.data ?? []
 
   const handleAssign = () => {
@@ -88,7 +93,7 @@ export function HouseAssignDialog({
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-start'>
           <DialogTitle>
-            Assign Penghuni ke {currentRow.house_number}
+            Tugaskan Penghuni ke {currentRow.house_number}
           </DialogTitle>
           <DialogDescription>
             Cari dan pilih penghuni untuk menempati rumah ini.
@@ -96,7 +101,7 @@ export function HouseAssignDialog({
         </DialogHeader>
 
         <div className='space-y-4 px-0.5'>
-          <div className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+          <div className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
             <Label className='col-span-2 text-end'>Penghuni</Label>
             <div className='col-span-4'>
               <Popover
@@ -124,9 +129,7 @@ export function HouseAssignDialog({
                   <Command>
                     <CommandInput placeholder='Cari penghuni...' />
                     <CommandList>
-                      <CommandEmpty>
-                        Tidak ada penghuni ditemukan.
-                      </CommandEmpty>
+                      <CommandEmpty>Tidak ada penghuni ditemukan.</CommandEmpty>
                       <CommandGroup>
                         {residents.map((resident) => (
                           <CommandItem
@@ -138,10 +141,7 @@ export function HouseAssignDialog({
                             }}
                           >
                             <span>{resident.full_name}</span>
-                            <Badge
-                              variant='secondary'
-                              className='ml-2 text-xs'
-                            >
+                            <Badge variant='secondary' className='ml-2 text-xs'>
                               {resident.status}
                             </Badge>
                           </CommandItem>
@@ -155,7 +155,7 @@ export function HouseAssignDialog({
           </div>
 
           {selectedResident && (
-            <div className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+            <div className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
               <Label className='col-span-2 text-end'>Tanggal Mulai</Label>
               <div className='col-span-4 flex items-center gap-2'>
                 <Input
@@ -183,7 +183,7 @@ export function HouseAssignDialog({
             disabled={!selectedResident || !startDate || isPending}
             onClick={handleAssign}
           >
-            {isPending ? 'Menyimpan...' : 'Assign'}
+            {isPending ? 'Menyimpan...' : 'Tugaskan'}
           </Button>
         </DialogFooter>
       </DialogContent>

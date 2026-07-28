@@ -1,5 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import type { ColumnDef, Row } from '@tanstack/react-table'
+import type { Resident } from '@/types/api'
 import { Trash2, UserPen } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
-import type { Resident } from '@/types/api'
 import { useResidentsContext } from './residents-provider'
 
 function DataTableRowActions({ row }: { row: Row<Resident> }) {
@@ -25,7 +25,7 @@ function DataTableRowActions({ row }: { row: Row<Resident> }) {
           className='flex h-8 w-8 p-0 data-[state=open]:bg-muted'
         >
           <DotsHorizontalIcon className='h-4 w-4' />
-          <span className='sr-only'>Open menu</span>
+          <span className='sr-only'>Buka menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-40'>
@@ -35,7 +35,7 @@ function DataTableRowActions({ row }: { row: Row<Resident> }) {
             setOpen('update')
           }}
         >
-          Edit
+          Ubah
           <DropdownMenuShortcut>
             <UserPen size={16} />
           </DropdownMenuShortcut>
@@ -48,7 +48,7 @@ function DataTableRowActions({ row }: { row: Row<Resident> }) {
           }}
           className='text-red-500!'
         >
-          Delete
+          Hapus
           <DropdownMenuShortcut>
             <Trash2 size={16} />
           </DropdownMenuShortcut>
@@ -101,7 +101,9 @@ export function residentsColumns(): ColumnDef<Resident>[] {
       meta: { label: 'Status Nikah' },
       cell: ({ row }) => (
         <span>
-          {row.original.marital_status === 'menikah' ? 'Menikah' : 'Belum Menikah'}
+          {row.original.marital_status === 'menikah'
+            ? 'Menikah'
+            : 'Belum Menikah'}
         </span>
       ),
     },

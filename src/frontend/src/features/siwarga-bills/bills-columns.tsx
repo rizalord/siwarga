@@ -1,5 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import type { ColumnDef, Row } from '@tanstack/react-table'
+import type { Bill } from '@/types/api'
 import { Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
-import type { Bill } from '@/types/api'
 import { useBillsContext } from './bills-provider'
 
 function formatRupiah(amount: number) {
@@ -41,7 +41,7 @@ function DataTableRowActions({ row }: { row: Row<Bill> }) {
           className='flex h-8 w-8 p-0 data-[state=open]:bg-muted'
         >
           <DotsHorizontalIcon className='h-4 w-4' />
-          <span className='sr-only'>Open menu</span>
+          <span className='sr-only'>Buka menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-40'>
@@ -52,7 +52,7 @@ function DataTableRowActions({ row }: { row: Row<Bill> }) {
           }}
           className='text-red-500!'
         >
-          Delete
+          Hapus
           <DropdownMenuShortcut>
             <Trash2 size={16} />
           </DropdownMenuShortcut>
@@ -73,7 +73,8 @@ export function billsColumns(): ColumnDef<Bill>[] {
       accessorKey: 'period_start',
       cell: ({ row }) => (
         <span>
-          {formatDate(row.original.period_start)} — {formatDate(row.original.period_end)}
+          {formatDate(row.original.period_start)} —{' '}
+          {formatDate(row.original.period_end)}
         </span>
       ),
       meta: { label: 'Periode' },

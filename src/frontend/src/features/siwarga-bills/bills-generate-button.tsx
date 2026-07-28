@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CalendarPlus } from 'lucide-react'
+import { useGenerateBills } from '@/hooks/use-bills'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,7 +12,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useGenerateBills } from '@/hooks/use-bills'
 
 export function BillsGenerateButton() {
   const [open, setOpen] = useState(false)
@@ -37,7 +37,7 @@ export function BillsGenerateButton() {
   return (
     <>
       <Button className='space-x-1' onClick={() => setOpen(true)}>
-        <span>Generate Tagihan</span> <CalendarPlus size={18} />
+        <span>Buat Tagihan</span> <CalendarPlus size={18} />
       </Button>
       <Dialog
         open={open}
@@ -47,9 +47,9 @@ export function BillsGenerateButton() {
       >
         <DialogContent className='sm:max-w-md'>
           <DialogHeader className='text-start'>
-            <DialogTitle>Generate Tagihan</DialogTitle>
+            <DialogTitle>Buat Tagihan</DialogTitle>
             <DialogDescription>
-              Generate tagihan untuk periode{' '}
+              Buat tagihan untuk periode{' '}
               <span className='font-medium'>
                 {monthName} {year}
               </span>
@@ -86,7 +86,7 @@ export function BillsGenerateButton() {
               onClick={handleGenerate}
               disabled={generateBills.isPending}
             >
-              {generateBills.isPending ? 'Mengenerate...' : 'Generate'}
+              {generateBills.isPending ? 'Membuat...' : 'Buat'}
             </Button>
           </DialogFooter>
         </DialogContent>

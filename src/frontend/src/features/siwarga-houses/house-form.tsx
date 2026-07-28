@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import type { House } from '@/types/api'
+import { useCreateHouse, useUpdateHouse } from '@/hooks/use-houses'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -20,8 +22,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useCreateHouse, useUpdateHouse } from '@/hooks/use-houses'
-import type { House } from '@/types/api'
 
 type HouseFormDialogProps = {
   currentRow?: House
@@ -83,9 +83,7 @@ export function HouseFormDialog({
     >
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-start'>
-          <DialogTitle>
-            {isUpdate ? 'Edit Rumah' : 'Tambah Rumah'}
-          </DialogTitle>
+          <DialogTitle>{isUpdate ? 'Ubah Rumah' : 'Tambah Rumah'}</DialogTitle>
           <DialogDescription>
             {isUpdate
               ? 'Perbarui data rumah di sini. Klik simpan setelah selesai.'
@@ -123,9 +121,7 @@ export function HouseFormDialog({
               name='address'
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                  <FormLabel className='col-span-2 text-end'>
-                    Alamat
-                  </FormLabel>
+                  <FormLabel className='col-span-2 text-end'>Alamat</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder='Masukkan alamat (opsional)'

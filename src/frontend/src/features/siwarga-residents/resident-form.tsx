@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import type { Resident } from '@/types/api'
+import { useCreateResident, useUpdateResident } from '@/hooks/use-residents'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -21,8 +23,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { useCreateResident, useUpdateResident } from '@/hooks/use-residents'
-import type { Resident } from '@/types/api'
 
 type ResidentFormDialogProps = {
   currentRow?: Resident
@@ -106,7 +106,7 @@ export function ResidentFormDialog({
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-start'>
           <DialogTitle>
-            {isUpdate ? 'Edit Penghuni' : 'Tambah Penghuni'}
+            {isUpdate ? 'Ubah Penghuni' : 'Tambah Penghuni'}
           </DialogTitle>
           <DialogDescription>
             {isUpdate
@@ -152,13 +152,13 @@ export function ResidentFormDialog({
                       defaultValue={field.value}
                       className='col-span-4 flex flex-row gap-4'
                     >
-                      <FormItem className='flex items-center space-x-2 space-y-0'>
+                      <FormItem className='flex items-center space-y-0 space-x-2'>
                         <FormControl>
                           <RadioGroupItem value='tetap' />
                         </FormControl>
                         <FormLabel className='font-normal'>Tetap</FormLabel>
                       </FormItem>
-                      <FormItem className='flex items-center space-x-2 space-y-0'>
+                      <FormItem className='flex items-center space-y-0 space-x-2'>
                         <FormControl>
                           <RadioGroupItem value='kontrak' />
                         </FormControl>
@@ -204,13 +204,13 @@ export function ResidentFormDialog({
                       defaultValue={field.value}
                       className='col-span-4 flex flex-row gap-4'
                     >
-                      <FormItem className='flex items-center space-x-2 space-y-0'>
+                      <FormItem className='flex items-center space-y-0 space-x-2'>
                         <FormControl>
                           <RadioGroupItem value='menikah' />
                         </FormControl>
                         <FormLabel className='font-normal'>Menikah</FormLabel>
                       </FormItem>
-                      <FormItem className='flex items-center space-x-2 space-y-0'>
+                      <FormItem className='flex items-center space-y-0 space-x-2'>
                         <FormControl>
                           <RadioGroupItem value='belum_menikah' />
                         </FormControl>
@@ -241,7 +241,8 @@ export function ResidentFormDialog({
                         const file = e.target.files?.[0]
                         onChange(file ?? undefined)
                         setPhotoPreview((prev) => {
-                          if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev)
+                          if (prev?.startsWith('blob:'))
+                            URL.revokeObjectURL(prev)
                           return file ? URL.createObjectURL(file) : null
                         })
                       }}

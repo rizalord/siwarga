@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import type { Expense } from '@/types/api'
+import { cn } from '@/lib/utils'
+import { useCreateExpense, useUpdateExpense } from '@/hooks/use-expenses'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -26,9 +29,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
-import { useCreateExpense, useUpdateExpense } from '@/hooks/use-expenses'
-import type { Expense } from '@/types/api'
 
 type ExpenseFormDialogProps = {
   currentRow?: Expense
@@ -112,7 +112,7 @@ export function ExpenseFormDialog({
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-start'>
           <DialogTitle>
-            {isUpdate ? 'Edit Pengeluaran' : 'Catat Pengeluaran'}
+            {isUpdate ? 'Ubah Pengeluaran' : 'Catat Pengeluaran'}
           </DialogTitle>
           <DialogDescription>
             {isUpdate
@@ -170,9 +170,7 @@ export function ExpenseFormDialog({
               name='amount'
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                  <FormLabel className='col-span-2 text-end'>
-                    Jumlah
-                  </FormLabel>
+                  <FormLabel className='col-span-2 text-end'>Jumlah</FormLabel>
                   <FormControl>
                     <Input
                       type='number'
@@ -219,9 +217,7 @@ export function ExpenseFormDialog({
                             }
                             onSelect={(date) => {
                               if (date) {
-                                field.onChange(
-                                  date.toISOString().split('T')[0]
-                                )
+                                field.onChange(date.toISOString().split('T')[0])
                               }
                             }}
                             initialFocus

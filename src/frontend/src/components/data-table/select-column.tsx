@@ -11,7 +11,7 @@ export function selectColumn<TData>(): ColumnDef<TData> {
           (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label='Select all'
+        aria-label='Pilih semua'
         className='translate-y-0.5'
       />
     ),
@@ -19,7 +19,7 @@ export function selectColumn<TData>(): ColumnDef<TData> {
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label='Select row'
+        aria-label='Pilih baris'
         className='translate-y-0.5'
       />
     ),

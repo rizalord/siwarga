@@ -1,5 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import type { ColumnDef, Row } from '@tanstack/react-table'
+import type { User } from '@/types/api'
 import { Trash2, UserPen } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
-import type { User } from '@/types/api'
 
 type UsersColumnsProps = {
   setOpen: (open: 'create' | 'update' | 'delete' | null) => void
@@ -32,7 +32,7 @@ export function usersColumns({
             className='flex h-8 w-8 p-0 data-[state=open]:bg-muted'
           >
             <DotsHorizontalIcon className='h-4 w-4' />
-            <span className='sr-only'>Open menu</span>
+            <span className='sr-only'>Buka menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-40'>
@@ -42,7 +42,7 @@ export function usersColumns({
               setOpen('update')
             }}
           >
-            Edit
+            Ubah
             <DropdownMenuShortcut>
               <UserPen size={16} />
             </DropdownMenuShortcut>
@@ -85,20 +85,20 @@ export function usersColumns({
     },
     {
       id: 'roles',
-      header: 'Roles',
+      header: 'Peran',
       accessorKey: 'roles',
       enableSorting: false,
       cell: ({ row }) => (
         <div className='flex flex-wrap gap-1'>
-          {row.original.roles.length > 0
-            ? row.original.roles.map((role) => (
-                <Badge key={role.id} variant='secondary'>
-                  {role.name}
-                </Badge>
-              ))
-            : (
-              <span className='text-muted-foreground text-sm'>-</span>
-            )}
+          {row.original.roles.length > 0 ? (
+            row.original.roles.map((role) => (
+              <Badge key={role.id} variant='secondary'>
+                {role.name}
+              </Badge>
+            ))
+          ) : (
+            <span className='text-sm text-muted-foreground'>-</span>
+          )}
         </div>
       ),
     },

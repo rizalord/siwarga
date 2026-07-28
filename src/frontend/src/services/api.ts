@@ -39,7 +39,15 @@ api.interceptors.response.use(
       _retry?: boolean
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isAuthEndpoint =
+      originalRequest.url?.includes('/auth/login') ||
+      originalRequest.url?.includes('/auth/refresh')
+
+    if (
+      error.response?.status === 401 &&
+      !isAuthEndpoint &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -53,9 +61,15 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, {}, {
-          headers: { Authorization: `Bearer ${useAuthStore.getState().auth.accessToken}` },
-        })
+        const { data } = await axios.post(
+          `${BASE_URL}/api/auth/refresh`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${useAuthStore.getState().auth.accessToken}`,
+            },
+          }
+        )
         const newToken = data.data.token
         useAuthStore.getState().auth.setAccessToken(newToken)
         processQueue(null, newToken)
@@ -72,7 +86,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error)
-  },
+  }
 )
 
 export default api

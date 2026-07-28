@@ -7,7 +7,7 @@ export function handleServerError(error: unknown) {
     console.log(error)
   }
 
-  let errMsg = 'Something went wrong!'
+  let errMsg = 'Terjadi kesalahan!'
 
   if (
     error &&
@@ -15,11 +15,18 @@ export function handleServerError(error: unknown) {
     'status' in error &&
     Number(error.status) === 204
   ) {
-    errMsg = 'No content.'
+    errMsg = 'Tidak ada konten.'
   }
 
   if (error instanceof AxiosError) {
-    const title = error.response?.data?.title ?? error.response?.data?.message
+    const errors = error.response?.data?.errors
+    const firstError =
+      errors && typeof errors === 'object'
+        ? Object.values(errors).flat()[0]
+        : undefined
+
+    const title =
+      error.response?.data?.title ?? firstError ?? error.response?.data?.message
     if (typeof title === 'string' && title.length > 0) {
       errMsg = title
     }
