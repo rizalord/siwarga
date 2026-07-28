@@ -4,7 +4,8 @@ namespace Tests\Feature\Api;
 
 use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +18,7 @@ class UserTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(RolePermissionSeeder::class);
+        $this->seed([PermissionSeeder::class, RoleSeeder::class]);
         $this->admin = User::factory()->create();
         $this->admin->roles()->attach(Role::where('name', 'admin')->first()->id);
         $this->admin->load('roles.permissions');
@@ -31,6 +32,9 @@ class UserTest extends TestCase
         $response = $this->getJson('/api/users');
 
         $response->assertStatus(200);
+        $this->assertIsArray($response->json('data'));
+        // 3 created + the admin acting user from setUp()
+        $this->assertCount(4, $response->json('data'));
     }
 
     public function test_can_create_user()

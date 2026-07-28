@@ -4,7 +4,7 @@ import { usersService } from '@/services/users'
 export function useUsers() {
   return useQuery({
     queryKey: ['users'],
-    queryFn: () => usersService.getAll(),
+    queryFn: () => usersService.getAll({ per_page: 1000 }),
     select: (res) => res.data,
   })
 }
@@ -13,7 +13,7 @@ export function useUser(id: number) {
   return useQuery({
     queryKey: ['users', id],
     queryFn: () => usersService.getById(id),
-    select: (res) => res.data,
+    select: (res) => res.data.data,
     enabled: !!id,
   })
 }

@@ -28,7 +28,6 @@ import {
 import { useAssignResident } from '@/hooks/use-houses'
 import { useResidents } from '@/hooks/use-residents'
 import type { House, Resident } from '@/types/api'
-import { cn } from '@/lib/utils'
 
 type HouseAssignDialogProps = {
   currentRow: House

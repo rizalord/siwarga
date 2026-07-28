@@ -131,7 +131,7 @@ function UsersPageInner() {
           </div>
         ) : (
           <UsersTable
-            data={data ?? []}
+            data={data?.data ?? []}
             search={search}
             navigate={navigate}
             setOpen={setOpen}

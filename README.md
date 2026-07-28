@@ -80,6 +80,9 @@ php artisan key:generate
 # Run migrations & seeders
 php artisan migrate --seed
 
+# Buat symlink storage (wajib agar foto KTP yang diupload bisa diakses publik)
+php artisan storage:link
+
 # Jalankan server development
 php artisan serve
 ```
@@ -107,13 +110,15 @@ npm run dev
 
 Frontend akan berjalan di `http://localhost:5173`.
 
-### 4. Default Admin Credential
+### 4. Akun & Data Demo
 
-Setelah seeding (`php artisan db:seed`), akun default:
+`php artisan migrate --seed` otomatis membuat 3 akun (satu per role) dan data demo yang realistis: 20 rumah (15 tetap dihuni, 3 kontrak dihuni, 2 kosong), 18 penghuni, tagihan 3 bulan terakhir (sebagian sudah lunas), serta pengeluaran operasional — supaya dashboard, laporan, dan setiap modul langsung terlihat terisi begitu login pertama kali, tidak perlu input manual dulu.
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@siwarga.test` | `password` |
+| Role | Email | Password | Catatan |
+|------|-------|----------|---------|
+| Admin | `admin@siwarga.test` | `password` | Akses penuh |
+| Bendahara | `bendahara@siwarga.test` | `password` | Kelola pembayaran, pengeluaran, laporan |
+| Warga | `warga@siwarga.test` | `password` | Hanya lihat tagihan & pembayaran miliknya sendiri |
 
 ## Struktur Repository
 
@@ -176,7 +181,7 @@ siwarga/
 | GET/POST/DELETE | `/api/bills` | List, generate, delete tagihan |
 | GET/POST/DELETE | `/api/payments` | List, create, delete pembayaran |
 | GET/POST/PUT/DELETE | `/api/expenses` | CRUD pengeluaran |
-| GET | `/api/reports/summary?year=...` | Ringkasan tahunan |
+| GET | `/api/reports/summary/{year}` | Ringkasan tahunan |
 | GET | `/api/reports/monthly/{year}/{month}` | Laporan bulanan |
 | GET/POST/PUT/DELETE | `/api/users` | CRUD user (Admin only) |
 

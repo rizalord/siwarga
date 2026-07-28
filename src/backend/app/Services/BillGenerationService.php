@@ -13,12 +13,19 @@ class BillGenerationService
 {
     public function generate(int $month, int $year, ?int $generatedBy = null): Collection
     {
-        $periodStart = Carbon::createFromDate($year, $month, 1);
-        $periodEnd = $periodStart->copy()->endOfMonth();
         $generated = collect();
         $dueTypes = DueType::all();
 
         foreach ($dueTypes as $dueType) {
+            $isAnnual = $dueType->billing_cycle === 'fleksibel';
+            $periodStart = $isAnnual
+                ? Carbon::createFromDate($year, 1, 1)
+                : Carbon::createFromDate($year, $month, 1);
+            $periodEnd = $isAnnual
+                ? Carbon::createFromDate($year, 12, 31)
+                : $periodStart->copy()->endOfMonth();
+            $amountDue = $isAnnual ? $dueType->amount * 12 : $dueType->amount;
+
             $houses = House::where('status', 'dihuni')->get();
             foreach ($houses as $house) {
                 $activeResident = HouseResident::where('house_id', $house->id)
@@ -27,10 +34,15 @@ class BillGenerationService
                     continue;
                 }
 
-                $exists = Bill::where('house_id', $house->id)
-                    ->where('due_type_id', $dueType->id)
-                    ->whereYear('period_start', $year)->whereMonth('period_start', $month)
-                    ->exists();
+                $exists = $isAnnual
+                    ? Bill::where('house_id', $house->id)
+                        ->where('due_type_id', $dueType->id)
+                        ->whereYear('period_start', $year)
+                        ->exists()
+                    : Bill::where('house_id', $house->id)
+                        ->where('due_type_id', $dueType->id)
+                        ->whereYear('period_start', $year)->whereMonth('period_start', $month)
+                        ->exists();
                 if ($exists) {
                     continue;
                 }
@@ -41,7 +53,7 @@ class BillGenerationService
                     'due_type_id' => $dueType->id,
                     'period_start' => $periodStart,
                     'period_end' => $periodEnd,
-                    'amount_due' => $dueType->amount,
+                    'amount_due' => $amountDue,
                     'generated_by' => $generatedBy,
                     'generated_at' => now(),
                 ]);

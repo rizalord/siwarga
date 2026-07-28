@@ -47,9 +47,9 @@ type PaymentFormDialogProps = {
 }
 
 const formSchema = z.object({
-  bill_id: z.number({ required_error: 'Tagihan wajib dipilih.' }),
+  bill_id: z.number({ error: 'Tagihan wajib dipilih.' }),
   amount_paid: z.coerce
-    .number({ invalid_type_error: 'Jumlah dibayar wajib diisi.' })
+    .number({ error: 'Jumlah dibayar wajib diisi.' })
     .positive('Jumlah harus lebih dari 0.'),
   payment_date: z.string().min(1, 'Tanggal bayar wajib diisi.'),
   notes: z.string().optional(),
@@ -80,7 +80,7 @@ export function PaymentFormDialog({
   const bills = billsData?.data ?? []
   const [billSearchOpen, setBillSearchOpen] = useState(false)
 
-  const form = useForm<PaymentForm>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       bill_id: undefined as unknown as number,
@@ -208,6 +208,7 @@ export function PaymentFormDialog({
                       className='col-span-4'
                       autoComplete='off'
                       {...field}
+                      value={(field.value as number | string | undefined) ?? ''}
                     />
                   </FormControl>
                   <FormMessage className='col-span-4 col-start-3' />

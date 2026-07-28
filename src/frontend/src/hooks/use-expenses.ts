@@ -5,7 +5,7 @@ import type { ExpenseFilter, CreateExpenseRequest } from '@/types/api'
 export function useExpenses(params?: ExpenseFilter) {
   return useQuery({
     queryKey: ['expenses', params],
-    queryFn: () => expensesService.getAll(params),
+    queryFn: () => expensesService.getAll({ per_page: 1000, ...params }),
     select: (res) => res.data,
   })
 }
@@ -14,7 +14,7 @@ export function useExpense(id: number) {
   return useQuery({
     queryKey: ['expenses', id],
     queryFn: () => expensesService.getById(id),
-    select: (res) => res.data,
+    select: (res) => res.data.data,
     enabled: !!id,
   })
 }

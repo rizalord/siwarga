@@ -14,6 +14,10 @@ class BillController extends Controller
     {
         $query = Bill::with(['house', 'resident', 'dueType']);
 
+        if ($request->user()->resident_id) {
+            $query->where('resident_id', $request->user()->resident_id);
+        }
+
         if ($request->month) {
             $query->whereMonth('period_start', $request->month);
         }
@@ -29,8 +33,13 @@ class BillController extends Controller
         return BillResource::collection($query->paginate($request->per_page ?? 10));
     }
 
-    public function show(Bill $bill)
+    public function show(Request $request, Bill $bill)
     {
+        abort_if(
+            $request->user()->resident_id && $bill->resident_id !== $request->user()->resident_id,
+            403
+        );
+
         $bill->load(['house', 'resident', 'dueType', 'payments']);
 
         return new BillResource($bill);

@@ -7,7 +7,8 @@ use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -21,7 +22,7 @@ class ReportTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(RolePermissionSeeder::class);
+        $this->seed([PermissionSeeder::class, RoleSeeder::class]);
 
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
@@ -45,10 +46,19 @@ class ReportTest extends TestCase
         $response = $this->getJson('/api/reports/summary/2026');
 
         $response->assertStatus(200);
-        $response->assertJsonStructure(['data' => ['year', 'total_income', 'total_expense', 'balance']]);
+        $response->assertJsonStructure([
+            'data' => [
+                'year',
+                'year_balance',
+                'monthly_data' => [
+                    '*' => ['month', 'total_income', 'total_expense', 'balance'],
+                ],
+            ],
+        ]);
+        $this->assertCount(12, $response->json('data.monthly_data'));
     }
 
-    public function test_yearly_summary_returns_correct_totals()
+    public function test_yearly_summary_returns_correct_monthly_totals()
     {
         $bill = Bill::factory()->create(['amount_due' => 300000]);
         Payment::factory()->create([
@@ -64,9 +74,18 @@ class ReportTest extends TestCase
         $response = $this->getJson('/api/reports/summary/2026');
 
         $response->assertStatus(200);
-        $response->assertJsonPath('data.total_income', 300000);
-        $response->assertJsonPath('data.total_expense', 100000);
-        $response->assertJsonPath('data.balance', 200000);
+        $monthly = collect($response->json('data.monthly_data'));
+        $january = $monthly->firstWhere('month', 1);
+
+        $this->assertEquals(300000, $january['total_income']);
+        $this->assertEquals(100000, $january['total_expense']);
+        $this->assertEquals(200000, $january['balance']);
+        $this->assertEquals(200000, $response->json('data.year_balance'));
+
+        // Other months should be untouched.
+        $february = $monthly->firstWhere('month', 2);
+        $this->assertEquals(0, $february['total_income']);
+        $this->assertEquals(0, $february['total_expense']);
     }
 
     public function test_can_get_monthly_report()

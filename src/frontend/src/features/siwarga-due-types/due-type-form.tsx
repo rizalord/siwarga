@@ -31,10 +31,10 @@ type DueTypeFormDialogProps = {
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nama jenis iuran wajib diisi.'),
-  amount: z.coerce.number({ invalid_type_error: 'Nominal wajib diisi.' })
+  amount: z.coerce.number({ error: 'Nominal wajib diisi.' })
     .positive('Nominal harus lebih dari 0.'),
   billing_cycle: z.enum(['bulanan', 'fleksibel'], {
-    required_error: 'Siklus billing wajib dipilih.',
+    error: 'Siklus billing wajib dipilih.',
   }),
 })
 
@@ -49,7 +49,7 @@ export function DueTypeFormDialog({
   const createDueType = useCreateDueType()
   const updateDueType = useUpdateDueType(currentRow?.id ?? 0)
 
-  const form = useForm<DueTypeForm>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: currentRow ?? {
       name: '',
@@ -139,6 +139,7 @@ export function DueTypeFormDialog({
                       className='col-span-4'
                       autoComplete='off'
                       {...field}
+                      value={(field.value as number | string | undefined) ?? ''}
                     />
                   </FormControl>
                   <FormMessage className='col-span-4 col-start-3' />

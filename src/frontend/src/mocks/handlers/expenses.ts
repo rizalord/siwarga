@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { mockExpenses } from '../data/expenses'
 
-let expenses = [...mockExpenses]
+const expenses = [...mockExpenses]
 let nextId = 100
 
 export const expenseHandlers = [

@@ -4,12 +4,12 @@ export const baseURL = 'http://localhost:5173'
 
 export const defaultAdmin = {
   email: 'admin@siwarga.test',
-  password: 'password123',
+  password: 'password',
 }
 
 export const defaultWarga = {
   email: 'warga@siwarga.test',
-  password: 'password123',
+  password: 'password',
 }
 
 export async function login(page: Page, email: string, password: string) {

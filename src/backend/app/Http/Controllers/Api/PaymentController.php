@@ -13,6 +13,12 @@ class PaymentController extends Controller
     {
         $query = Payment::with('bill');
 
+        if ($request->user()->resident_id) {
+            $query->whereHas('bill', function ($q) use ($request) {
+                $q->where('resident_id', $request->user()->resident_id);
+            });
+        }
+
         return PaymentResource::collection($query->paginate($request->per_page ?? 10));
     }
 
@@ -39,9 +45,14 @@ class PaymentController extends Controller
         return new PaymentResource($payment);
     }
 
-    public function show(Payment $payment)
+    public function show(Request $request, Payment $payment)
     {
         $payment->load('bill');
+
+        abort_if(
+            $request->user()->resident_id && $payment->bill?->resident_id !== $request->user()->resident_id,
+            403
+        );
 
         return new PaymentResource($payment);
     }

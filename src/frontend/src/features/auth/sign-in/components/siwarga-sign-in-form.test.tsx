@@ -19,7 +19,7 @@ const setAccessTokenMock = vi.fn()
 const loginMock = vi.fn()
 
 vi.mock('@/stores/auth-store', () => ({
-  useAuthStore: (selector: (s: any) => any) =>
+  useAuthStore: (selector: (s: unknown) => unknown) =>
     selector({
       auth: {
         setUser: setUserMock,
@@ -49,7 +49,7 @@ describe('SiwargaSignInForm', () => {
   })
 
   it('should render email and password fields', async () => {
-    const screen = render(<SiwargaSignInForm />)
+    const screen = await render(<SiwargaSignInForm />)
     await expect.element(screen.getByLabelText(/email/i)).toBeInTheDocument()
     await expect
       .element(screen.getByLabelText(/password/i))
@@ -57,7 +57,7 @@ describe('SiwargaSignInForm', () => {
   })
 
   it('should show validation error for empty fields', async () => {
-    const screen = render(<SiwargaSignInForm />)
+    const screen = await render(<SiwargaSignInForm />)
     const signInButton = screen.getByRole('button', { name: /masuk/i })
     await userEvent.click(signInButton)
 
@@ -72,7 +72,7 @@ describe('SiwargaSignInForm', () => {
   it('should call auth service and store on valid submission', async () => {
     loginMock.mockResolvedValue(mockLoginResponse)
 
-    const screen = render(<SiwargaSignInForm />)
+    const screen = await render(<SiwargaSignInForm />)
     const emailInput = screen.getByLabelText(/email/i)
     const passwordInput = screen.getByLabelText(/password/i)
     const signInButton = screen.getByRole('button', { name: /masuk/i })
@@ -109,7 +109,7 @@ describe('SiwargaSignInForm', () => {
   it('should handle login error gracefully', async () => {
     loginMock.mockRejectedValue(new Error('Login failed'))
 
-    const screen = render(<SiwargaSignInForm />)
+    const screen = await render(<SiwargaSignInForm />)
     const emailInput = screen.getByLabelText(/email/i)
     const passwordInput = screen.getByLabelText(/password/i)
     const signInButton = screen.getByRole('button', { name: /masuk/i })

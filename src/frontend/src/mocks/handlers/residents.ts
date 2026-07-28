@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { mockResidents } from '../data/residents'
 
-let residents = [...mockResidents]
+const residents = [...mockResidents]
 let nextId = 100
 
 export const residentHandlers = [

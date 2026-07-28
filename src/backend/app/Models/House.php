@@ -36,6 +36,11 @@ class House extends Model
         return $this->hasMany(HouseResident::class);
     }
 
+    public function bills()
+    {
+        return $this->hasMany(Bill::class);
+    }
+
     protected static function booted(): void
     {
         static::saved(function (House $house) {

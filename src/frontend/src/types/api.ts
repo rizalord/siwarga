@@ -69,7 +69,7 @@ export interface CreateResidentRequest {
   ktp_photo?: File
 }
 
-export interface UpdateResidentRequest extends Partial<CreateResidentRequest> {}
+export type UpdateResidentRequest = Partial<CreateResidentRequest>
 
 // Houses
 export interface House {

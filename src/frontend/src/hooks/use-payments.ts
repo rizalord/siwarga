@@ -5,7 +5,7 @@ import type { CreatePaymentRequest } from '@/types/api'
 export function usePayments(params?: { bill_id?: number; page?: number; per_page?: number }) {
   return useQuery({
     queryKey: ['payments', params],
-    queryFn: () => paymentsService.getAll(params),
+    queryFn: () => paymentsService.getAll({ per_page: 1000, ...params }),
     select: (res) => res.data,
   })
 }
@@ -14,7 +14,7 @@ export function usePayment(id: number) {
   return useQuery({
     queryKey: ['payments', id],
     queryFn: () => paymentsService.getById(id),
-    select: (res) => res.data,
+    select: (res) => res.data.data,
     enabled: !!id,
   })
 }

@@ -5,7 +5,8 @@ namespace Tests\Feature\Api;
 use App\Models\DueType;
 use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,7 +20,7 @@ class DueTypeTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(RolePermissionSeeder::class);
+        $this->seed([PermissionSeeder::class, RoleSeeder::class]);
 
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);

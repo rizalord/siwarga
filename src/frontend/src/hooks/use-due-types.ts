@@ -5,7 +5,7 @@ import type { CreateDueTypeRequest } from '@/types/api'
 export function useDueTypes() {
   return useQuery({
     queryKey: ['due-types'],
-    queryFn: () => dueTypesService.getAll(),
+    queryFn: () => dueTypesService.getAll({ per_page: 1000 }),
     select: (res) => res.data,
   })
 }
@@ -14,7 +14,7 @@ export function useDueType(id: number) {
   return useQuery({
     queryKey: ['due-types', id],
     queryFn: () => dueTypesService.getById(id),
-    select: (res) => res.data,
+    select: (res) => res.data.data,
     enabled: !!id,
   })
 }

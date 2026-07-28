@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Bill;
 use App\Models\House;
 use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,7 +22,7 @@ class HouseTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(RolePermissionSeeder::class);
+        $this->seed([PermissionSeeder::class, RoleSeeder::class]);
 
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
@@ -60,6 +62,17 @@ class HouseTest extends TestCase
         $this->deleteJson("/api/houses/{$house->id}");
 
         $this->assertSoftDeleted($house);
+    }
+
+    public function test_cannot_delete_house_with_transaction_history()
+    {
+        $house = House::factory()->create();
+        Bill::factory()->create(['house_id' => $house->id]);
+
+        $response = $this->deleteJson("/api/houses/{$house->id}");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('houses', ['id' => $house->id, 'deleted_at' => null]);
     }
 
     public function test_can_assign_resident_to_house()

@@ -1,7 +1,8 @@
 import { http, HttpResponse } from 'msw'
 import { mockBills } from '../data/bills'
+import type { Bill } from '@/types/api'
 
-let bills = [...mockBills]
+const bills = [...mockBills]
 let nextId = 100
 
 export const billHandlers = [
@@ -29,7 +30,7 @@ export const billHandlers = [
 
   http.post('/api/bills/generate', async ({ request }) => {
     const body = await request.json() as { month: number; year: number; due_type_id?: number }
-    const newBill = {
+    const newBill: Bill = {
       id: nextId++,
       house: { id: 1, house_number: 'A-01', address: 'Jl. Mawar No. 1', status: 'dihuni', created_at: '', updated_at: '', deleted_at: null },
       resident: { id: 1, full_name: 'Ahmad Fauzi', status: 'tetap', phone_number: '081234567890', marital_status: 'menikah', ktp_photo_url: null, created_at: '', updated_at: '', deleted_at: null },

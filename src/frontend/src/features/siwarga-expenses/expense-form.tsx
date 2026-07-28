@@ -40,7 +40,7 @@ const formSchema = z.object({
   category: z.string().min(1, 'Kategori wajib diisi.'),
   description: z.string().optional(),
   amount: z.coerce
-    .number({ invalid_type_error: 'Jumlah wajib diisi.' })
+    .number({ error: 'Jumlah wajib diisi.' })
     .positive('Jumlah harus lebih dari 0.'),
   expense_date: z.string().min(1, 'Tanggal pengeluaran wajib diisi.'),
 })
@@ -64,14 +64,21 @@ export function ExpenseFormDialog({
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense(currentRow?.id ?? 0)
 
-  const form = useForm<ExpenseForm>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: currentRow ?? {
-      category: '',
-      description: '',
-      amount: undefined as unknown as number,
-      expense_date: '',
-    },
+    defaultValues: currentRow
+      ? {
+          category: currentRow.category,
+          description: currentRow.description ?? '',
+          amount: currentRow.amount,
+          expense_date: currentRow.expense_date,
+        }
+      : {
+          category: '',
+          description: '',
+          amount: undefined as unknown as number,
+          expense_date: '',
+        },
   })
 
   const onSubmit = (data: ExpenseForm) => {
@@ -174,6 +181,7 @@ export function ExpenseFormDialog({
                       className='col-span-4'
                       autoComplete='off'
                       {...field}
+                      value={(field.value as number | string | undefined) ?? ''}
                     />
                   </FormControl>
                   <FormMessage className='col-span-4 col-start-3' />

@@ -2,8 +2,8 @@ import api from './api'
 import type { ApiResponse, PaginatedResponse, DueType, CreateDueTypeRequest } from '@/types/api'
 
 export const dueTypesService = {
-  getAll: () =>
-    api.get<PaginatedResponse<DueType>>('/api/due-types'),
+  getAll: (params?: { page?: number; per_page?: number }) =>
+    api.get<PaginatedResponse<DueType>>('/api/due-types', { params }),
   getById: (id: number) =>
     api.get<ApiResponse<DueType>>(`/api/due-types/${id}`),
   create: (data: CreateDueTypeRequest) =>

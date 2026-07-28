@@ -10,14 +10,33 @@ class ReportService
 {
     public function yearlySummary(int $year): array
     {
-        $totalIncome = Payment::whereYear('payment_date', $year)->sum('amount_paid');
-        $totalExpense = Expense::whereYear('expense_date', $year)->sum('amount');
+        $monthlyData = [];
+        $yearBalance = 0.0;
+
+        for ($month = 1; $month <= 12; $month++) {
+            $income = (float) Payment::whereYear('payment_date', $year)
+                ->whereMonth('payment_date', $month)
+                ->sum('amount_paid');
+
+            $expense = (float) Expense::whereYear('expense_date', $year)
+                ->whereMonth('expense_date', $month)
+                ->sum('amount');
+
+            $balance = $income - $expense;
+            $yearBalance += $balance;
+
+            $monthlyData[] = [
+                'month' => $month,
+                'total_income' => $income,
+                'total_expense' => $expense,
+                'balance' => $balance,
+            ];
+        }
 
         return [
             'year' => $year,
-            'total_income' => (float) $totalIncome,
-            'total_expense' => (float) $totalExpense,
-            'balance' => (float) ($totalIncome - $totalExpense),
+            'monthly_data' => $monthlyData,
+            'year_balance' => $yearBalance,
         ];
     }
 

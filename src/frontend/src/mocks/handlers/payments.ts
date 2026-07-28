@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { mockPayments } from '../data/payments'
 
-let payments = [...mockPayments]
+const payments = [...mockPayments]
 let nextId = 100
 
 export const paymentHandlers = [

@@ -5,8 +5,11 @@ namespace Tests\Feature\Api;
 use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ResidentTest extends TestCase
@@ -19,7 +22,7 @@ class ResidentTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(RolePermissionSeeder::class);
+        $this->seed([PermissionSeeder::class, RoleSeeder::class]);
 
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
@@ -48,6 +51,30 @@ class ResidentTest extends TestCase
         $response = $this->postJson('/api/residents', $data);
 
         $response->assertStatus(201)->assertJsonPath('data.full_name', 'Test');
+    }
+
+    public function test_can_upload_and_retrieve_ktp_photo(): void
+    {
+        Storage::fake('public');
+
+        $data = [
+            'full_name' => 'Test Foto',
+            'status' => 'tetap',
+            'phone_number' => '08123456789',
+            'marital_status' => 'menikah',
+            'ktp_photo' => UploadedFile::fake()->image('ktp.jpg'),
+        ];
+
+        $response = $this->postJson('/api/residents', $data);
+
+        $response->assertStatus(201);
+        $resident = Resident::first();
+        Storage::disk('public')->assertExists($resident->ktp_photo_path);
+
+        $show = $this->getJson("/api/residents/{$resident->id}");
+        $show->assertStatus(200);
+        $this->assertNotNull($show->json('data.ktp_photo_url'));
+        $this->assertStringContainsString($resident->ktp_photo_path, $show->json('data.ktp_photo_url'));
     }
 
     public function test_validates_required_fields()

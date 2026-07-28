@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
 import { useCreateUser, useUpdateUser } from '@/hooks/use-users'
+import { useRoles } from '@/hooks/use-roles'
 import type { User } from '@/types/api'
 
 type UserFormDialogProps = {
@@ -38,18 +39,11 @@ const formSchema = z.object({
     .email('Format email tidak valid.'),
   password: z.string().optional(),
   role_id: z.coerce
-    .number({ invalid_type_error: 'Role wajib dipilih.' })
+    .number({ error: 'Role wajib dipilih.' })
     .min(1, 'Role wajib dipilih.'),
 })
 
 type UserForm = z.infer<typeof formSchema>
-
-const ROLE_OPTIONS = [
-  { label: 'Admin', value: '1' },
-  { label: 'Ketua RT', value: '2' },
-  { label: 'Bendahara', value: '3' },
-  { label: 'Warga', value: '4' },
-]
 
 export function UserFormDialog({
   currentRow,
@@ -59,8 +53,13 @@ export function UserFormDialog({
   const isUpdate = !!currentRow
   const createUser = useCreateUser()
   const updateUser = useUpdateUser(currentRow?.id ?? 0)
+  const { data: roles } = useRoles()
+  const roleOptions = (roles ?? []).map((role) => ({
+    label: role.description || role.name,
+    value: String(role.id),
+  }))
 
-  const form = useForm<UserForm>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: currentRow
       ? {
@@ -83,6 +82,7 @@ export function UserFormDialog({
         {
           name: data.name,
           email: data.email,
+          role_ids: [data.role_id],
         },
         {
           onSuccess: () => {
@@ -220,7 +220,7 @@ export function UserFormDialog({
                       onValueChange={(value) => field.onChange(Number(value))}
                       placeholder='Pilih role'
                       className='col-span-4'
-                      items={ROLE_OPTIONS}
+                      items={roleOptions}
                     />
                   </FormControl>
                   <FormMessage className='col-span-4 col-start-3' />

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -32,11 +33,11 @@ type ResidentFormDialogProps = {
 const formSchema = z.object({
   full_name: z.string().min(1, 'Nama lengkap wajib diisi.'),
   status: z.enum(['kontrak', 'tetap'], {
-    required_error: 'Status wajib dipilih.',
+    error: 'Status wajib dipilih.',
   }),
   phone_number: z.string().min(1, 'Nomor telepon wajib diisi.'),
   marital_status: z.enum(['menikah', 'belum_menikah'], {
-    required_error: 'Status nikah wajib dipilih.',
+    error: 'Status nikah wajib dipilih.',
   }),
   ktp_photo: z.instanceof(File).optional(),
 })
@@ -51,6 +52,17 @@ export function ResidentFormDialog({
   const isUpdate = !!currentRow
   const createResident = useCreateResident()
   const updateResident = useUpdateResident(currentRow?.id ?? 0)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(
+    currentRow?.ktp_photo_url ?? null
+  )
+
+  useEffect(() => {
+    return () => {
+      if (photoPreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(photoPreview)
+      }
+    }
+  }, [photoPreview])
 
   const form = useForm<ResidentForm>({
     resolver: zodResolver(formSchema),
@@ -229,11 +241,22 @@ export function ResidentFormDialog({
                       onChange={(e) => {
                         const file = e.target.files?.[0]
                         onChange(file ?? undefined)
+                        setPhotoPreview((prev) => {
+                          if (prev?.startsWith('blob:')) URL.revokeObjectURL(prev)
+                          return file ? URL.createObjectURL(file) : null
+                        })
                       }}
                       {...field}
                     />
                   </FormControl>
                   <FormMessage className='col-span-4 col-start-3' />
+                  {photoPreview && (
+                    <img
+                      src={photoPreview}
+                      alt='Preview foto KTP'
+                      className='col-span-4 col-start-3 h-32 w-auto rounded-md border object-contain'
+                    />
+                  )}
                 </FormItem>
               )}
             />

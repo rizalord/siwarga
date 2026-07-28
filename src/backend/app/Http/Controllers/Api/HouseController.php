@@ -58,6 +58,12 @@ class HouseController extends Controller
 
     public function destroy(House $house)
     {
+        if ($house->bills()->exists()) {
+            return response()->json([
+                'message' => 'Rumah tidak bisa dihapus karena memiliki histori transaksi.',
+            ], 422);
+        }
+
         $house->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);

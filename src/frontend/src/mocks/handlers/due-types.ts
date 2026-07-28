@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { mockDueTypes } from '../data/due-types'
 
-let dueTypes = [...mockDueTypes]
+const dueTypes = [...mockDueTypes]
 let nextId = 100
 
 export const dueTypeHandlers = [

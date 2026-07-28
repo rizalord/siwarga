@@ -5,7 +5,7 @@ import type { HouseFilter, CreateHouseRequest, AssignResidentRequest } from '@/t
 export function useHouses(params?: HouseFilter) {
   return useQuery({
     queryKey: ['houses', params],
-    queryFn: () => housesService.getAll(params),
+    queryFn: () => housesService.getAll({ per_page: 1000, ...params }),
     select: (res) => res.data,
   })
 }
@@ -14,7 +14,7 @@ export function useHouse(id: number) {
   return useQuery({
     queryKey: ['houses', id],
     queryFn: () => housesService.getById(id),
-    select: (res) => res.data,
+    select: (res) => res.data.data,
     enabled: !!id,
   })
 }
@@ -56,7 +56,7 @@ export function useHouseResidents(id: number) {
   return useQuery({
     queryKey: ['houses', id, 'residents'],
     queryFn: () => housesService.getResidents(id),
-    select: (res) => res.data,
+    select: (res) => res.data.data,
     enabled: !!id,
   })
 }
