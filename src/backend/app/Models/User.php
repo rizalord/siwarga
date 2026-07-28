@@ -50,9 +50,18 @@ class User extends Authenticatable implements PasskeyUser
         return $this->belongsToMany(Role::class, 'user_roles');
     }
 
-    public function permissions(): BelongsToMany
+    public function getAllPermissions(): array
     {
-        return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id');
+        return $this->roles()
+            ->with('permissions')
+            ->get()
+            ->pluck('permissions')
+            ->flatten()
+            ->pluck('name')
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
     }
 
     public function hasPermission(string $permission): bool

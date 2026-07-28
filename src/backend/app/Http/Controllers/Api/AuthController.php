@@ -31,7 +31,7 @@ class AuthController extends Controller
             'data' => [
                 'user' => $user,
                 'token' => $token,
-                'permissions' => [],
+                'permissions' => $user->getAllPermissions(),
             ],
         ]);
     }
@@ -57,7 +57,7 @@ class AuthController extends Controller
         return response()->json([
             'data' => [
                 'user' => $request->user()->load('roles.permissions'),
-                'permissions' => [],
+                'permissions' => $request->user()->getAllPermissions(),
             ],
         ]);
     }
