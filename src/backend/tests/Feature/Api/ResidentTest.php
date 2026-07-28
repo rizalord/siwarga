@@ -3,7 +3,9 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Resident;
+use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +19,11 @@ class ResidentTest extends TestCase
     {
         parent::setUp();
 
+        $this->seed(RolePermissionSeeder::class);
+
         $this->user = User::factory()->create();
+        $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
+        $this->user->load('roles.permissions');
         $this->actingAs($this->user);
     }
 

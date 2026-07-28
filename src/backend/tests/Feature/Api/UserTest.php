@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,9 +17,10 @@ class UserTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $role = Role::create(['name' => 'admin', 'description' => 'Admin']);
+        $this->seed(RolePermissionSeeder::class);
         $this->admin = User::factory()->create();
-        $this->admin->roles()->attach($role->id);
+        $this->admin->roles()->attach(Role::where('name', 'admin')->first()->id);
+        $this->admin->load('roles.permissions');
         $this->actingAs($this->admin);
     }
 

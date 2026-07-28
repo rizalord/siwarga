@@ -6,7 +6,9 @@ use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\House;
 use App\Models\Resident;
+use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,7 +22,11 @@ class BillTest extends TestCase
     {
         parent::setUp();
 
+        $this->seed(RolePermissionSeeder::class);
+
         $this->user = User::factory()->create();
+        $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
+        $this->user->load('roles.permissions');
         $this->actingAs($this->user);
     }
 
@@ -68,6 +74,7 @@ class BillTest extends TestCase
             'resident_id' => $resident->id,
             'start_date' => '2026-01-01',
         ]);
+        $house->update(['status' => 'dihuni']);
 
         $response = $this->postJson('/api/bills/generate', [
             'month' => 1,
@@ -91,6 +98,7 @@ class BillTest extends TestCase
             'resident_id' => $resident->id,
             'start_date' => '2026-01-01',
         ]);
+        $house->update(['status' => 'dihuni']);
 
         $this->postJson('/api/bills/generate', ['month' => 1, 'year' => 2026]);
         $this->postJson('/api/bills/generate', ['month' => 1, 'year' => 2026]);
