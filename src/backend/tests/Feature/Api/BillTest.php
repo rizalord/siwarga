@@ -66,6 +66,20 @@ class BillTest extends TestCase
         $response->assertStatus(200)->assertJsonCount(1, 'data');
     }
 
+    public function test_can_search_bills_by_resident_or_house()
+    {
+        $house = House::factory()->create(['house_number' => 'A01']);
+        $resident = Resident::factory()->create(['full_name' => 'Budi Santoso']);
+        Bill::factory()->create(['house_id' => $house->id, 'resident_id' => $resident->id]);
+        Bill::factory()->create();
+
+        $this->getJson('/api/bills?search=Budi')
+            ->assertStatus(200)->assertJsonCount(1, 'data');
+
+        $this->getJson('/api/bills?search=A01')
+            ->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
     public function test_can_generate_bills()
     {
         $dueType = DueType::factory()->create(['amount' => 100000, 'billing_cycle' => 'bulanan']);

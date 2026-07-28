@@ -11,7 +11,13 @@ class DueTypeController extends Controller
 {
     public function index(Request $request)
     {
-        return DueTypeResource::collection(DueType::paginate($request->per_page ?? 10));
+        $query = DueType::query();
+
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
+
+        return $this->paginated($query->paginate($request->per_page ?? 10), DueTypeResource::class);
     }
 
     public function store(Request $request)

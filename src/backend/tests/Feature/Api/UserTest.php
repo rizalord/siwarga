@@ -37,6 +37,18 @@ class UserTest extends TestCase
         $this->assertCount(4, $response->json('data'));
     }
 
+    public function test_can_search_users_by_name_or_email()
+    {
+        User::factory()->create(['name' => 'Budi Santoso', 'email' => 'budi@test.com']);
+        User::factory()->create(['name' => 'Ani Wijaya', 'email' => 'ani@test.com']);
+
+        $this->getJson('/api/users?search=Budi')
+            ->assertStatus(200);
+        $this->assertCount(1, $this->getJson('/api/users?search=Budi')->json('data'));
+
+        $this->assertCount(1, $this->getJson('/api/users?search=ani@test.com')->json('data'));
+    }
+
     public function test_can_create_user()
     {
         $response = $this->postJson('/api/users', [

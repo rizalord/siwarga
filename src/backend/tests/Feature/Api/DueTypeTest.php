@@ -37,6 +37,16 @@ class DueTypeTest extends TestCase
         $response->assertStatus(200)->assertJsonCount(3, 'data');
     }
 
+    public function test_can_search_due_types_by_name()
+    {
+        DueType::factory()->create(['name' => 'Iuran Satpam']);
+        DueType::factory()->create(['name' => 'Iuran Kebersihan']);
+
+        $response = $this->getJson('/api/due-types?search=Satpam');
+
+        $response->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
     public function test_can_create_due_type()
     {
         $data = ['name' => 'Iuran Kebersihan', 'amount' => 50000, 'billing_cycle' => 'bulanan'];

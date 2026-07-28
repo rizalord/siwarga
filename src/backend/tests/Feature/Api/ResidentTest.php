@@ -39,6 +39,21 @@ class ResidentTest extends TestCase
         $response->assertStatus(200)->assertJsonCount(3, 'data');
     }
 
+    public function test_can_filter_residents_by_status_and_search()
+    {
+        Resident::factory()->create(['status' => 'tetap', 'full_name' => 'Budi Santoso', 'phone_number' => '081111111111']);
+        Resident::factory()->create(['status' => 'kontrak', 'full_name' => 'Ani Wijaya', 'phone_number' => '082222222222']);
+
+        $this->getJson('/api/residents?status=kontrak')
+            ->assertStatus(200)->assertJsonCount(1, 'data');
+
+        $this->getJson('/api/residents?search=Budi')
+            ->assertStatus(200)->assertJsonCount(1, 'data');
+
+        $this->getJson('/api/residents?search=082222222222')
+            ->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
     public function test_can_create_resident()
     {
         $data = [

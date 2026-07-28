@@ -13,15 +13,20 @@ class ResidentController extends Controller
     {
         $query = Resident::query();
 
-        if ($request->status) {
-            $query->where('status', $request->status);
+        if ($request->filled('status')) {
+            is_array($request->status)
+                ? $query->whereIn('status', $request->status)
+                : $query->where('status', $request->status);
         }
 
         if ($request->search) {
-            $query->where('full_name', 'like', "%{$request->search}%");
+            $query->where(function ($q) use ($request) {
+                $q->where('full_name', 'like', "%{$request->search}%")
+                    ->orWhere('phone_number', 'like', "%{$request->search}%");
+            });
         }
 
-        return ResidentResource::collection($query->paginate($request->per_page ?? 10));
+        return $this->paginated($query->paginate($request->per_page ?? 10), ResidentResource::class);
     }
 
     public function store(Request $request)

@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Expenses
     Route::get('expenses', [ExpenseController::class, 'index'])->middleware('can:expenses.view');
     Route::post('expenses', [ExpenseController::class, 'store'])->middleware('can:expenses.create');
+    Route::get('expenses/categories', [ExpenseController::class, 'categories'])->middleware('can:expenses.view');
     Route::get('expenses/{expense}', [ExpenseController::class, 'show'])->middleware('can:expenses.view');
     Route::put('expenses/{expense}', [ExpenseController::class, 'update'])->middleware('can:expenses.edit');
     Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->middleware('can:expenses.delete');

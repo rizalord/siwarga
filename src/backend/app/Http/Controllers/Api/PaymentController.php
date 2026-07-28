@@ -11,7 +11,7 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payment::with('bill');
+        $query = Payment::with(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
         if ($request->user()->resident_id) {
             $query->whereHas('bill', function ($q) use ($request) {
@@ -19,7 +19,31 @@ class PaymentController extends Controller
             });
         }
 
-        return PaymentResource::collection($query->paginate($request->per_page ?? 10));
+        if ($request->month) {
+            $query->whereMonth('payment_date', $request->month);
+        }
+
+        if ($request->year) {
+            $query->whereYear('payment_date', $request->year);
+        }
+
+        if ($request->bill_id) {
+            $query->where('bill_id', $request->bill_id);
+        }
+
+        if ($request->search) {
+            $query->whereHas('bill', function ($q) use ($request) {
+                $q->whereHas('resident', function ($r) use ($request) {
+                    $r->where('full_name', 'like', "%{$request->search}%");
+                })->orWhereHas('house', function ($h) use ($request) {
+                    $h->where('house_number', 'like', "%{$request->search}%");
+                })->orWhereHas('dueType', function ($d) use ($request) {
+                    $d->where('name', 'like', "%{$request->search}%");
+                });
+            });
+        }
+
+        return $this->paginated($query->paginate($request->per_page ?? 10), PaymentResource::class);
     }
 
     public function store(Request $request)
@@ -42,12 +66,14 @@ class PaymentController extends Controller
             $bill->update(['status' => 'lunas']);
         }
 
+        $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
+
         return new PaymentResource($payment);
     }
 
     public function show(Request $request, Payment $payment)
     {
-        $payment->load('bill');
+        $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
         abort_if(
             $request->user()->resident_id && $payment->bill?->resident_id !== $request->user()->resident_id,
@@ -77,6 +103,8 @@ class PaymentController extends Controller
                 $payment->bill->update(['status' => 'belum_lunas']);
             }
         }
+
+        $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
         return new PaymentResource($payment);
     }

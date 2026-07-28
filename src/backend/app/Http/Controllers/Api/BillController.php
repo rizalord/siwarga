@@ -26,11 +26,23 @@ class BillController extends Controller
             $query->whereYear('period_start', $request->year);
         }
 
-        if ($request->status) {
-            $query->where('status', $request->status);
+        if ($request->filled('status')) {
+            is_array($request->status)
+                ? $query->whereIn('status', $request->status)
+                : $query->where('status', $request->status);
         }
 
-        return BillResource::collection($query->paginate($request->per_page ?? 10));
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->whereHas('resident', function ($r) use ($request) {
+                    $r->where('full_name', 'like', "%{$request->search}%");
+                })->orWhereHas('house', function ($h) use ($request) {
+                    $h->where('house_number', 'like', "%{$request->search}%");
+                });
+            });
+        }
+
+        return $this->paginated($query->paginate($request->per_page ?? 10), BillResource::class);
     }
 
     public function show(Request $request, Bill $bill)

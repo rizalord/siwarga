@@ -13,7 +13,35 @@ class ExpenseController extends Controller
     {
         $query = Expense::query();
 
-        return ExpenseResource::collection($query->paginate($request->per_page ?? 10));
+        if ($request->month) {
+            $query->whereMonth('expense_date', $request->month);
+        }
+
+        if ($request->year) {
+            $query->whereYear('expense_date', $request->year);
+        }
+
+        if ($request->filled('category')) {
+            is_array($request->category)
+                ? $query->whereIn('category', $request->category)
+                : $query->where('category', $request->category);
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('category', 'like', "%{$request->search}%")
+                    ->orWhere('description', 'like', "%{$request->search}%");
+            });
+        }
+
+        return $this->paginated($query->paginate($request->per_page ?? 10), ExpenseResource::class);
+    }
+
+    public function categories()
+    {
+        return response()->json([
+            'data' => Expense::query()->distinct()->orderBy('category')->pluck('category'),
+        ]);
     }
 
     public function store(Request $request)

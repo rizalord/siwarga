@@ -37,6 +37,40 @@ class ExpenseTest extends TestCase
         $response->assertStatus(200)->assertJsonCount(3, 'data');
     }
 
+    public function test_can_filter_expenses_by_month_year_category_and_search()
+    {
+        Expense::factory()->create([
+            'category' => 'Satpam',
+            'description' => 'Gaji satpam bulan ini',
+            'expense_date' => '2026-01-15',
+        ]);
+        Expense::factory()->create([
+            'category' => 'Kebersihan',
+            'expense_date' => '2026-02-15',
+        ]);
+
+        $this->getJson('/api/expenses?month=1&year=2026')
+            ->assertStatus(200)->assertJsonCount(1, 'data');
+
+        $this->getJson('/api/expenses?category=Satpam')
+            ->assertStatus(200)->assertJsonCount(1, 'data');
+
+        $this->getJson('/api/expenses?search=Gaji')
+            ->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
+    public function test_can_get_distinct_expense_categories()
+    {
+        Expense::factory()->create(['category' => 'Satpam']);
+        Expense::factory()->create(['category' => 'Kebersihan']);
+        Expense::factory()->create(['category' => 'Satpam']);
+
+        $response = $this->getJson('/api/expenses/categories');
+
+        $response->assertStatus(200);
+        $this->assertCount(2, $response->json('data'));
+    }
+
     public function test_can_create_expense()
     {
         $response = $this->postJson('/api/expenses', [

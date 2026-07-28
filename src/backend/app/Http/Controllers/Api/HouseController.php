@@ -20,7 +20,13 @@ class HouseController extends Controller
             });
         }
 
-        return HouseResource::collection($query->paginate($request->per_page ?? 10));
+        if ($request->filled('status')) {
+            is_array($request->status)
+                ? $query->whereIn('status', $request->status)
+                : $query->where('status', $request->status);
+        }
+
+        return $this->paginated($query->paginate($request->per_page ?? 10), HouseResource::class);
     }
 
     public function store(Request $request)

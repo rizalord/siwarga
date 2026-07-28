@@ -39,6 +39,35 @@ class HouseTest extends TestCase
         $response->assertStatus(200)->assertJsonCount(3, 'data');
     }
 
+    public function test_house_list_returns_flat_pagination_shape()
+    {
+        House::factory()->count(15)->create();
+
+        $response = $this->getJson('/api/houses?per_page=10');
+
+        $response->assertStatus(200)->assertJsonStructure([
+            'data', 'current_page', 'last_page', 'per_page', 'total',
+        ]);
+        $this->assertCount(10, $response->json('data'));
+        $this->assertEquals(2, $response->json('last_page'));
+        $this->assertEquals(15, $response->json('total'));
+    }
+
+    public function test_can_filter_houses_by_status()
+    {
+        $occupied = House::factory()->create(['status' => 'kosong']);
+        House::factory()->create(['status' => 'kosong']);
+        $resident = Resident::factory()->create();
+        $occupied->houseResidents()->create([
+            'resident_id' => $resident->id,
+            'start_date' => '2026-01-01',
+        ]);
+
+        $response = $this->getJson('/api/houses?status=dihuni');
+
+        $response->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
     public function test_can_create_house()
     {
         $data = ['house_number' => 'A01', 'address' => 'Jl. Test No. 1'];
