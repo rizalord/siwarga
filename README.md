@@ -20,7 +20,7 @@ Aplikasi web untuk mengelola administrasi RT: penghuni, rumah, iuran bulanan, pe
 ### Backend
 - **Framework:** Laravel 13.x
 - **Auth:** Laravel Sanctum (token-based, 24h expiry)
-- **Database:** MySQL 8.x (SQLite default untuk development)
+- **Database:** MySQL 8.x
 - **Testing:** PHPUnit (Unit + Feature)
 
 ### Frontend
@@ -42,7 +42,7 @@ Aplikasi web untuk mengelola administrasi RT: penghuni, rumah, iuran bulanan, pe
 - PHP 8.3+ dengan ekstensi: `bcmath`, `ctype`, `curl`, `dom`, `fileinfo`, `gd`, `json`, `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip`
 - Composer 2.x
 - Node.js 20+ dan npm/pnpm
-- MySQL 8.x (atau SQLite untuk development)
+- MySQL 8.x
 - Git
 
 ## Instalasi & Setup
@@ -68,8 +68,7 @@ cp .env.example .env
 # Generate application key
 php artisan key:generate
 
-# Konfigurasi database di .env (default: SQLite)
-# Untuk MySQL, sesuaikan:
+# Konfigurasi database di .env (default: MySQL)
 # DB_CONNECTION=mysql
 # DB_HOST=127.0.0.1
 # DB_PORT=3306
@@ -119,6 +118,50 @@ Frontend akan berjalan di `http://localhost:5173`.
 | Admin | `admin@siwarga.test` | `password` | Akses penuh |
 | Bendahara | `bendahara@siwarga.test` | `password` | Kelola pembayaran, pengeluaran, laporan |
 | Warga | `warga@siwarga.test` | `password` | Hanya lihat tagihan & pembayaran miliknya sendiri |
+
+## Menjalankan dengan Docker (Opsional)
+
+Selain instalasi native di atas, tersedia juga setup Docker Compose untuk development dan production. Backend dan frontend masing-masing punya image sendiri (`Dockerfile` untuk dev, `Dockerfile.prd` untuk production), dan satu file `.env` di root project mengonfigurasi semuanya.
+
+> Catatan: setup native di atas tetap jadi acuan utama untuk kriteria "tanpa Docker" pada skill test ini. Docker Compose ini disediakan sebagai kenyamanan tambahan untuk pemakaian sehari-hari (termasuk sebagai aplikasi produksi di perumahan penulis).
+
+### Development
+
+Source code di-mount ke dalam container, jadi perubahan kode langsung ke-reload (Vite HMR di frontend, PHP re-interpret setiap request di backend) tanpa rebuild image.
+
+```bash
+cp .env.example .env   # sesuaikan bila perlu
+
+docker compose up --build
+```
+
+- Backend: `http://localhost:8000`
+- Frontend: `http://localhost:5173`
+- MySQL: `localhost:3306`
+
+Migration jalan otomatis saat container backend start. Seed data (akun demo, dsb.) perlu dijalankan sekali secara manual:
+
+```bash
+docker compose exec backend php artisan db:seed
+```
+
+### Production
+
+Image production berisi build teroptimasi: backend jadi satu image php-fpm + nginx (tanpa bind mount), frontend di-build jadi static asset lalu di-serve nginx.
+
+```bash
+cp .env.example .env
+# Wajib set APP_KEY untuk production:
+docker compose run --rm backend php artisan key:generate --show
+# tempel hasilnya ke APP_KEY= di .env, lalu:
+
+docker compose -f docker-compose.prd.yml up --build -d
+```
+
+- Backend: `http://localhost:8000`
+- Frontend: `http://localhost:8080`
+
+`VITE_API_URL`/`VITE_USE_MOCK` di-bake ke frontend saat build image (build arg) — kalau nilainya berubah, rebuild ulang frontend: `docker compose -f docker-compose.prd.yml build frontend`.
 
 ## Struktur Repository
 
@@ -281,4 +324,4 @@ Untuk laporan bug atau saran fitur, silakan buka issue di repository.
 
 ---
 
-**Dibuat dengan ❤️ oleh Ahmad**
+**Dibuat dengan ❤️ oleh Ahmad Rizal Khamdani**

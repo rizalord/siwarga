@@ -1,0 +1,73 @@
+# Production stack: backend serves php-fpm+nginx from a pre-built,
+# optimized image; frontend is a static build served by nginx. No bind
+# mounts — everything is baked into the images at build time.
+#
+# Usage:
+#   cp .env.example .env   # set APP_KEY dan kredensial production
+#   docker compose -f docker-compose.prd.yml up --build -d
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-siwarga}
+      MYSQL_USER: ${DB_USERNAME:-siwarga}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
+    volumes:
+      - siwarga_db_data_prd:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile.prd
+    image: siwarga-backend:prd
+    restart: unless-stopped
+    ports:
+      - '${BACKEND_PORT:-8000}:80'
+    environment:
+      APP_NAME: ${APP_NAME:-SIWarga}
+      APP_ENV: production
+      APP_KEY: ${APP_KEY:?APP_KEY wajib di-set di .env untuk production}
+      APP_DEBUG: 'false'
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-siwarga}
+      DB_USERNAME: ${DB_USERNAME:-siwarga}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: local
+      LOG_CHANNEL: stack
+    volumes:
+      - siwarga_backend_storage_prd:/var/www/html/storage/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.prd
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        VITE_USE_MOCK: ${VITE_USE_MOCK:-false}
+    image: siwarga-frontend:prd
+    restart: unless-stopped
+    ports:
+      - '${FRONTEND_PROD_PORT:-8080}:80'
+    depends_on:
+      - backend
+
+volumes:
+  siwarga_db_data_prd:
+  siwarga_backend_storage_prd:

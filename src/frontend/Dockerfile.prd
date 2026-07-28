@@ -1,0 +1,28 @@
+# Production image for the SIWarga SPA (React + Vite).
+# Multi-stage build: compile static assets, then serve them with nginx.
+# VITE_* variables are build-time only — pass them as build args from
+# docker-compose.prd.yml.
+
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+ARG VITE_API_URL
+ARG VITE_USE_MOCK=false
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_USE_MOCK=${VITE_USE_MOCK}
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+FROM nginx:1.27-alpine AS runtime
+
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
