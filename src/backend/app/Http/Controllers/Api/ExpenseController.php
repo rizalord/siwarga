@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
@@ -36,6 +37,7 @@ class ExpenseController extends Controller
             });
         }
 
+        $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['amount', 'expense_date', 'created_at']);
 
         return $this->paginated($query->paginate($request->per_page ?? 10), ExpenseResource::class);
@@ -44,6 +46,16 @@ class ExpenseController extends Controller
     public function bulkDestroy(Request $request)
     {
         return $this->bulkDelete($request, Expense::class);
+    }
+
+    public function bulkRestore(Request $request, string $modelClass = Expense::class): JsonResponse
+    {
+        return parent::bulkRestore($request, $modelClass);
+    }
+
+    public function bulkForceDestroy(Request $request)
+    {
+        return $this->bulkForceDelete($request, Expense::class);
     }
 
     public function store(Request $request)
@@ -86,5 +98,19 @@ class ExpenseController extends Controller
         $expense->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function restore(Expense $expense)
+    {
+        $this->restoreModel($expense);
+
+        return new ExpenseResource($expense->load('category'));
+    }
+
+    public function forceDestroy(Expense $expense)
+    {
+        $this->forceDeleteModel($expense);
+
+        return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 }

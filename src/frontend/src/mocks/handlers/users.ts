@@ -2,19 +2,34 @@ import { http, HttpResponse } from 'msw'
 import { mockUsers } from '../data/users'
 import { mockRoles } from '../data/roles'
 import type { User } from '@/types/api'
+import {
+  applyTrashedFilter,
+  buildPaginatedResponse,
+  bulkForceDelete,
+  bulkRestore,
+  bulkSoftDelete,
+  forceDeleteById,
+  readIds,
+  restoreById,
+  softDeleteById,
+} from './soft-delete'
 
-let users = [...mockUsers]
+const users = [...mockUsers]
 let nextId = 100
 
 function otherAdminExists(excludeUserId?: number) {
   return users.some(
-    (u) => u.id !== excludeUserId && u.roles.some((r) => r.is_admin)
+    (u) => u.deleted_at === null && u.id !== excludeUserId && u.roles.some((r) => r.is_admin)
   )
 }
 
 export const userHandlers = [
-  http.get('/api/users', () =>
-    HttpResponse.json({ data: users, current_page: 1, last_page: 1, per_page: 10, total: users.length })),
+  http.get('/api/users', ({ request }) => {
+    const url = new URL(request.url)
+    const filtered = applyTrashedFilter(users, url.searchParams.get('trashed'))
+
+    return HttpResponse.json(buildPaginatedResponse(filtered))
+  }),
 
   http.get('/api/users/:id', ({ params }) => {
     const user = users.find((u) => u.id === Number(params.id))
@@ -82,9 +97,41 @@ export const userHandlers = [
   }),
 
   http.delete('/api/users/:id', ({ params }) => {
-    const idx = users.findIndex((u) => u.id === Number(params.id))
-    if (idx === -1) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
-    users = users.filter((u) => u.id !== Number(params.id))
+    const user = softDeleteById(users, Number(params.id))
+    if (!user) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     return HttpResponse.json({ data: null, message: 'Deleted' })
+  }),
+
+  http.post('/api/users/:id/restore', ({ params }) => {
+    const user = restoreById(users, Number(params.id))
+    if (!user) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: user })
+  }),
+
+  http.delete('/api/users/:id/force-delete', ({ params }) => {
+    const deleted = forceDeleteById(users, Number(params.id))
+    if (!deleted) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: null, message: 'Deleted permanently' })
+  }),
+
+  http.post('/api/users/bulk-delete', async ({ request }) => {
+    const deleted = bulkSoftDelete(users, await readIds(request))
+    return HttpResponse.json({ data: null, message: `${deleted} data berhasil dihapus` })
+  }),
+
+  http.post('/api/users/bulk-restore', async ({ request }) => {
+    const restored = bulkRestore(users, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${restored} data berhasil dipulihkan`,
+    })
+  }),
+
+  http.post('/api/users/bulk-force-delete', async ({ request }) => {
+    const deleted = bulkForceDelete(users, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${deleted} data berhasil dihapus permanen`,
+    })
   }),
 ]

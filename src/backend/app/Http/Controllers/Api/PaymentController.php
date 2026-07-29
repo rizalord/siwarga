@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
 use App\Models\Bill;
 use App\Models\Payment;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -44,6 +46,7 @@ class PaymentController extends Controller
             });
         }
 
+        $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['amount_paid', 'payment_date', 'created_at']);
 
         return $this->paginated($query->paginate($request->per_page ?? 10), PaymentResource::class);
@@ -67,6 +70,18 @@ class PaymentController extends Controller
         });
 
         return response()->json(['data' => null, 'message' => "{$deleted} pembayaran berhasil dihapus"]);
+    }
+
+    public function bulkRestore(Request $request, string $modelClass = Payment::class): JsonResponse
+    {
+        return $this->bulkRestoreWithCallback($request, $modelClass, function (EloquentCollection $payments): void {
+            $this->refreshBillStatuses($payments->pluck('bill_id')->all());
+        });
+    }
+
+    public function bulkForceDestroy(Request $request)
+    {
+        return $this->bulkForceDelete($request, Payment::class);
     }
 
     public function store(Request $request)
@@ -148,5 +163,45 @@ class PaymentController extends Controller
         }
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function restore(Payment $payment)
+    {
+        $this->restoreModel($payment, function (Payment $restoredPayment): void {
+            $this->refreshBillStatuses([$restoredPayment->bill_id]);
+        });
+        $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
+
+        return new PaymentResource($payment);
+    }
+
+    public function forceDestroy(Payment $payment)
+    {
+        $this->forceDeleteModel($payment);
+
+        return response()->json(['data' => null, 'message' => 'Deleted permanently']);
+    }
+
+    /**
+     * @param  array<int, int|null>  $billIds
+     */
+    private function refreshBillStatuses(array $billIds): void
+    {
+        $filteredBillIds = collect($billIds)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($filteredBillIds->isEmpty()) {
+            return;
+        }
+
+        Bill::whereIn('id', $filteredBillIds)->each(function (Bill $bill): void {
+            $totalPaid = $bill->payments()->sum('amount_paid');
+
+            $bill->update([
+                'status' => $totalPaid >= $bill->amount_due ? 'lunas' : 'belum_lunas',
+            ]);
+        });
     }
 }

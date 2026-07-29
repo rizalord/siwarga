@@ -55,6 +55,30 @@ export function useDeleteExpense() {
   })
 }
 
+export function useRestoreExpense() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => expensesService.restore(id),
+    onSuccess: (response) => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      toast.success(response.data.message ?? 'Pengeluaran berhasil dipulihkan')
+    },
+  })
+}
+
+export function useForceDeleteExpense() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => expensesService.forceDelete(id),
+    onSuccess: (response) => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      toast.success(
+        response.data.message ?? 'Pengeluaran berhasil dihapus permanen'
+      )
+    },
+  })
+}
+
 export function useBulkDeleteExpenses() {
   const qc = useQueryClient()
   return useMutation({
@@ -62,6 +86,33 @@ export function useBulkDeleteExpenses() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['expenses'] })
       toast.success('Pengeluaran terpilih berhasil dihapus')
+    },
+  })
+}
+
+export function useBulkRestoreExpenses() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => expensesService.bulkRestore(ids),
+    onSuccess: (response) => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      toast.success(
+        response.data.message ?? 'Pengeluaran terpilih berhasil dipulihkan'
+      )
+    },
+  })
+}
+
+export function useBulkForceDeleteExpenses() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => expensesService.bulkForceDelete(ids),
+    onSuccess: (response) => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      toast.success(
+        response.data.message ??
+          'Pengeluaran terpilih berhasil dihapus permanen'
+      )
     },
   })
 }

@@ -1,7 +1,16 @@
+import type {
+  ApiResponse,
+  PaginatedResponse,
+  Resident,
+  CreateResidentRequest,
+  UpdateResidentRequest,
+  ResidentFilter,
+} from '@/types/api'
 import api from './api'
-import type { ApiResponse, PaginatedResponse, Resident, CreateResidentRequest, UpdateResidentRequest, ResidentFilter } from '@/types/api'
 
-function toResidentFormData(data: CreateResidentRequest | UpdateResidentRequest) {
+function toResidentFormData(
+  data: CreateResidentRequest | UpdateResidentRequest
+) {
   const formData = new FormData()
   Object.entries(data).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
@@ -17,9 +26,13 @@ export const residentsService = {
   getById: (id: number) =>
     api.get<ApiResponse<Resident>>(`/api/residents/${id}`),
   create: (data: CreateResidentRequest) =>
-    api.post<ApiResponse<Resident>>('/api/residents', toResidentFormData(data), {
-      headers: { 'Content-Type': undefined },
-    }),
+    api.post<ApiResponse<Resident>>(
+      '/api/residents',
+      toResidentFormData(data),
+      {
+        headers: { 'Content-Type': undefined },
+      }
+    ),
   update: (id: number, data: UpdateResidentRequest) => {
     const formData = toResidentFormData(data)
     formData.append('_method', 'PUT')
@@ -27,8 +40,15 @@ export const residentsService = {
       headers: { 'Content-Type': undefined },
     })
   },
-  delete: (id: number) =>
-    api.delete<ApiResponse<null>>(`/api/residents/${id}`),
+  delete: (id: number) => api.delete<ApiResponse<null>>(`/api/residents/${id}`),
+  restore: (id: number) =>
+    api.post<ApiResponse<Resident>>(`/api/residents/${id}/restore`),
+  forceDelete: (id: number) =>
+    api.delete<ApiResponse<null>>(`/api/residents/${id}/force-delete`),
   bulkDelete: (ids: number[]) =>
     api.post<ApiResponse<null>>('/api/residents/bulk-delete', { ids }),
+  bulkRestore: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/residents/bulk-restore', { ids }),
+  bulkForceDelete: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/residents/bulk-force-delete', { ids }),
 }

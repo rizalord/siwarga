@@ -23,6 +23,20 @@ export const expenseCategoriesService = {
     ),
   delete: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/expense-categories/${id}`),
+  restore: (id: number) =>
+    api.post<ApiResponse<ExpenseCategory>>(
+      `/api/expense-categories/${id}/restore`
+    ),
+  forceDelete: (id: number) =>
+    api.delete<ApiResponse<null>>(`/api/expense-categories/${id}/force-delete`),
   bulkDelete: (ids: number[]) =>
     api.post<ApiResponse<null>>('/api/expense-categories/bulk-delete', { ids }),
+  bulkRestore: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/expense-categories/bulk-restore', {
+      ids,
+    }),
+  bulkForceDelete: (ids: number[]) =>
+    api.post<ApiResponse<null>>('/api/expense-categories/bulk-force-delete', {
+      ids,
+    }),
 }

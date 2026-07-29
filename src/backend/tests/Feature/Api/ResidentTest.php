@@ -19,6 +19,8 @@ class ResidentTest extends TestCase
 
     protected User $user;
 
+    protected User $warga;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,6 +30,10 @@ class ResidentTest extends TestCase
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
         $this->user->load('roles.permissions');
+
+        $this->warga = User::factory()->create();
+        $this->warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+        $this->warga->load('roles.permissions');
         $this->actingAs($this->user);
     }
 
@@ -53,6 +59,29 @@ class ResidentTest extends TestCase
 
         $this->getJson('/api/residents?search=082222222222')
             ->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
+    public function test_can_filter_residents_by_trashed_mode()
+    {
+        Resident::factory()->create(['full_name' => 'Resident Aktif']);
+        $deletedResident = Resident::factory()->create(['full_name' => 'Resident Terhapus']);
+        $deletedResident->delete();
+
+        $this->getJson('/api/residents')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.full_name', 'Resident Aktif');
+
+        $this->getJson('/api/residents?trashed=with')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['full_name' => 'Resident Aktif'])
+            ->assertJsonFragment(['full_name' => 'Resident Terhapus']);
+
+        $this->getJson('/api/residents?trashed=only')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.full_name', 'Resident Terhapus');
     }
 
     public function test_can_create_resident()
@@ -148,5 +177,98 @@ class ResidentTest extends TestCase
         $this->assertSoftDeleted($residents[0]);
         $this->assertSoftDeleted($residents[1]);
         $this->assertDatabaseHas('residents', ['id' => $residents[2]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_restore_a_soft_deleted_resident()
+    {
+        $resident = Resident::factory()->create(['full_name' => 'Budi Restore']);
+        $resident->delete();
+
+        $this->postJson("/api/residents/{$resident->id}/restore")
+            ->assertStatus(200)
+            ->assertJsonPath('data.id', $resident->id)
+            ->assertJsonPath('data.deleted_at', null);
+
+        $this->assertDatabaseHas('residents', ['id' => $resident->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_force_delete_a_soft_deleted_resident()
+    {
+        $resident = Resident::factory()->create(['full_name' => 'Budi Force Delete']);
+        $resident->delete();
+
+        $this->deleteJson("/api/residents/{$resident->id}/force-delete")
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', 'Deleted permanently');
+
+        $this->assertDatabaseMissing('residents', ['id' => $resident->id]);
+    }
+
+    public function test_can_bulk_restore_residents()
+    {
+        $residents = Resident::factory()->count(2)->create();
+        $residents->each->delete();
+
+        $this->postJson('/api/residents/bulk-restore', [
+            'ids' => $residents->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dipulihkan');
+
+        $this->assertDatabaseHas('residents', ['id' => $residents[0]->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('residents', ['id' => $residents[1]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_bulk_force_delete_residents()
+    {
+        $residents = Resident::factory()->count(2)->create();
+        $residents->each->delete();
+
+        $this->postJson('/api/residents/bulk-force-delete', [
+            'ids' => $residents->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dihapus permanen');
+
+        $this->assertDatabaseMissing('residents', ['id' => $residents[0]->id]);
+        $this->assertDatabaseMissing('residents', ['id' => $residents[1]->id]);
+    }
+
+    public function test_warga_cannot_restore_or_permanently_delete_residents()
+    {
+        $resident = Resident::factory()->create();
+        $resident->delete();
+
+        $this->actingAs($this->warga)
+            ->postJson("/api/residents/{$resident->id}/restore")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->deleteJson("/api/residents/{$resident->id}/force-delete")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/residents/bulk-restore', ['ids' => [$resident->id]])
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/residents/bulk-force-delete', ['ids' => [$resident->id]])
+            ->assertStatus(403);
+    }
+
+    public function test_bulk_restore_and_force_delete_validate_ids_payload_for_residents()
+    {
+        foreach (['/api/residents/bulk-restore', '/api/residents/bulk-force-delete'] as $uri) {
+            $this->postJson($uri, ['ids' => []])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids');
+
+            $this->postJson($uri, ['ids' => ['invalid']])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids.0');
+        }
     }
 }

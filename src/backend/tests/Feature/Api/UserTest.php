@@ -15,6 +15,8 @@ class UserTest extends TestCase
 
     protected User $admin;
 
+    protected User $warga;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -22,6 +24,10 @@ class UserTest extends TestCase
         $this->admin = User::factory()->create();
         $this->admin->roles()->attach(Role::where('name', 'admin')->first()->id);
         $this->admin->load('roles.permissions');
+
+        $this->warga = User::factory()->create();
+        $this->warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+        $this->warga->load('roles.permissions');
         $this->actingAs($this->admin);
     }
 
@@ -33,8 +39,8 @@ class UserTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertIsArray($response->json('data'));
-        // 3 created + the admin acting user from setUp()
-        $this->assertCount(4, $response->json('data'));
+        // 3 created + admin + warga from setUp()
+        $this->assertCount(5, $response->json('data'));
     }
 
     public function test_can_search_users_by_name_or_email()
@@ -47,6 +53,28 @@ class UserTest extends TestCase
         $this->assertCount(1, $this->getJson('/api/users?search=Budi')->json('data'));
 
         $this->assertCount(1, $this->getJson('/api/users?search=ani@test.com')->json('data'));
+    }
+
+    public function test_can_filter_users_by_trashed_mode()
+    {
+        User::factory()->create(['name' => 'User Aktif', 'email' => 'aktif@test.com']);
+        $deletedUser = User::factory()->create(['name' => 'User Terhapus', 'email' => 'deleted@test.com']);
+        $deletedUser->delete();
+
+        $this->getJson('/api/users')
+            ->assertStatus(200)
+            ->assertJsonCount(3, 'data')
+            ->assertJsonMissing(['name' => 'User Terhapus']);
+
+        $this->getJson('/api/users?trashed=with')
+            ->assertStatus(200)
+            ->assertJsonCount(4, 'data')
+            ->assertJsonFragment(['name' => 'User Terhapus']);
+
+        $this->getJson('/api/users?trashed=only')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'User Terhapus');
     }
 
     public function test_can_create_user()
@@ -153,5 +181,98 @@ class UserTest extends TestCase
         ]);
 
         $response->assertStatus(200)->assertJsonPath('data.name', 'Updated Admin Name');
+    }
+
+    public function test_can_restore_a_soft_deleted_user()
+    {
+        $user = User::factory()->create(['name' => 'Restore User', 'email' => 'restore-user@test.com']);
+        $user->delete();
+
+        $this->postJson("/api/users/{$user->id}/restore")
+            ->assertStatus(200)
+            ->assertJsonPath('data.id', $user->id)
+            ->assertJsonPath('data.deleted_at', null);
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_force_delete_a_soft_deleted_user()
+    {
+        $user = User::factory()->create(['name' => 'Force User', 'email' => 'force-user@test.com']);
+        $user->delete();
+
+        $this->deleteJson("/api/users/{$user->id}/force-delete")
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', 'Deleted permanently');
+
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    }
+
+    public function test_can_bulk_restore_users()
+    {
+        $users = User::factory()->count(2)->create();
+        $users->each->delete();
+
+        $this->postJson('/api/users/bulk-restore', [
+            'ids' => $users->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dipulihkan');
+
+        $this->assertDatabaseHas('users', ['id' => $users[0]->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('users', ['id' => $users[1]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_bulk_force_delete_users()
+    {
+        $users = User::factory()->count(2)->create();
+        $users->each->delete();
+
+        $this->postJson('/api/users/bulk-force-delete', [
+            'ids' => $users->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dihapus permanen');
+
+        $this->assertDatabaseMissing('users', ['id' => $users[0]->id]);
+        $this->assertDatabaseMissing('users', ['id' => $users[1]->id]);
+    }
+
+    public function test_warga_cannot_restore_or_permanently_delete_users()
+    {
+        $user = User::factory()->create();
+        $user->delete();
+
+        $this->actingAs($this->warga)
+            ->postJson("/api/users/{$user->id}/restore")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->deleteJson("/api/users/{$user->id}/force-delete")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/users/bulk-restore', ['ids' => [$user->id]])
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/users/bulk-force-delete', ['ids' => [$user->id]])
+            ->assertStatus(403);
+    }
+
+    public function test_bulk_restore_and_force_delete_validate_ids_payload_for_users()
+    {
+        foreach (['/api/users/bulk-restore', '/api/users/bulk-force-delete'] as $uri) {
+            $this->postJson($uri, ['ids' => []])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids');
+
+            $this->postJson($uri, ['ids' => ['invalid']])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids.0');
+        }
     }
 }

@@ -3,7 +3,12 @@ import { getRouteApi } from '@tanstack/react-router'
 import type { Expense } from '@/types/api'
 import { AlertTriangle, Plus } from 'lucide-react'
 import useDialogState from '@/hooks/use-dialog-state'
-import { useExpenses, useDeleteExpense } from '@/hooks/use-expenses'
+import {
+  useDeleteExpense,
+  useExpenses,
+  useForceDeleteExpense,
+  useRestoreExpense,
+} from '@/hooks/use-expenses'
 import { Button } from '@/components/ui/button'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -23,16 +28,44 @@ function ExpensesDialogs({
   currentRow,
   setCurrentRow,
 }: {
-  open: 'create' | 'update' | 'delete' | null
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   currentRow: Expense | null
   setCurrentRow: (row: Expense | null) => void
 }) {
   const deleteExpense = useDeleteExpense()
+  const restoreExpense = useRestoreExpense()
+  const forceDeleteExpense = useForceDeleteExpense()
 
   const handleDelete = () => {
     if (!currentRow) return
     deleteExpense.mutate(currentRow.id, {
+      onSuccess: () => {
+        setOpen(null)
+        setTimeout(() => {
+          setCurrentRow(null)
+        }, 500)
+      },
+    })
+  }
+
+  const handleRestore = () => {
+    if (!currentRow) return
+    restoreExpense.mutate(currentRow.id, {
+      onSuccess: () => {
+        setOpen(null)
+        setTimeout(() => {
+          setCurrentRow(null)
+        }, 500)
+      },
+    })
+  }
+
+  const handleForceDelete = () => {
+    if (!currentRow) return
+    forceDeleteExpense.mutate(currentRow.id, {
       onSuccess: () => {
         setOpen(null)
         setTimeout(() => {
@@ -89,11 +122,65 @@ function ExpensesDialogs({
                 Apakah Anda yakin ingin menghapus pengeluaran{' '}
                 <span className='font-bold'>{currentRow.category.name}</span>?
                 <br />
-                Tindakan ini akan menghapus pengeluaran secara permanen dan
-                tidak dapat dibatalkan.
+                Tindakan ini akan memindahkan pengeluaran ke data terhapus.
               </p>
             }
             confirmText='Hapus'
+            destructive
+          />
+
+          <ConfirmDialog
+            key={`expense-restore-${currentRow.id}`}
+            open={open === 'restore'}
+            onOpenChange={() => {
+              setOpen('restore')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={handleRestore}
+            disabled={restoreExpense.isPending}
+            isLoading={restoreExpense.isPending}
+            title='Pulihkan Pengeluaran'
+            desc={
+              <p>
+                Apakah Anda yakin ingin memulihkan pengeluaran{' '}
+                <span className='font-bold'>{currentRow.category.name}</span>?
+              </p>
+            }
+            confirmText='Pulihkan'
+          />
+
+          <ConfirmDialog
+            key={`expense-force-delete-${currentRow.id}`}
+            open={open === 'force-delete'}
+            onOpenChange={() => {
+              setOpen('force-delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={handleForceDelete}
+            disabled={forceDeleteExpense.isPending}
+            isLoading={forceDeleteExpense.isPending}
+            title={
+              <span className='text-destructive'>
+                <AlertTriangle
+                  className='me-1 inline-block stroke-destructive'
+                  size={18}
+                />{' '}
+                Hapus Permanen Pengeluaran
+              </span>
+            }
+            desc={
+              <p>
+                Apakah Anda yakin ingin menghapus permanen pengeluaran{' '}
+                <span className='font-bold'>{currentRow.category.name}</span>?
+                <br />
+                Tindakan ini tidak dapat dibatalkan.
+              </p>
+            }
+            confirmText='Hapus Permanen'
             destructive
           />
         </>
@@ -112,11 +199,14 @@ function ExpensesPageInner() {
     year: search.year,
     category_id: search.category_id,
     search: search.search,
+    trashed: search.trashed,
     sort: search.sort,
     order: search.order,
   })
 
-  const [open, setOpen] = useDialogState<'create' | 'update' | 'delete'>(null)
+  const [open, setOpen] = useDialogState<
+    'create' | 'update' | 'delete' | 'restore' | 'force-delete'
+  >(null)
   const [currentRow, setCurrentRow] = useState<Expense | null>(null)
 
   return (

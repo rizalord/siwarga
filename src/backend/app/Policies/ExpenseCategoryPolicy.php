@@ -30,4 +30,9 @@ class ExpenseCategoryPolicy
     {
         return $user->hasPermission('expense-categories.manage');
     }
+
+    public function restore(User $user): bool
+    {
+        return $user->hasPermission('expense-categories.trash');
+    }
 }

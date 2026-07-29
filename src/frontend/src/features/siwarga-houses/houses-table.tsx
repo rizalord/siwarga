@@ -6,10 +6,15 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { House } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import type { House, TrashedFilterValue } from '@/types/api'
+import { RotateCcw, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
-import { useBulkDeleteHouses } from '@/hooks/use-houses'
+import {
+  useBulkDeleteHouses,
+  useBulkForceDeleteHouses,
+  useBulkRestoreHouses,
+} from '@/hooks/use-houses'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,13 +25,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
+  handleTrashedFilterChange,
+  TrashedFilter,
 } from '@/components/data-table'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import { housesColumns as columns } from './houses-columns'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 const statusOptions = [
   { label: 'Dihuni', value: 'dihuni' },
@@ -37,7 +47,7 @@ type DataTableProps = {
   data: House[]
   pageCount: number
   isFetching?: boolean
-  search: Record<string, unknown>
+  search: Record<string, unknown> & { trashed?: TrashedFilterValue }
   navigate: NavigateFn
 }
 
@@ -48,14 +58,22 @@ export function HousesTable({
   search,
   navigate,
 }: DataTableProps) {
-  // Local UI-only states
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkForceDeleteOpen, setBulkForceDeleteOpen] = useState(false)
 
   const bulkDeleteHouses = useBulkDeleteHouses()
+  const bulkRestoreHouses = useBulkRestoreHouses()
+  const bulkForceDeleteHouses = useBulkForceDeleteHouses()
+  const permissions = useAuthStore(
+    (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+  )
+  const canManageTrash = permissions.includes('houses.trash')
+  const trashedFilter = search.trashed
+  const isOnlyTrashed = trashedFilter === 'only'
 
-  // Synced with URL states
   const {
     globalFilter,
     onGlobalFilterChange,
@@ -110,6 +128,21 @@ export function HousesTable({
     .filter((id) => rowSelection[id])
     .map(Number)
 
+  const handleTrashedChange = (value: TrashedFilterValue | undefined) => {
+    handleTrashedFilterChange({
+      value,
+      clearRowSelection: () => setRowSelection({}),
+      navigate,
+    })
+  }
+
+  const resetSelectionAfterSuccess = (onClose: () => void) => {
+    onClose()
+    table.resetRowSelection()
+  }
+
+  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+
   return (
     <div
       className={cn(
@@ -127,7 +160,9 @@ export function HousesTable({
             options: statusOptions,
           },
         ]}
-      />
+      >
+        <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
+      </DataTableToolbar>
       <div className='flex-1 overflow-auto'>
         <div
           className={cn(
@@ -202,28 +237,87 @@ export function HousesTable({
         </div>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
-      <DataTableBulkActions table={table} entityName='rumah'>
-        <Button
-          variant='destructive'
-          size='sm'
-          className='h-7'
-          onClick={() => setMultiDeleteOpen(true)}
-        >
-          <Trash2 />
-          Hapus
-        </Button>
-      </DataTableBulkActions>
+      {shouldShowBulkActions && (
+        <DataTableBulkActions table={table} entityName='rumah'>
+          {isOnlyTrashed ? (
+            <>
+              <Button
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkRestoreOpen(true)}
+              >
+                <RotateCcw />
+                Pulihkan
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkForceDeleteOpen(true)}
+              >
+                <Trash2 />
+                Hapus Permanen
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant='destructive'
+              size='sm'
+              className='h-7'
+              onClick={() => setMultiDeleteOpen(true)}
+            >
+              <Trash2 />
+              Hapus
+            </Button>
+          )}
+        </DataTableBulkActions>
+      )}
       <MultiDeleteDialog
         open={multiDeleteOpen}
         onOpenChange={setMultiDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='rumah'
+        deletionType='soft'
         isLoading={bulkDeleteHouses.isPending}
         onConfirm={() => {
           bulkDeleteHouses.mutate(selectedIds, {
             onSuccess: () => {
-              setMultiDeleteOpen(false)
-              table.resetRowSelection()
+              resetSelectionAfterSuccess(() => setMultiDeleteOpen(false))
+            },
+          })
+        }}
+      />
+      <ConfirmDialog
+        open={bulkRestoreOpen}
+        onOpenChange={setBulkRestoreOpen}
+        handleConfirm={() => {
+          bulkRestoreHouses.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkRestoreOpen(false))
+            },
+          })
+        }}
+        disabled={bulkRestoreHouses.isPending}
+        isLoading={bulkRestoreHouses.isPending}
+        title='Pulihkan Rumah'
+        desc={
+          <p>
+            Apakah Anda yakin ingin memulihkan {selectedIds.length} rumah
+            terpilih?
+          </p>
+        }
+        confirmText='Pulihkan'
+      />
+      <MultiDeleteDialog
+        open={bulkForceDeleteOpen}
+        onOpenChange={setBulkForceDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='rumah'
+        isLoading={bulkForceDeleteHouses.isPending}
+        onConfirm={() => {
+          bulkForceDeleteHouses.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkForceDeleteOpen(false))
             },
           })
         }}

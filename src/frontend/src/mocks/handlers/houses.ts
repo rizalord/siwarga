@@ -1,12 +1,27 @@
 import { http, HttpResponse } from 'msw'
 import { mockHouses } from '../data/houses'
+import {
+  applyTrashedFilter,
+  buildPaginatedResponse,
+  bulkForceDelete,
+  bulkRestore,
+  bulkSoftDelete,
+  forceDeleteById,
+  readIds,
+  restoreById,
+  softDeleteById,
+} from './soft-delete'
 
 const houses = [...mockHouses]
 let nextId = 100
 
 export const houseHandlers = [
-  http.get('/api/houses', () =>
-    HttpResponse.json({ data: houses, current_page: 1, last_page: 1, per_page: 10, total: houses.length })),
+  http.get('/api/houses', ({ request }) => {
+    const url = new URL(request.url)
+    const filtered = applyTrashedFilter(houses, url.searchParams.get('trashed'))
+
+    return HttpResponse.json(buildPaginatedResponse(filtered))
+  }),
 
   http.get('/api/houses/:id', ({ params }) => {
     const house = houses.find((h) => h.id === Number(params.id))
@@ -68,5 +83,44 @@ export const houseHandlers = [
       updated_at: new Date().toISOString(),
     }
     return HttpResponse.json({ data: null, message: 'Penghuni berhasil dicopot dari rumah' })
+  }),
+
+  http.delete('/api/houses/:id', ({ params }) => {
+    const house = softDeleteById(houses, Number(params.id))
+    if (!house) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: null, message: 'Deleted' })
+  }),
+
+  http.post('/api/houses/:id/restore', ({ params }) => {
+    const house = restoreById(houses, Number(params.id))
+    if (!house) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: house })
+  }),
+
+  http.delete('/api/houses/:id/force-delete', ({ params }) => {
+    const deleted = forceDeleteById(houses, Number(params.id))
+    if (!deleted) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: null, message: 'Deleted permanently' })
+  }),
+
+  http.post('/api/houses/bulk-delete', async ({ request }) => {
+    const deleted = bulkSoftDelete(houses, await readIds(request))
+    return HttpResponse.json({ data: null, message: `${deleted} data berhasil dihapus` })
+  }),
+
+  http.post('/api/houses/bulk-restore', async ({ request }) => {
+    const restored = bulkRestore(houses, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${restored} data berhasil dipulihkan`,
+    })
+  }),
+
+  http.post('/api/houses/bulk-force-delete', async ({ request }) => {
+    const deleted = bulkForceDelete(houses, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${deleted} data berhasil dihapus permanen`,
+    })
   }),
 ]

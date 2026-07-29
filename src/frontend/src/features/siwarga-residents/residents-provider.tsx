@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import useDialogState from '@/hooks/use-dialog-state'
 import type { Resident } from '@/types/api'
+import useDialogState from '@/hooks/use-dialog-state'
 
-type ResidentsDialogType = 'create' | 'update' | 'delete'
+type ResidentsDialogType =
+  'create' | 'update' | 'delete' | 'restore' | 'force-delete'
 
 type ResidentsContextType = {
   open: ResidentsDialogType | null

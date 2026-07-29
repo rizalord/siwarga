@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BillResource;
 use App\Models\Bill;
 use App\Services\BillGenerationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BillController extends Controller
@@ -48,6 +49,7 @@ class BillController extends Controller
             });
         }
 
+        $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['period_start', 'period_end', 'amount_due', 'status', 'created_at']);
 
         return $this->paginated($query->paginate($request->per_page ?? 10), BillResource::class);
@@ -56,6 +58,16 @@ class BillController extends Controller
     public function bulkDestroy(Request $request)
     {
         return $this->bulkDelete($request, Bill::class);
+    }
+
+    public function bulkRestore(Request $request, string $modelClass = Bill::class): JsonResponse
+    {
+        return parent::bulkRestore($request, $modelClass);
+    }
+
+    public function bulkForceDestroy(Request $request)
+    {
+        return $this->bulkForceDelete($request, Bill::class);
     }
 
     public function show(Request $request, Bill $bill)
@@ -95,5 +107,20 @@ class BillController extends Controller
         $bill->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function restore(Bill $bill)
+    {
+        $this->restoreModel($bill);
+        $bill->load(['house', 'resident', 'dueType', 'payments']);
+
+        return new BillResource($bill);
+    }
+
+    public function forceDestroy(Bill $bill)
+    {
+        $this->forceDeleteModel($bill);
+
+        return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 }

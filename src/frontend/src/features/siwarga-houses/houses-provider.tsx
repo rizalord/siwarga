@@ -1,8 +1,15 @@
 import React, { useState } from 'react'
-import useDialogState from '@/hooks/use-dialog-state'
 import type { House } from '@/types/api'
+import useDialogState from '@/hooks/use-dialog-state'
 
-type HousesDialogType = 'create' | 'update' | 'delete' | 'assign' | 'vacate'
+type HousesDialogType =
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'restore'
+  | 'force-delete'
+  | 'assign'
+  | 'vacate'
 
 type HousesContextType = {
   open: HousesDialogType | null
@@ -29,9 +36,7 @@ export const useHousesContext = () => {
   const housesContext = React.useContext(HousesContext)
 
   if (!housesContext) {
-    throw new Error(
-      'useHousesContext has to be used within <HousesProvider>'
-    )
+    throw new Error('useHousesContext has to be used within <HousesProvider>')
   }
 
   return housesContext

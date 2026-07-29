@@ -10,6 +10,7 @@ const searchSchema = z.object({
   category_id: z.coerce.number().optional(),
   search: z.string().optional().catch(''),
   sort: z.string().optional().catch(undefined),
+  trashed: z.enum(['with', 'only']).optional().catch(undefined),
   order: z
     .union([z.literal('asc'), z.literal('desc')])
     .optional()

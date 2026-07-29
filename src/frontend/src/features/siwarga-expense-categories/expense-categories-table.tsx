@@ -6,10 +6,15 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { ExpenseCategory } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import type { ExpenseCategory, TrashedFilterValue } from '@/types/api'
+import { RotateCcw, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
-import { useBulkDeleteExpenseCategories } from '@/hooks/use-expense-categories'
+import {
+  useBulkDeleteExpenseCategories,
+  useBulkForceDeleteExpenseCategories,
+  useBulkRestoreExpenseCategories,
+} from '@/hooks/use-expense-categories'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,17 +29,24 @@ import {
   DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
+  handleTrashedFilterChange,
+  TrashedFilter,
 } from '@/components/data-table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import { expenseCategoriesColumns as columns } from './expense-categories-columns'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 type DataTableProps = {
   data: ExpenseCategory[]
   pageCount: number
   isFetching?: boolean
-  search: Record<string, unknown>
+  search: Record<string, unknown> & { trashed?: TrashedFilterValue }
   navigate: NavigateFn
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   setCurrentRow: (row: ExpenseCategory | null) => void
 }
 
@@ -50,8 +62,19 @@ export function ExpenseCategoriesTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkForceDeleteOpen, setBulkForceDeleteOpen] = useState(false)
 
   const bulkDeleteExpenseCategories = useBulkDeleteExpenseCategories()
+  const bulkRestoreExpenseCategories = useBulkRestoreExpenseCategories()
+  const bulkForceDeleteExpenseCategories =
+    useBulkForceDeleteExpenseCategories()
+  const permissions = useAuthStore(
+    (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+  )
+  const canManageTrash = permissions.includes('expense-categories.trash')
+  const trashedFilter = search.trashed
+  const isOnlyTrashed = trashedFilter === 'only'
 
   const {
     globalFilter,
@@ -106,6 +129,21 @@ export function ExpenseCategoriesTable({
     .filter((id) => rowSelection[id])
     .map(Number)
 
+  const handleTrashedChange = (value: TrashedFilterValue | undefined) => {
+    handleTrashedFilterChange({
+      value,
+      clearRowSelection: () => setRowSelection({}),
+      navigate,
+    })
+  }
+
+  const resetSelectionAfterSuccess = (onClose: () => void) => {
+    onClose()
+    table.resetRowSelection()
+  }
+
+  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+
   return (
     <div
       className={cn(
@@ -116,7 +154,9 @@ export function ExpenseCategoriesTable({
       <DataTableToolbar
         table={table}
         searchPlaceholder='Cari kategori pengeluaran...'
-      />
+      >
+        <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
+      </DataTableToolbar>
       <div className='flex-1 overflow-auto'>
         <div
           className={cn(
@@ -191,28 +231,88 @@ export function ExpenseCategoriesTable({
         </div>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
-      <DataTableBulkActions table={table} entityName='kategori pengeluaran'>
-        <Button
-          variant='destructive'
-          size='sm'
-          className='h-7'
-          onClick={() => setMultiDeleteOpen(true)}
-        >
-          <Trash2 />
-          Hapus
-        </Button>
-      </DataTableBulkActions>
+      {shouldShowBulkActions && (
+        <DataTableBulkActions table={table} entityName='kategori pengeluaran'>
+          {isOnlyTrashed ? (
+            <>
+              <Button
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkRestoreOpen(true)}
+              >
+                <RotateCcw />
+                Pulihkan
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkForceDeleteOpen(true)}
+              >
+                <Trash2 />
+                Hapus Permanen
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant='destructive'
+              size='sm'
+              className='h-7'
+              onClick={() => setMultiDeleteOpen(true)}
+            >
+              <Trash2 />
+              Hapus
+            </Button>
+          )}
+        </DataTableBulkActions>
+      )}
       <MultiDeleteDialog
         open={multiDeleteOpen}
         onOpenChange={setMultiDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='kategori pengeluaran'
+        deletionType='soft'
         isLoading={bulkDeleteExpenseCategories.isPending}
         onConfirm={() => {
           bulkDeleteExpenseCategories.mutate(selectedIds, {
             onSuccess: () => {
-              setMultiDeleteOpen(false)
-              table.resetRowSelection()
+              resetSelectionAfterSuccess(() => setMultiDeleteOpen(false))
+            },
+          })
+        }}
+      />
+      <ConfirmDialog
+        open={bulkRestoreOpen}
+        onOpenChange={setBulkRestoreOpen}
+        handleConfirm={() => {
+          bulkRestoreExpenseCategories.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkRestoreOpen(false))
+            },
+          })
+        }}
+        disabled={bulkRestoreExpenseCategories.isPending}
+        isLoading={bulkRestoreExpenseCategories.isPending}
+        title='Pulihkan Kategori Pengeluaran'
+        desc={
+          <p>
+            Apakah Anda yakin ingin memulihkan {selectedIds.length} kategori
+            pengeluaran yang dipilih?
+          </p>
+        }
+        confirmText='Pulihkan'
+      />
+      <MultiDeleteDialog
+        open={bulkForceDeleteOpen}
+        onOpenChange={setBulkForceDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='kategori pengeluaran'
+        deletionType='permanent'
+        isLoading={bulkForceDeleteExpenseCategories.isPending}
+        onConfirm={() => {
+          bulkForceDeleteExpenseCategories.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkForceDeleteOpen(false))
             },
           })
         }}

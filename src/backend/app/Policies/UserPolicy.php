@@ -30,4 +30,9 @@ class UserPolicy
     {
         return $user->hasPermission('users.manage');
     }
+
+    public function restore(User $user): bool
+    {
+        return $user->hasPermission('users.trash');
+    }
 }

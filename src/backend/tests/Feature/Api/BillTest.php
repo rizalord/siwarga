@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\House;
+use App\Models\Payment;
 use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
@@ -19,6 +20,8 @@ class BillTest extends TestCase
 
     protected User $user;
 
+    protected User $warga;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,6 +31,10 @@ class BillTest extends TestCase
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
         $this->user->load('roles.permissions');
+
+        $this->warga = User::factory()->create();
+        $this->warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+        $this->warga->load('roles.permissions');
         $this->actingAs($this->user);
     }
 
@@ -64,6 +71,28 @@ class BillTest extends TestCase
         $response = $this->getJson('/api/bills?status=lunas');
 
         $response->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
+    public function test_can_filter_bills_by_trashed_mode()
+    {
+        Bill::factory()->create();
+        $deletedBill = Bill::factory()->create();
+        $deletedBill->delete();
+
+        $this->getJson('/api/bills')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', Bill::query()->whereNull('deleted_at')->first()->id);
+
+        $this->getJson('/api/bills?trashed=with')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['id' => $deletedBill->id]);
+
+        $this->getJson('/api/bills?trashed=only')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $deletedBill->id);
     }
 
     public function test_can_search_bills_by_resident_or_house()
@@ -184,5 +213,113 @@ class BillTest extends TestCase
         $this->assertSoftDeleted($bills[0]);
         $this->assertSoftDeleted($bills[1]);
         $this->assertDatabaseHas('bills', ['id' => $bills[2]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_restore_a_soft_deleted_bill()
+    {
+        $bill = Bill::factory()->create();
+        $bill->delete();
+
+        $this->postJson("/api/bills/{$bill->id}/restore")
+            ->assertStatus(200)
+            ->assertJsonPath('data.id', $bill->id)
+            ->assertJsonPath('data.deleted_at', null);
+
+        $this->assertDatabaseHas('bills', ['id' => $bill->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_force_delete_a_soft_deleted_bill()
+    {
+        $bill = Bill::factory()->create();
+        $bill->delete();
+
+        $this->deleteJson("/api/bills/{$bill->id}/force-delete")
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', 'Deleted permanently');
+
+        $this->assertDatabaseMissing('bills', ['id' => $bill->id]);
+    }
+
+    public function test_can_bulk_restore_bills()
+    {
+        $bills = Bill::factory()->count(2)->create();
+        $bills->each->delete();
+
+        $this->postJson('/api/bills/bulk-restore', [
+            'ids' => $bills->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dipulihkan');
+
+        $this->assertDatabaseHas('bills', ['id' => $bills[0]->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('bills', ['id' => $bills[1]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_bulk_force_delete_bills()
+    {
+        $bills = Bill::factory()->count(2)->create();
+        $bills->each->delete();
+
+        $this->postJson('/api/bills/bulk-force-delete', [
+            'ids' => $bills->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dihapus permanen');
+
+        $this->assertDatabaseMissing('bills', ['id' => $bills[0]->id]);
+        $this->assertDatabaseMissing('bills', ['id' => $bills[1]->id]);
+    }
+
+    public function test_bulk_force_delete_bills_returns_validation_error_when_a_bill_is_still_referenced()
+    {
+        $bill = Bill::factory()->create();
+        Payment::factory()->create(['bill_id' => $bill->id]);
+        $bill->delete();
+
+        $this->postJson('/api/bills/bulk-force-delete', [
+            'ids' => [$bill->id],
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('ids');
+
+        $this->assertDatabaseHas('bills', ['id' => $bill->id]);
+    }
+
+    public function test_warga_cannot_restore_or_permanently_delete_bills()
+    {
+        $bill = Bill::factory()->create();
+        $bill->delete();
+
+        $this->actingAs($this->warga)
+            ->postJson("/api/bills/{$bill->id}/restore")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->deleteJson("/api/bills/{$bill->id}/force-delete")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/bills/bulk-restore', ['ids' => [$bill->id]])
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/bills/bulk-force-delete', ['ids' => [$bill->id]])
+            ->assertStatus(403);
+    }
+
+    public function test_bulk_restore_and_force_delete_validate_ids_payload_for_bills()
+    {
+        foreach (['/api/bills/bulk-restore', '/api/bills/bulk-force-delete'] as $uri) {
+            $this->postJson($uri, ['ids' => []])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids');
+
+            $this->postJson($uri, ['ids' => ['invalid']])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids.0');
+        }
     }
 }

@@ -1,6 +1,11 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { AlertTriangle } from 'lucide-react'
-import { useBills, useDeleteBill } from '@/hooks/use-bills'
+import {
+  useBills,
+  useDeleteBill,
+  useForceDeleteBill,
+  useRestoreBill,
+} from '@/hooks/use-bills'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Header } from '@/components/layout/header'
@@ -17,51 +22,120 @@ const route = getRouteApi('/_authenticated/bills/')
 function BillsDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useBillsContext()
   const deleteBill = useDeleteBill()
+  const restoreBill = useRestoreBill()
+  const forceDeleteBill = useForceDeleteBill()
 
   return (
     <>
       {currentRow && (
-        <ConfirmDialog
-          key={`bill-delete-${currentRow.id}`}
-          open={open === 'delete'}
-          onOpenChange={() => {
-            setOpen('delete')
-            setTimeout(() => {
-              setCurrentRow(null)
-            }, 500)
-          }}
-          handleConfirm={() => {
-            if (!currentRow) return
-            deleteBill.mutate(currentRow.id, {
-              onSuccess: () => {
-                setOpen(null)
-                setTimeout(() => {
-                  setCurrentRow(null)
-                }, 500)
-              },
-            })
-          }}
-          disabled={deleteBill.isPending}
-          title={
-            <span className='text-destructive'>
-              <AlertTriangle
-                className='me-1 inline-block stroke-destructive'
-                size={18}
-              />{' '}
-              Hapus Tagihan
-            </span>
-          }
-          desc={
-            <p>
-              Apakah Anda yakin ingin menghapus tagihan ini?
-              <br />
-              Tindakan ini akan menghapus tagihan secara permanen dan tidak
-              dapat dibatalkan.
-            </p>
-          }
-          confirmText='Hapus'
-          destructive
-        />
+        <>
+          <ConfirmDialog
+            key={`bill-delete-${currentRow.id}`}
+            open={open === 'delete'}
+            onOpenChange={() => {
+              setOpen('delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={() => {
+              deleteBill.mutate(currentRow.id, {
+                onSuccess: () => {
+                  setOpen(null)
+                  setTimeout(() => {
+                    setCurrentRow(null)
+                  }, 500)
+                },
+              })
+            }}
+            disabled={deleteBill.isPending}
+            title={
+              <span className='text-destructive'>
+                <AlertTriangle
+                  className='me-1 inline-block stroke-destructive'
+                  size={18}
+                />{' '}
+                Hapus Tagihan
+              </span>
+            }
+            desc={
+              <p>
+                Apakah Anda yakin ingin menghapus tagihan ini?
+                <br />
+                Tindakan ini akan memindahkan tagihan ke data terhapus.
+              </p>
+            }
+            confirmText='Hapus'
+            destructive
+          />
+
+          <ConfirmDialog
+            key={`bill-restore-${currentRow.id}`}
+            open={open === 'restore'}
+            onOpenChange={() => {
+              setOpen('restore')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={() => {
+              restoreBill.mutate(currentRow.id, {
+                onSuccess: () => {
+                  setOpen(null)
+                  setTimeout(() => {
+                    setCurrentRow(null)
+                  }, 500)
+                },
+              })
+            }}
+            disabled={restoreBill.isPending}
+            isLoading={restoreBill.isPending}
+            title='Pulihkan Tagihan'
+            desc={<p>Apakah Anda yakin ingin memulihkan tagihan ini?</p>}
+            confirmText='Pulihkan'
+          />
+
+          <ConfirmDialog
+            key={`bill-force-delete-${currentRow.id}`}
+            open={open === 'force-delete'}
+            onOpenChange={() => {
+              setOpen('force-delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={() => {
+              forceDeleteBill.mutate(currentRow.id, {
+                onSuccess: () => {
+                  setOpen(null)
+                  setTimeout(() => {
+                    setCurrentRow(null)
+                  }, 500)
+                },
+              })
+            }}
+            disabled={forceDeleteBill.isPending}
+            isLoading={forceDeleteBill.isPending}
+            title={
+              <span className='text-destructive'>
+                <AlertTriangle
+                  className='me-1 inline-block stroke-destructive'
+                  size={18}
+                />{' '}
+                Hapus Permanen Tagihan
+              </span>
+            }
+            desc={
+              <p>
+                Apakah Anda yakin ingin menghapus permanen tagihan ini?
+                <br />
+                Tindakan ini tidak dapat dibatalkan.
+              </p>
+            }
+            confirmText='Hapus Permanen'
+            destructive
+          />
+        </>
       )}
     </>
   )
@@ -78,6 +152,7 @@ function BillsPageInner() {
     status: search.status,
     due_type_id: search.due_type_id,
     search: search.search,
+    trashed: search.trashed,
     sort: search.sort,
     order: search.order,
   })

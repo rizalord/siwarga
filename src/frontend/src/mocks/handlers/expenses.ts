@@ -1,6 +1,17 @@
 import { http, HttpResponse } from 'msw'
 import { mockExpenseCategories } from '../data/expense-categories'
 import { mockExpenses } from '../data/expenses'
+import {
+  applyTrashedFilter,
+  buildPaginatedResponse,
+  bulkForceDelete,
+  bulkRestore,
+  bulkSoftDelete,
+  forceDeleteById,
+  readIds,
+  restoreById,
+  softDeleteById,
+} from './soft-delete'
 
 const expenses = [...mockExpenses]
 let nextId = 100
@@ -11,17 +22,11 @@ export const expenseHandlers = [
     const month = url.searchParams.get('month')
     const year = url.searchParams.get('year')
     const categoryId = url.searchParams.get('category_id')
-    let filtered = [...expenses]
+    let filtered = applyTrashedFilter(expenses, url.searchParams.get('trashed'))
     if (month) filtered = filtered.filter((e) => new Date(e.expense_date).getMonth() + 1 === Number(month))
     if (year) filtered = filtered.filter((e) => new Date(e.expense_date).getFullYear() === Number(year))
     if (categoryId) filtered = filtered.filter((e) => e.category.id === Number(categoryId))
-    return HttpResponse.json({
-      data: filtered,
-      current_page: 1,
-      last_page: 1,
-      per_page: 10,
-      total: filtered.length,
-    })
+    return HttpResponse.json(buildPaginatedResponse(filtered))
   }),
 
   http.get('/api/expenses/:id', ({ params }) => {
@@ -60,9 +65,41 @@ export const expenseHandlers = [
   }),
 
   http.delete('/api/expenses/:id', ({ params }) => {
-    const idx = expenses.findIndex((e) => e.id === Number(params.id))
-    if (idx === -1) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
-    expenses[idx] = { ...expenses[idx], deleted_at: new Date().toISOString() }
+    const expense = softDeleteById(expenses, Number(params.id))
+    if (!expense) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     return HttpResponse.json({ data: null, message: 'Deleted' })
+  }),
+
+  http.post('/api/expenses/:id/restore', ({ params }) => {
+    const expense = restoreById(expenses, Number(params.id))
+    if (!expense) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: expense })
+  }),
+
+  http.delete('/api/expenses/:id/force-delete', ({ params }) => {
+    const deleted = forceDeleteById(expenses, Number(params.id))
+    if (!deleted) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: null, message: 'Deleted permanently' })
+  }),
+
+  http.post('/api/expenses/bulk-delete', async ({ request }) => {
+    const deleted = bulkSoftDelete(expenses, await readIds(request))
+    return HttpResponse.json({ data: null, message: `${deleted} data berhasil dihapus` })
+  }),
+
+  http.post('/api/expenses/bulk-restore', async ({ request }) => {
+    const restored = bulkRestore(expenses, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${restored} data berhasil dipulihkan`,
+    })
+  }),
+
+  http.post('/api/expenses/bulk-force-delete', async ({ request }) => {
+    const deleted = bulkForceDelete(expenses, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${deleted} data berhasil dihapus permanen`,
+    })
   }),
 ]

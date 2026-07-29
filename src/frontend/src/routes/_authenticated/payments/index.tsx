@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
+import { createFileRoute } from '@tanstack/react-router'
 import { PaymentsPage } from '@/features/siwarga-payments'
 
 const searchSchema = z.object({
@@ -9,7 +9,11 @@ const searchSchema = z.object({
   year: z.coerce.number().optional(),
   search: z.string().optional().catch(''),
   sort: z.string().optional().catch(undefined),
-  order: z.union([z.literal('asc'), z.literal('desc')]).optional().catch(undefined),
+  trashed: z.enum(['with', 'only']).optional().catch(undefined),
+  order: z
+    .union([z.literal('asc'), z.literal('desc')])
+    .optional()
+    .catch(undefined),
 })
 
 export const Route = createFileRoute('/_authenticated/payments/')({

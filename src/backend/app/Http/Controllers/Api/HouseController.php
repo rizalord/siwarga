@@ -7,6 +7,7 @@ use App\Http\Resources\HouseResource;
 use App\Models\ActivityLog;
 use App\Models\House;
 use App\Models\Resident;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class HouseController extends Controller
@@ -28,6 +29,7 @@ class HouseController extends Controller
                 : $query->where('status', $request->status);
         }
 
+        $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['house_number', 'address', 'status', 'created_at']);
 
         return $this->paginated($query->paginate($request->per_page ?? 10), HouseResource::class);
@@ -54,6 +56,16 @@ class HouseController extends Controller
         }
 
         return response()->json(['data' => null, 'message' => "{$deleted} rumah berhasil dihapus"]);
+    }
+
+    public function bulkRestore(Request $request, string $modelClass = House::class): JsonResponse
+    {
+        return parent::bulkRestore($request, $modelClass);
+    }
+
+    public function bulkForceDestroy(Request $request)
+    {
+        return $this->bulkForceDelete($request, House::class);
     }
 
     public function store(Request $request)
@@ -100,6 +112,21 @@ class HouseController extends Controller
         $house->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function restore(House $house)
+    {
+        $this->restoreModel($house);
+        $house->load('currentResident');
+
+        return new HouseResource($house);
+    }
+
+    public function forceDestroy(House $house)
+    {
+        $this->forceDeleteModel($house);
+
+        return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 
     public function history(House $house)

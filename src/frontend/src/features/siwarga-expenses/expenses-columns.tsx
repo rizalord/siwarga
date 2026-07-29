@@ -1,7 +1,8 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import type { Expense } from '@/types/api'
-import { Trash2, UserPen } from 'lucide-react'
+import { RotateCcw, Trash2, UserPen } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 function formatRupiah(amount: number) {
   return new Intl.NumberFormat('id-ID', {
@@ -31,7 +34,9 @@ function formatDate(dateStr: string) {
 }
 
 type ExpensesColumnsProps = {
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   setCurrentRow: (row: Expense | null) => void
 }
 
@@ -40,6 +45,16 @@ export function expensesColumns({
   setCurrentRow,
 }: ExpensesColumnsProps): ColumnDef<Expense>[] {
   function DataTableRowActions({ row }: { row: Row<Expense> }) {
+    const permissions = useAuthStore(
+      (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+    )
+    const canManageTrash = permissions.includes('expenses.trash')
+    const isTrashed = row.original.deleted_at !== null
+
+    if (isTrashed && !canManageTrash) {
+      return null
+    }
+
     return (
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
@@ -52,30 +67,61 @@ export function expensesColumns({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-40'>
-          <DropdownMenuItem
-            onClick={() => {
-              setCurrentRow(row.original)
-              setOpen('update')
-            }}
-          >
-            Ubah
-            <DropdownMenuShortcut>
-              <UserPen size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              setCurrentRow(row.original)
-              setOpen('delete')
-            }}
-            className='text-red-500!'
-          >
-            Hapus
-            <DropdownMenuShortcut>
-              <Trash2 size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
+          {isTrashed ? (
+            <>
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('restore')
+                }}
+              >
+                Pulihkan
+                <DropdownMenuShortcut>
+                  <RotateCcw size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('force-delete')
+                }}
+                className='text-red-500!'
+              >
+                Hapus Permanen
+                <DropdownMenuShortcut>
+                  <Trash2 size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('update')
+                }}
+              >
+                Ubah
+                <DropdownMenuShortcut>
+                  <UserPen size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('delete')
+                }}
+                className='text-red-500!'
+              >
+                Hapus
+                <DropdownMenuShortcut>
+                  <Trash2 size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     )

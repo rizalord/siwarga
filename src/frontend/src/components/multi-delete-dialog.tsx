@@ -13,6 +13,7 @@ type MultiDeleteDialogProps = {
   selectedCount: number
   entityLabel: string
   entityLabelPlural?: string
+  deletionType?: 'soft' | 'permanent'
   isLoading?: boolean
   onConfirm: () => void
 }
@@ -23,11 +24,13 @@ export function MultiDeleteDialog({
   selectedCount,
   entityLabel,
   entityLabelPlural,
+  deletionType = 'permanent',
   isLoading,
   onConfirm,
 }: MultiDeleteDialogProps) {
   const [value, setValue] = useState('')
   const label = selectedCount > 1 ? (entityLabelPlural ?? entityLabel) : entityLabel
+  const isPermanent = deletionType === 'permanent'
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) setValue('')
@@ -64,8 +67,9 @@ export function MultiDeleteDialog({
             Apakah Anda yakin ingin menghapus {selectedCount} {label} yang
             dipilih?
             <br />
-            Tindakan ini akan menghapus data secara permanen dan tidak dapat
-            dibatalkan.
+            {isPermanent
+              ? 'Tindakan ini akan menghapus data secara permanen dan tidak dapat dibatalkan.'
+              : 'Data akan dipindahkan ke data terhapus dan dapat dipulihkan nanti.'}
           </p>
 
           <Label className='my-4 flex flex-col items-start gap-1.5'>
@@ -81,7 +85,9 @@ export function MultiDeleteDialog({
           <Alert variant='destructive'>
             <AlertTitle>Peringatan!</AlertTitle>
             <AlertDescription>
-              Harap berhati-hati, operasi ini tidak dapat dibatalkan.
+              {isPermanent
+                ? 'Harap berhati-hati, operasi ini tidak dapat dibatalkan.'
+                : 'Data yang dipindahkan masih dapat dipulihkan nanti.'}
             </AlertDescription>
           </Alert>
         </form>

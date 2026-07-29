@@ -6,11 +6,16 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { User } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import type { TrashedFilterValue, User } from '@/types/api'
+import { RotateCcw, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
-import { useBulkDeleteUsers } from '@/hooks/use-users'
+import {
+  useBulkDeleteUsers,
+  useBulkForceDeleteUsers,
+  useBulkRestoreUsers,
+} from '@/hooks/use-users'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -20,21 +25,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
+  handleTrashedFilterChange,
+  TrashedFilter,
 } from '@/components/data-table'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import { usersColumns as columns } from './users-columns'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 type DataTableProps = {
   data: User[]
   pageCount: number
   isFetching?: boolean
-  search: Record<string, unknown>
+  search: Record<string, unknown> & { trashed?: TrashedFilterValue }
   navigate: NavigateFn
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   setCurrentRow: (row: User | null) => void
 }
 
@@ -50,8 +62,18 @@ export function UsersTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkForceDeleteOpen, setBulkForceDeleteOpen] = useState(false)
 
   const bulkDeleteUsers = useBulkDeleteUsers()
+  const bulkRestoreUsers = useBulkRestoreUsers()
+  const bulkForceDeleteUsers = useBulkForceDeleteUsers()
+  const permissions = useAuthStore(
+    (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+  )
+  const canManageTrash = permissions.includes('users.trash')
+  const trashedFilter = search.trashed
+  const isOnlyTrashed = trashedFilter === 'only'
 
   const {
     globalFilter,
@@ -106,6 +128,21 @@ export function UsersTable({
     .filter((id) => rowSelection[id])
     .map(Number)
 
+  const handleTrashedChange = (value: TrashedFilterValue | undefined) => {
+    handleTrashedFilterChange({
+      value,
+      clearRowSelection: () => setRowSelection({}),
+      navigate,
+    })
+  }
+
+  const resetSelectionAfterSuccess = (onClose: () => void) => {
+    onClose()
+    table.resetRowSelection()
+  }
+
+  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+
   return (
     <div
       className={cn(
@@ -113,7 +150,9 @@ export function UsersTable({
         'flex flex-1 flex-col gap-4 overflow-hidden'
       )}
     >
-      <DataTableToolbar table={table} searchPlaceholder='Cari pengguna...' />
+      <DataTableToolbar table={table} searchPlaceholder='Cari pengguna...'>
+        <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
+      </DataTableToolbar>
       <div className='flex-1 overflow-auto'>
         <div
           className={cn(
@@ -188,28 +227,87 @@ export function UsersTable({
         </div>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
-      <DataTableBulkActions table={table} entityName='pengguna'>
-        <Button
-          variant='destructive'
-          size='sm'
-          className='h-7'
-          onClick={() => setMultiDeleteOpen(true)}
-        >
-          <Trash2 />
-          Hapus
-        </Button>
-      </DataTableBulkActions>
+      {shouldShowBulkActions && (
+        <DataTableBulkActions table={table} entityName='pengguna'>
+          {isOnlyTrashed ? (
+            <>
+              <Button
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkRestoreOpen(true)}
+              >
+                <RotateCcw />
+                Pulihkan
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkForceDeleteOpen(true)}
+              >
+                <Trash2 />
+                Hapus Permanen
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant='destructive'
+              size='sm'
+              className='h-7'
+              onClick={() => setMultiDeleteOpen(true)}
+            >
+              <Trash2 />
+              Hapus
+            </Button>
+          )}
+        </DataTableBulkActions>
+      )}
       <MultiDeleteDialog
         open={multiDeleteOpen}
         onOpenChange={setMultiDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='pengguna'
+        deletionType='soft'
         isLoading={bulkDeleteUsers.isPending}
         onConfirm={() => {
           bulkDeleteUsers.mutate(selectedIds, {
             onSuccess: () => {
-              setMultiDeleteOpen(false)
-              table.resetRowSelection()
+              resetSelectionAfterSuccess(() => setMultiDeleteOpen(false))
+            },
+          })
+        }}
+      />
+      <ConfirmDialog
+        open={bulkRestoreOpen}
+        onOpenChange={setBulkRestoreOpen}
+        handleConfirm={() => {
+          bulkRestoreUsers.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkRestoreOpen(false))
+            },
+          })
+        }}
+        disabled={bulkRestoreUsers.isPending}
+        isLoading={bulkRestoreUsers.isPending}
+        title='Pulihkan Pengguna'
+        desc={
+          <p>
+            Apakah Anda yakin ingin memulihkan {selectedIds.length} pengguna
+            terpilih?
+          </p>
+        }
+        confirmText='Pulihkan'
+      />
+      <MultiDeleteDialog
+        open={bulkForceDeleteOpen}
+        onOpenChange={setBulkForceDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='pengguna'
+        isLoading={bulkForceDeleteUsers.isPending}
+        onConfirm={() => {
+          bulkForceDeleteUsers.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkForceDeleteOpen(false))
             },
           })
         }}

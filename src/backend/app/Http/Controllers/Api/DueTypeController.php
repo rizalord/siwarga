@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DueTypeResource;
 use App\Models\DueType;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DueTypeController extends Controller
@@ -17,6 +18,7 @@ class DueTypeController extends Controller
             $query->where('name', 'like', "%{$request->search}%");
         }
 
+        $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['name', 'amount', 'billing_cycle', 'created_at']);
 
         return $this->paginated($query->paginate($request->per_page ?? 10), DueTypeResource::class);
@@ -25,6 +27,16 @@ class DueTypeController extends Controller
     public function bulkDestroy(Request $request)
     {
         return $this->bulkDelete($request, DueType::class);
+    }
+
+    public function bulkRestore(Request $request, string $modelClass = DueType::class): JsonResponse
+    {
+        return parent::bulkRestore($request, $modelClass);
+    }
+
+    public function bulkForceDestroy(Request $request)
+    {
+        return $this->bulkForceDelete($request, DueType::class);
     }
 
     public function store(Request $request)
@@ -63,5 +75,19 @@ class DueTypeController extends Controller
         $dueType->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function restore(DueType $dueType)
+    {
+        $this->restoreModel($dueType);
+
+        return new DueTypeResource($dueType);
+    }
+
+    public function forceDestroy(DueType $dueType)
+    {
+        $this->forceDeleteModel($dueType);
+
+        return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 }

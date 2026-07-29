@@ -3,7 +3,12 @@ import { getRouteApi } from '@tanstack/react-router'
 import type { User } from '@/types/api'
 import { AlertTriangle, Plus } from 'lucide-react'
 import useDialogState from '@/hooks/use-dialog-state'
-import { useUsers, useDeleteUser } from '@/hooks/use-users'
+import {
+  useDeleteUser,
+  useForceDeleteUser,
+  useRestoreUser,
+  useUsers,
+} from '@/hooks/use-users'
 import { Button } from '@/components/ui/button'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -23,16 +28,44 @@ function UsersDialogs({
   currentRow,
   setCurrentRow,
 }: {
-  open: 'create' | 'update' | 'delete' | null
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   currentRow: User | null
   setCurrentRow: (row: User | null) => void
 }) {
   const deleteUser = useDeleteUser()
+  const restoreUser = useRestoreUser()
+  const forceDeleteUser = useForceDeleteUser()
 
   const handleDelete = () => {
     if (!currentRow) return
     deleteUser.mutate(currentRow.id, {
+      onSuccess: () => {
+        setOpen(null)
+        setTimeout(() => {
+          setCurrentRow(null)
+        }, 500)
+      },
+    })
+  }
+
+  const handleRestore = () => {
+    if (!currentRow) return
+    restoreUser.mutate(currentRow.id, {
+      onSuccess: () => {
+        setOpen(null)
+        setTimeout(() => {
+          setCurrentRow(null)
+        }, 500)
+      },
+    })
+  }
+
+  const handleForceDelete = () => {
+    if (!currentRow) return
+    forceDeleteUser.mutate(currentRow.id, {
       onSuccess: () => {
         setOpen(null)
         setTimeout(() => {
@@ -89,11 +122,65 @@ function UsersDialogs({
                 Apakah Anda yakin ingin menghapus{' '}
                 <span className='font-bold'>{currentRow.name}</span>?
                 <br />
-                Tindakan ini akan menghapus pengguna secara permanen dan tidak
-                dapat dibatalkan.
+                Tindakan ini akan memindahkan pengguna ke data terhapus.
               </p>
             }
             confirmText='Hapus'
+            destructive
+          />
+
+          <ConfirmDialog
+            key={`user-restore-${currentRow.id}`}
+            open={open === 'restore'}
+            onOpenChange={() => {
+              setOpen('restore')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={handleRestore}
+            disabled={restoreUser.isPending}
+            isLoading={restoreUser.isPending}
+            title='Pulihkan Pengguna'
+            desc={
+              <p>
+                Apakah Anda yakin ingin memulihkan{' '}
+                <span className='font-bold'>{currentRow.name}</span>?
+              </p>
+            }
+            confirmText='Pulihkan'
+          />
+
+          <ConfirmDialog
+            key={`user-force-delete-${currentRow.id}`}
+            open={open === 'force-delete'}
+            onOpenChange={() => {
+              setOpen('force-delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={handleForceDelete}
+            disabled={forceDeleteUser.isPending}
+            isLoading={forceDeleteUser.isPending}
+            title={
+              <span className='text-destructive'>
+                <AlertTriangle
+                  className='me-1 inline-block stroke-destructive'
+                  size={18}
+                />{' '}
+                Hapus Permanen Pengguna
+              </span>
+            }
+            desc={
+              <p>
+                Apakah Anda yakin ingin menghapus permanen{' '}
+                <span className='font-bold'>{currentRow.name}</span>?
+                <br />
+                Tindakan ini tidak dapat dibatalkan.
+              </p>
+            }
+            confirmText='Hapus Permanen'
             destructive
           />
         </>
@@ -109,11 +196,14 @@ function UsersPageInner() {
     page: search.page,
     per_page: search.pageSize,
     search: search.search,
+    trashed: search.trashed,
     sort: search.sort,
     order: search.order,
   })
 
-  const [open, setOpen] = useDialogState<'create' | 'update' | 'delete'>(null)
+  const [open, setOpen] = useDialogState<
+    'create' | 'update' | 'delete' | 'restore' | 'force-delete'
+  >(null)
   const [currentRow, setCurrentRow] = useState<User | null>(null)
 
   return (

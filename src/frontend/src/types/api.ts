@@ -225,6 +225,8 @@ export interface CreateExpenseRequest {
   expense_date: string
 }
 
+export type TrashedFilterValue = 'with' | 'only'
+
 // Reports
 export interface MonthlyReport {
   year: number
@@ -251,6 +253,7 @@ export interface YearlySummary {
 export interface ResidentFilter {
   status?: string | string[]
   marital_status?: string | string[]
+  trashed?: TrashedFilterValue
   search?: string
   page?: number
   per_page?: number
@@ -260,6 +263,7 @@ export interface ResidentFilter {
 
 export interface HouseFilter {
   status?: string | string[]
+  trashed?: TrashedFilterValue
   search?: string
   page?: number
   per_page?: number
@@ -273,6 +277,7 @@ export interface BillFilter {
   status?: string | string[]
   house_id?: number
   due_type_id?: string | string[]
+  trashed?: TrashedFilterValue
   search?: string
   page?: number
   per_page?: number
@@ -284,6 +289,7 @@ export interface PaymentFilter {
   bill_id?: number
   month?: number
   year?: number
+  trashed?: TrashedFilterValue
   search?: string
   page?: number
   per_page?: number
@@ -295,6 +301,7 @@ export interface ExpenseFilter {
   month?: number
   year?: number
   category_id?: number | number[]
+  trashed?: TrashedFilterValue
   search?: string
   page?: number
   per_page?: number
@@ -303,6 +310,7 @@ export interface ExpenseFilter {
 }
 
 export interface DueTypeFilter {
+  trashed?: TrashedFilterValue
   search?: string
   page?: number
   per_page?: number
@@ -311,6 +319,7 @@ export interface DueTypeFilter {
 }
 
 export interface ExpenseCategoryFilter {
+  trashed?: TrashedFilterValue
   search?: string
   page?: number
   per_page?: number
@@ -319,6 +328,7 @@ export interface ExpenseCategoryFilter {
 }
 
 export interface UserFilter {
+  trashed?: TrashedFilterValue
   search?: string
   page?: number
   per_page?: number

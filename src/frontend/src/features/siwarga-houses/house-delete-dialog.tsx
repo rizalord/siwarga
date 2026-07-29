@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import type { House } from '@/types/api'
 import { AlertTriangle } from 'lucide-react'
+import { useDeleteHouse } from '@/hooks/use-houses'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { useDeleteHouse } from '@/hooks/use-houses'
-import type { House } from '@/types/api'
 
 type HouseDeleteDialogProps = {
   open: boolean
@@ -60,8 +60,7 @@ export function HouseDeleteDialog({
             Apakah Anda yakin ingin menghapus{' '}
             <span className='font-bold'>{currentRow.house_number}</span>?
             <br />
-            Tindakan ini akan menghapus data rumah secara permanen dan
-            tidak dapat dibatalkan.
+            Tindakan ini akan memindahkan data rumah ke data terhapus.
           </p>
 
           <Label className='my-2'>
@@ -77,7 +76,7 @@ export function HouseDeleteDialog({
           <Alert variant='destructive'>
             <AlertTitle>Peringatan!</AlertTitle>
             <AlertDescription>
-              Harap berhati-hati, operasi ini tidak dapat dibatalkan.
+              Data yang dipindahkan masih dapat dipulihkan nanti.
             </AlertDescription>
           </Alert>
         </form>

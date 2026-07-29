@@ -6,10 +6,15 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { Bill } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import type { Bill, TrashedFilterValue } from '@/types/api'
+import { RotateCcw, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
-import { useBulkDeleteBills } from '@/hooks/use-bills'
+import {
+  useBulkDeleteBills,
+  useBulkForceDeleteBills,
+  useBulkRestoreBills,
+} from '@/hooks/use-bills'
 import { useDueTypes } from '@/hooks/use-due-types'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
@@ -21,13 +26,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
+  handleTrashedFilterChange,
+  TrashedFilter,
 } from '@/components/data-table'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import { billsColumns as columns } from './bills-columns'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 const statusOptions = [
   { label: 'Lunas', value: 'lunas' },
@@ -49,7 +59,7 @@ type DataTableProps = {
   data: Bill[]
   pageCount: number
   isFetching?: boolean
-  search: Record<string, unknown>
+  search: Record<string, unknown> & { trashed?: TrashedFilterValue }
   navigate: NavigateFn
 }
 
@@ -63,8 +73,18 @@ export function BillsTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkForceDeleteOpen, setBulkForceDeleteOpen] = useState(false)
 
   const bulkDeleteBills = useBulkDeleteBills()
+  const bulkRestoreBills = useBulkRestoreBills()
+  const bulkForceDeleteBills = useBulkForceDeleteBills()
+  const permissions = useAuthStore(
+    (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+  )
+  const canManageTrash = permissions.includes('bills.trash')
+  const trashedFilter = search.trashed
+  const isOnlyTrashed = trashedFilter === 'only'
 
   const { data: dueTypesData } = useDueTypes({ per_page: 100 })
   const dueTypeOptions = (dueTypesData?.data ?? []).map((dueType) => ({
@@ -131,6 +151,21 @@ export function BillsTable({
     .filter((id) => rowSelection[id])
     .map(Number)
 
+  const handleTrashedChange = (value: TrashedFilterValue | undefined) => {
+    handleTrashedFilterChange({
+      value,
+      clearRowSelection: () => setRowSelection({}),
+      navigate,
+    })
+  }
+
+  const resetSelectionAfterSuccess = (onClose: () => void) => {
+    onClose()
+    table.resetRowSelection()
+  }
+
+  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+
   return (
     <div
       className={cn(
@@ -163,7 +198,9 @@ export function BillsTable({
             options: dueTypeOptions,
           },
         ]}
-      />
+      >
+        <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
+      </DataTableToolbar>
       <div className='flex-1 overflow-auto'>
         <div
           className={cn(
@@ -238,28 +275,87 @@ export function BillsTable({
         </div>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
-      <DataTableBulkActions table={table} entityName='tagihan'>
-        <Button
-          variant='destructive'
-          size='sm'
-          className='h-7'
-          onClick={() => setMultiDeleteOpen(true)}
-        >
-          <Trash2 />
-          Hapus
-        </Button>
-      </DataTableBulkActions>
+      {shouldShowBulkActions && (
+        <DataTableBulkActions table={table} entityName='tagihan'>
+          {isOnlyTrashed ? (
+            <>
+              <Button
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkRestoreOpen(true)}
+              >
+                <RotateCcw />
+                Pulihkan
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkForceDeleteOpen(true)}
+              >
+                <Trash2 />
+                Hapus Permanen
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant='destructive'
+              size='sm'
+              className='h-7'
+              onClick={() => setMultiDeleteOpen(true)}
+            >
+              <Trash2 />
+              Hapus
+            </Button>
+          )}
+        </DataTableBulkActions>
+      )}
       <MultiDeleteDialog
         open={multiDeleteOpen}
         onOpenChange={setMultiDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='tagihan'
+        deletionType='soft'
         isLoading={bulkDeleteBills.isPending}
         onConfirm={() => {
           bulkDeleteBills.mutate(selectedIds, {
             onSuccess: () => {
-              setMultiDeleteOpen(false)
-              table.resetRowSelection()
+              resetSelectionAfterSuccess(() => setMultiDeleteOpen(false))
+            },
+          })
+        }}
+      />
+      <ConfirmDialog
+        open={bulkRestoreOpen}
+        onOpenChange={setBulkRestoreOpen}
+        handleConfirm={() => {
+          bulkRestoreBills.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkRestoreOpen(false))
+            },
+          })
+        }}
+        disabled={bulkRestoreBills.isPending}
+        isLoading={bulkRestoreBills.isPending}
+        title='Pulihkan Tagihan'
+        desc={
+          <p>
+            Apakah Anda yakin ingin memulihkan {selectedIds.length} tagihan
+            terpilih?
+          </p>
+        }
+        confirmText='Pulihkan'
+      />
+      <MultiDeleteDialog
+        open={bulkForceDeleteOpen}
+        onOpenChange={setBulkForceDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='tagihan'
+        isLoading={bulkForceDeleteBills.isPending}
+        onConfirm={() => {
+          bulkForceDeleteBills.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkForceDeleteOpen(false))
             },
           })
         }}

@@ -59,6 +59,33 @@ export function useDeleteExpenseCategory() {
   })
 }
 
+export function useRestoreExpenseCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => expenseCategoriesService.restore(id),
+    onSuccess: (response) => {
+      qc.invalidateQueries({ queryKey: ['expense-categories'] })
+      toast.success(
+        response.data.message ?? 'Kategori pengeluaran berhasil dipulihkan'
+      )
+    },
+  })
+}
+
+export function useForceDeleteExpenseCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => expenseCategoriesService.forceDelete(id),
+    onSuccess: (response) => {
+      qc.invalidateQueries({ queryKey: ['expense-categories'] })
+      toast.success(
+        response.data.message ??
+          'Kategori pengeluaran berhasil dihapus permanen'
+      )
+    },
+  })
+}
+
 export function useBulkDeleteExpenseCategories() {
   const qc = useQueryClient()
   return useMutation({
@@ -66,6 +93,34 @@ export function useBulkDeleteExpenseCategories() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['expense-categories'] })
       toast.success('Kategori pengeluaran terpilih berhasil dihapus')
+    },
+  })
+}
+
+export function useBulkRestoreExpenseCategories() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => expenseCategoriesService.bulkRestore(ids),
+    onSuccess: (response) => {
+      qc.invalidateQueries({ queryKey: ['expense-categories'] })
+      toast.success(
+        response.data.message ??
+          'Kategori pengeluaran terpilih berhasil dipulihkan'
+      )
+    },
+  })
+}
+
+export function useBulkForceDeleteExpenseCategories() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => expenseCategoriesService.bulkForceDelete(ids),
+    onSuccess: (response) => {
+      qc.invalidateQueries({ queryKey: ['expense-categories'] })
+      toast.success(
+        response.data.message ??
+          'Kategori pengeluaran terpilih berhasil dihapus permanen'
+      )
     },
   })
 }

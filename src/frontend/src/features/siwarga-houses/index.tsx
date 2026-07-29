@@ -1,8 +1,13 @@
 import { getRouteApi } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
-import { useHouses } from '@/hooks/use-houses'
+import { AlertTriangle, Plus } from 'lucide-react'
+import {
+  useForceDeleteHouse,
+  useHouses,
+  useRestoreHouse,
+} from '@/hooks/use-houses'
 import { Button } from '@/components/ui/button'
 import { ConfigDrawer } from '@/components/config-drawer'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -28,6 +33,8 @@ function HousesPrimaryButtons() {
 
 function HousesDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useHousesContext()
+  const restoreHouse = useRestoreHouse()
+  const forceDeleteHouse = useForceDeleteHouse()
   return (
     <>
       <HouseFormDialog
@@ -60,6 +67,79 @@ function HousesDialogs() {
               }, 500)
             }}
             currentRow={currentRow}
+          />
+
+          <ConfirmDialog
+            key={`house-restore-${currentRow.id}`}
+            open={open === 'restore'}
+            onOpenChange={() => {
+              setOpen('restore')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={() => {
+              restoreHouse.mutate(currentRow.id, {
+                onSuccess: () => {
+                  setOpen(null)
+                  setTimeout(() => {
+                    setCurrentRow(null)
+                  }, 500)
+                },
+              })
+            }}
+            disabled={restoreHouse.isPending}
+            isLoading={restoreHouse.isPending}
+            title='Pulihkan Rumah'
+            desc={
+              <p>
+                Apakah Anda yakin ingin memulihkan{' '}
+                <span className='font-bold'>{currentRow.house_number}</span>?
+              </p>
+            }
+            confirmText='Pulihkan'
+          />
+
+          <ConfirmDialog
+            key={`house-force-delete-${currentRow.id}`}
+            open={open === 'force-delete'}
+            onOpenChange={() => {
+              setOpen('force-delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={() => {
+              forceDeleteHouse.mutate(currentRow.id, {
+                onSuccess: () => {
+                  setOpen(null)
+                  setTimeout(() => {
+                    setCurrentRow(null)
+                  }, 500)
+                },
+              })
+            }}
+            disabled={forceDeleteHouse.isPending}
+            isLoading={forceDeleteHouse.isPending}
+            title={
+              <span className='text-destructive'>
+                <AlertTriangle
+                  className='me-1 inline-block stroke-destructive'
+                  size={18}
+                />{' '}
+                Hapus Permanen Rumah
+              </span>
+            }
+            desc={
+              <p>
+                Apakah Anda yakin ingin menghapus permanen{' '}
+                <span className='font-bold'>{currentRow.house_number}</span>?
+                <br />
+                Tindakan ini tidak dapat dibatalkan.
+              </p>
+            }
+            confirmText='Hapus Permanen'
+            destructive
           />
 
           <HouseAssignDialog
@@ -99,6 +179,7 @@ function HousesPageInner() {
     per_page: search.pageSize,
     status: search.status,
     search: search.search,
+    trashed: search.trashed,
     sort: search.sort,
     order: search.order,
   })

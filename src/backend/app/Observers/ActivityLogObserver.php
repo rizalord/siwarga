@@ -76,6 +76,20 @@ class ActivityLogObserver
         ActivityLog::record('deleted', "Menghapus {$label}: {$identifier}", $model);
     }
 
+    public function restored(Model $model): void
+    {
+        [$label, $identifier] = $this->describe($model);
+
+        ActivityLog::record('restored', "Memulihkan {$label}: {$identifier}", $model);
+    }
+
+    public function forceDeleted(Model $model): void
+    {
+        [$label, $identifier] = $this->describe($model);
+
+        ActivityLog::record('force_deleted', "Menghapus permanen {$label}: {$identifier}", $model);
+    }
+
     /**
      * @return array{0: string, 1: string}
      */

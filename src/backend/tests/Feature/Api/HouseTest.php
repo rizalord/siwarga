@@ -18,6 +18,8 @@ class HouseTest extends TestCase
 
     protected User $user;
 
+    protected User $warga;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,6 +29,10 @@ class HouseTest extends TestCase
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
         $this->user->load('roles.permissions');
+
+        $this->warga = User::factory()->create();
+        $this->warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+        $this->warga->load('roles.permissions');
         $this->actingAs($this->user);
     }
 
@@ -66,6 +72,29 @@ class HouseTest extends TestCase
         $response = $this->getJson('/api/houses?status=dihuni');
 
         $response->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
+    public function test_can_filter_houses_by_trashed_mode()
+    {
+        House::factory()->create(['house_number' => 'A01']);
+        $deletedHouse = House::factory()->create(['house_number' => 'B02']);
+        $deletedHouse->delete();
+
+        $this->getJson('/api/houses')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.house_number', 'A01');
+
+        $this->getJson('/api/houses?trashed=with')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['house_number' => 'A01'])
+            ->assertJsonFragment(['house_number' => 'B02']);
+
+        $this->getJson('/api/houses?trashed=only')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.house_number', 'B02');
     }
 
     public function test_can_create_house()
@@ -218,5 +247,98 @@ class HouseTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.0.resident.id', $resident->id);
+    }
+
+    public function test_can_restore_a_soft_deleted_house()
+    {
+        $house = House::factory()->create(['house_number' => 'Restore-House']);
+        $house->delete();
+
+        $this->postJson("/api/houses/{$house->id}/restore")
+            ->assertStatus(200)
+            ->assertJsonPath('data.id', $house->id)
+            ->assertJsonPath('data.deleted_at', null);
+
+        $this->assertDatabaseHas('houses', ['id' => $house->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_force_delete_a_soft_deleted_house()
+    {
+        $house = House::factory()->create(['house_number' => 'Force-House']);
+        $house->delete();
+
+        $this->deleteJson("/api/houses/{$house->id}/force-delete")
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', 'Deleted permanently');
+
+        $this->assertDatabaseMissing('houses', ['id' => $house->id]);
+    }
+
+    public function test_can_bulk_restore_houses()
+    {
+        $houses = House::factory()->count(2)->create();
+        $houses->each->delete();
+
+        $this->postJson('/api/houses/bulk-restore', [
+            'ids' => $houses->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dipulihkan');
+
+        $this->assertDatabaseHas('houses', ['id' => $houses[0]->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('houses', ['id' => $houses[1]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_bulk_force_delete_houses()
+    {
+        $houses = House::factory()->count(2)->create();
+        $houses->each->delete();
+
+        $this->postJson('/api/houses/bulk-force-delete', [
+            'ids' => $houses->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dihapus permanen');
+
+        $this->assertDatabaseMissing('houses', ['id' => $houses[0]->id]);
+        $this->assertDatabaseMissing('houses', ['id' => $houses[1]->id]);
+    }
+
+    public function test_warga_cannot_restore_or_permanently_delete_houses()
+    {
+        $house = House::factory()->create();
+        $house->delete();
+
+        $this->actingAs($this->warga)
+            ->postJson("/api/houses/{$house->id}/restore")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->deleteJson("/api/houses/{$house->id}/force-delete")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/houses/bulk-restore', ['ids' => [$house->id]])
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/houses/bulk-force-delete', ['ids' => [$house->id]])
+            ->assertStatus(403);
+    }
+
+    public function test_bulk_restore_and_force_delete_validate_ids_payload_for_houses()
+    {
+        foreach (['/api/houses/bulk-restore', '/api/houses/bulk-force-delete'] as $uri) {
+            $this->postJson($uri, ['ids' => []])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids');
+
+            $this->postJson($uri, ['ids' => ['invalid']])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids.0');
+        }
     }
 }

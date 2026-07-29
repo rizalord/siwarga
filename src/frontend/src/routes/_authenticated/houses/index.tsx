@@ -11,7 +11,11 @@ const housesSearchSchema = z.object({
     .catch([]),
   search: z.string().optional().catch(''),
   sort: z.string().optional().catch(undefined),
-  order: z.union([z.literal('asc'), z.literal('desc')]).optional().catch(undefined),
+  trashed: z.enum(['with', 'only']).optional().catch(undefined),
+  order: z
+    .union([z.literal('asc'), z.literal('desc')])
+    .optional()
+    .catch(undefined),
 })
 
 export const Route = createFileRoute('/_authenticated/houses/')({
