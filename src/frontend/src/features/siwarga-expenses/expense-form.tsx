@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { Expense } from '@/types/api'
 import { cn } from '@/lib/utils'
+import { useExpenseCategories } from '@/hooks/use-expense-categories'
 import { useCreateExpense, useUpdateExpense } from '@/hooks/use-expenses'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -28,6 +29,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
 type ExpenseFormDialogProps = {
@@ -37,7 +45,9 @@ type ExpenseFormDialogProps = {
 }
 
 const formSchema = z.object({
-  category: z.string().min(1, 'Kategori wajib diisi.'),
+  category_id: z.coerce
+    .number({ error: 'Kategori wajib diisi.' })
+    .positive('Kategori wajib diisi.'),
   description: z.string().optional(),
   amount: z.coerce
     .number({ error: 'Jumlah wajib diisi.' })
@@ -63,18 +73,20 @@ export function ExpenseFormDialog({
   const isUpdate = !!currentRow
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense(currentRow?.id ?? 0)
+  const { data: categoriesData } = useExpenseCategories({ per_page: 100 })
+  const categories = categoriesData?.data ?? []
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: currentRow
       ? {
-          category: currentRow.category,
+          category_id: currentRow.category.id,
           description: currentRow.description ?? '',
           amount: currentRow.amount,
           expense_date: currentRow.expense_date,
         }
       : {
-          category: '',
+          category_id: undefined as unknown as number,
           description: '',
           amount: undefined as unknown as number,
           expense_date: '',
@@ -128,19 +140,28 @@ export function ExpenseFormDialog({
           >
             <FormField
               control={form.control}
-              name='category'
+              name='category_id'
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 text-end'>
                     Kategori
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder='Masukkan kategori'
-                      className='col-span-4'
-                      autoComplete='off'
-                      {...field}
-                    />
+                    <Select
+                      value={field.value ? String(field.value) : ''}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                    >
+                      <SelectTrigger className='col-span-4'>
+                        <SelectValue placeholder='Pilih kategori...' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={String(category.id)}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage className='col-span-4 col-start-3' />
                 </FormItem>
