@@ -99,6 +99,7 @@ class AppServiceProvider extends ServiceProvider
         // Expense Categories
         Gate::define('expense-categories.view', [ExpenseCategoryPolicy::class, 'viewAny']);
         Gate::define('expense-categories.manage', [ExpenseCategoryPolicy::class, 'create']);
+        Gate::define('expense-categories.trash', [ExpenseCategoryPolicy::class, 'restore']);
 
         // Payments
         Gate::define('payments.view', [PaymentPolicy::class, 'viewAny']);

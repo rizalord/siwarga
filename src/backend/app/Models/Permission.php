@@ -42,6 +42,7 @@ class Permission extends Model
         'expenses.delete' => 'Hapus pengeluaran',
         'expense-categories.view' => 'Lihat kategori pengeluaran',
         'expense-categories.manage' => 'Kelola kategori pengeluaran',
+        'expense-categories.trash' => 'Kelola data kategori pengeluaran terhapus',
         'reports.view' => 'Lihat laporan',
         'users.view' => 'Lihat data user',
         'users.manage' => 'Kelola user',

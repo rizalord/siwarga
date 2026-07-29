@@ -53,6 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('expense-categories', [ExpenseCategoryController::class, 'index'])->middleware('can:expense-categories.view');
     Route::post('expense-categories', [ExpenseCategoryController::class, 'store'])->middleware('can:expense-categories.manage');
     Route::post('expense-categories/bulk-delete', [ExpenseCategoryController::class, 'bulkDestroy'])->middleware('can:expense-categories.manage');
+    Route::post('expense-categories/bulk-restore', [ExpenseCategoryController::class, 'bulkRestore'])->middleware('can:expense-categories.trash');
+    Route::post('expense-categories/bulk-force-delete', [ExpenseCategoryController::class, 'bulkForceDestroy'])->middleware('can:expense-categories.trash');
+    Route::post('expense-categories/{expenseCategory}/restore', [ExpenseCategoryController::class, 'restore'])->withTrashed()->middleware('can:expense-categories.trash');
+    Route::delete('expense-categories/{expenseCategory}/force-delete', [ExpenseCategoryController::class, 'forceDestroy'])->withTrashed()->middleware('can:expense-categories.trash');
     Route::get('expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'show'])->middleware('can:expense-categories.view');
     Route::put('expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'update'])->middleware('can:expense-categories.manage');
     Route::delete('expense-categories/{expenseCategory}', [ExpenseCategoryController::class, 'destroy'])->middleware('can:expense-categories.manage');

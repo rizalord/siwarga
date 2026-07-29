@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Bill;
+use App\Models\ExpenseCategory;
 use App\Models\Payment;
 use App\Models\Resident;
 use App\Models\Role;
@@ -80,6 +81,17 @@ class RbacTest extends TestCase
             ]);
 
         $response->assertStatus(201);
+    }
+
+    public function test_bendahara_can_restore_expense_categories(): void
+    {
+        $category = ExpenseCategory::factory()->create(['name' => 'Test']);
+        $category->delete();
+
+        $response = $this->actingAs($this->bendahara)
+            ->postJson("/api/expense-categories/{$category->id}/restore");
+
+        $response->assertStatus(200);
     }
 
     public function test_bendahara_cannot_manage_users(): void
