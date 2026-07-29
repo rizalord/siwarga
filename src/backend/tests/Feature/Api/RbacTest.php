@@ -94,6 +94,13 @@ class RbacTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_bendahara_receives_financial_trash_permissions(): void
+    {
+        $this->assertTrue($this->bendahara->hasPermission('bills.trash'));
+        $this->assertTrue($this->bendahara->hasPermission('payments.trash'));
+        $this->assertTrue($this->bendahara->hasPermission('expenses.trash'));
+    }
+
     public function test_bendahara_cannot_manage_users(): void
     {
         $response = $this->actingAs($this->bendahara)

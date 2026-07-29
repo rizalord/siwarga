@@ -22,8 +22,8 @@ class RoleSeeder extends Seeder
 
         // Bendahara gets financial permissions
         $bendahara->permissions()->attach(Permission::whereIn('name', [
-            'houses.view', 'bills.view', 'bills.generate', 'payments.view', 'payments.create',
-            'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete',
+            'houses.view', 'bills.view', 'bills.generate', 'bills.trash', 'payments.view', 'payments.create', 'payments.trash',
+            'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'expenses.trash',
             'expense-categories.view', 'expense-categories.manage', 'expense-categories.trash', 'reports.view',
         ])->pluck('id'));
 
