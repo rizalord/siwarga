@@ -111,7 +111,7 @@ class BillController extends Controller
 
     public function restore(Bill $bill)
     {
-        $bill->restore();
+        $this->restoreModel($bill);
         $bill->load(['house', 'resident', 'dueType', 'payments']);
 
         return new BillResource($bill);
@@ -119,7 +119,7 @@ class BillController extends Controller
 
     public function forceDestroy(Bill $bill)
     {
-        $bill->forceDelete();
+        $this->forceDeleteModel($bill);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }

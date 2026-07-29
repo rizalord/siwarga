@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\House;
+use App\Models\Payment;
 use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
@@ -270,6 +271,21 @@ class BillTest extends TestCase
 
         $this->assertDatabaseMissing('bills', ['id' => $bills[0]->id]);
         $this->assertDatabaseMissing('bills', ['id' => $bills[1]->id]);
+    }
+
+    public function test_bulk_force_delete_bills_returns_validation_error_when_a_bill_is_still_referenced()
+    {
+        $bill = Bill::factory()->create();
+        Payment::factory()->create(['bill_id' => $bill->id]);
+        $bill->delete();
+
+        $this->postJson('/api/bills/bulk-force-delete', [
+            'ids' => [$bill->id],
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('ids');
+
+        $this->assertDatabaseHas('bills', ['id' => $bill->id]);
     }
 
     public function test_warga_cannot_restore_or_permanently_delete_bills()

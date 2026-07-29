@@ -182,3 +182,41 @@ it('mutates in-memory rows for restore and force-delete flows', () => {
     ).toEqual([])
   }
 })
+
+it('ignores active ids for restore and permanent delete flows', () => {
+  for (const resource of resources) {
+    const restoreCollection = structuredClone(resource.fixtures)
+
+    expect(
+      restoreById(restoreCollection, resource.activeId),
+      `${resource.label} single restore ignores active row`
+    ).toBeNull()
+    expect(
+      bulkRestore(restoreCollection, [resource.activeId, resource.trashedId]),
+      `${resource.label} bulk restore ignores active row`
+    ).toBe(1)
+    expect(
+      ids(applyTrashedFilter(restoreCollection, 'with')),
+      `${resource.label} after ignoring active restore`
+    ).toEqual([resource.activeId, resource.trashedId])
+    expect(
+      ids(applyTrashedFilter(restoreCollection, 'only')),
+      `${resource.label} only trashed after active-safe restore`
+    ).toEqual([])
+
+    const deleteCollection = structuredClone(resource.fixtures)
+
+    expect(
+      forceDeleteById(deleteCollection, resource.activeId),
+      `${resource.label} single force delete ignores active row`
+    ).toBe(false)
+    expect(
+      bulkForceDelete(deleteCollection, [resource.activeId, resource.trashedId]),
+      `${resource.label} bulk force delete ignores active row`
+    ).toBe(1)
+    expect(
+      ids(applyTrashedFilter(deleteCollection, 'with')),
+      `${resource.label} after ignoring active permanent delete`
+    ).toEqual([resource.activeId])
+  }
+})

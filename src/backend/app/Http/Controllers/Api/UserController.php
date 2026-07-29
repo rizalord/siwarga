@@ -124,14 +124,14 @@ class UserController extends Controller
 
     public function restore(User $user)
     {
-        $user->restore();
+        $this->restoreModel($user);
 
         return response()->json(['data' => $user->load('roles')]);
     }
 
     public function forceDestroy(User $user)
     {
-        $user->forceDelete();
+        $this->forceDeleteModel($user);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }

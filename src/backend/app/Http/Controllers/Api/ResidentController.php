@@ -130,14 +130,14 @@ class ResidentController extends Controller
 
     public function restore(Resident $resident)
     {
-        $resident->restore();
+        $this->restoreModel($resident);
 
         return new ResidentResource($resident);
     }
 
     public function forceDestroy(Resident $resident)
     {
-        $resident->forceDelete();
+        $this->forceDeleteModel($resident);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }

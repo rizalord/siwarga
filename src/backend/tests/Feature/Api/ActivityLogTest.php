@@ -121,6 +121,48 @@ class ActivityLogTest extends TestCase
         ]);
     }
 
+    public function test_bulk_restoring_residents_records_an_activity_log_for_each_row()
+    {
+        $residents = Resident::factory()->count(2)->create();
+        $residents->each->delete();
+        ActivityLog::query()->delete();
+
+        $this->postJson('/api/residents/bulk-restore', [
+            'ids' => $residents->modelKeys(),
+        ])->assertStatus(200);
+
+        $this->assertDatabaseCount('activity_logs', 2);
+
+        foreach ($residents as $resident) {
+            $this->assertDatabaseHas('activity_logs', [
+                'action' => 'restored',
+                'subject_type' => 'Resident',
+                'subject_id' => $resident->id,
+            ]);
+        }
+    }
+
+    public function test_bulk_force_deleting_residents_records_an_activity_log_for_each_row()
+    {
+        $residents = Resident::factory()->count(2)->create();
+        $residents->each->delete();
+        ActivityLog::query()->delete();
+
+        $this->postJson('/api/residents/bulk-force-delete', [
+            'ids' => $residents->modelKeys(),
+        ])->assertStatus(200);
+
+        $this->assertSame(2, ActivityLog::where('action', 'force_deleted')->count());
+
+        foreach ($residents as $resident) {
+            $this->assertDatabaseHas('activity_logs', [
+                'action' => 'force_deleted',
+                'subject_type' => 'Resident',
+                'subject_id' => $resident->id,
+            ]);
+        }
+    }
+
     public function test_login_records_an_activity_log()
     {
         $this->postJson('/api/auth/login', [

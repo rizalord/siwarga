@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
 use App\Models\Bill;
 use App\Models\Payment;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -73,7 +74,9 @@ class PaymentController extends Controller
 
     public function bulkRestore(Request $request, string $modelClass = Payment::class): JsonResponse
     {
-        return parent::bulkRestore($request, $modelClass);
+        return $this->bulkRestoreWithCallback($request, $modelClass, function (EloquentCollection $payments): void {
+            $this->refreshBillStatuses($payments->pluck('bill_id')->all());
+        });
     }
 
     public function bulkForceDestroy(Request $request)
@@ -164,7 +167,9 @@ class PaymentController extends Controller
 
     public function restore(Payment $payment)
     {
-        $payment->restore();
+        $this->restoreModel($payment, function (Payment $restoredPayment): void {
+            $this->refreshBillStatuses([$restoredPayment->bill_id]);
+        });
         $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
         return new PaymentResource($payment);
@@ -172,8 +177,31 @@ class PaymentController extends Controller
 
     public function forceDestroy(Payment $payment)
     {
-        $payment->forceDelete();
+        $this->forceDeleteModel($payment);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
+    }
+
+    /**
+     * @param  array<int, int|null>  $billIds
+     */
+    private function refreshBillStatuses(array $billIds): void
+    {
+        $filteredBillIds = collect($billIds)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($filteredBillIds->isEmpty()) {
+            return;
+        }
+
+        Bill::whereIn('id', $filteredBillIds)->each(function (Bill $bill): void {
+            $totalPaid = $bill->payments()->sum('amount_paid');
+
+            $bill->update([
+                'status' => $totalPaid >= $bill->amount_due ? 'lunas' : 'belum_lunas',
+            ]);
+        });
     }
 }

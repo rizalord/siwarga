@@ -79,14 +79,14 @@ class DueTypeController extends Controller
 
     public function restore(DueType $dueType)
     {
-        $dueType->restore();
+        $this->restoreModel($dueType);
 
         return new DueTypeResource($dueType);
     }
 
     public function forceDestroy(DueType $dueType)
     {
-        $dueType->forceDelete();
+        $this->forceDeleteModel($dueType);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }

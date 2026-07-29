@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\Role;
 use App\Models\User;
@@ -201,6 +202,21 @@ class DueTypeTest extends TestCase
 
         $this->assertDatabaseMissing('due_types', ['id' => $dueTypes[0]->id]);
         $this->assertDatabaseMissing('due_types', ['id' => $dueTypes[1]->id]);
+    }
+
+    public function test_bulk_force_delete_due_types_returns_validation_error_when_a_due_type_is_still_referenced()
+    {
+        $dueType = DueType::factory()->create();
+        Bill::factory()->create(['due_type_id' => $dueType->id]);
+        $dueType->delete();
+
+        $this->postJson('/api/due-types/bulk-force-delete', [
+            'ids' => [$dueType->id],
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('ids');
+
+        $this->assertDatabaseHas('due_types', ['id' => $dueType->id]);
     }
 
     public function test_warga_cannot_restore_or_permanently_delete_due_types()

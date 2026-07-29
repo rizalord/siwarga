@@ -116,7 +116,7 @@ class HouseController extends Controller
 
     public function restore(House $house)
     {
-        $house->restore();
+        $this->restoreModel($house);
         $house->load('currentResident');
 
         return new HouseResource($house);
@@ -124,7 +124,7 @@ class HouseController extends Controller
 
     public function forceDestroy(House $house)
     {
-        $house->forceDelete();
+        $this->forceDeleteModel($house);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }

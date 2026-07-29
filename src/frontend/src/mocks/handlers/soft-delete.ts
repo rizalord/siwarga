@@ -40,7 +40,7 @@ export function softDeleteById<T extends SoftDeletable>(items: T[], id: number) 
 }
 
 export function restoreById<T extends SoftDeletable>(items: T[], id: number) {
-  const item = items.find((entry) => entry.id === id)
+  const item = items.find((entry) => entry.id === id && entry.deleted_at !== null)
   if (!item) {
     return null
   }
@@ -50,7 +50,9 @@ export function restoreById<T extends SoftDeletable>(items: T[], id: number) {
 }
 
 export function forceDeleteById<T extends SoftDeletable>(items: T[], id: number) {
-  const index = items.findIndex((entry) => entry.id === id)
+  const index = items.findIndex(
+    (entry) => entry.id === id && entry.deleted_at !== null
+  )
   if (index === -1) {
     return false
   }

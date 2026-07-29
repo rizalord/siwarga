@@ -102,14 +102,14 @@ class ExpenseController extends Controller
 
     public function restore(Expense $expense)
     {
-        $expense->restore();
+        $this->restoreModel($expense);
 
         return new ExpenseResource($expense->load('category'));
     }
 
     public function forceDestroy(Expense $expense)
     {
-        $expense->forceDelete();
+        $this->forceDeleteModel($expense);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }

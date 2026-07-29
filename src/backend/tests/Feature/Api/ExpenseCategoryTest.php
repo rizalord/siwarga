@@ -211,6 +211,20 @@ class ExpenseCategoryTest extends TestCase
         $this->assertDatabaseMissing('expense_categories', ['id' => $categories[1]->id]);
     }
 
+    public function test_bulk_force_delete_returns_validation_error_when_a_category_is_still_referenced()
+    {
+        $category = ExpenseCategory::factory()->create();
+        Expense::factory()->create(['category_id' => $category->id]);
+        $category->delete();
+
+        $response = $this->actingAs($this->admin)->postJson('/api/expense-categories/bulk-force-delete', [
+            'ids' => [$category->id],
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('ids');
+        $this->assertDatabaseHas('expense_categories', ['id' => $category->id]);
+    }
+
     public function test_can_restore_a_soft_deleted_expense_category()
     {
         $category = ExpenseCategory::factory()->create(['name' => 'Keamanan']);

@@ -31,6 +31,7 @@ import {
   DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
+  handleTrashedFilterChange,
   TrashedFilter,
 } from '@/components/data-table'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
@@ -151,12 +152,10 @@ export function BillsTable({
     .map(Number)
 
   const handleTrashedChange = (value: TrashedFilterValue | undefined) => {
-    navigate({
-      search: (prev) => ({
-        ...(prev as Record<string, unknown>),
-        page: 1,
-        trashed: value,
-      }),
+    handleTrashedFilterChange({
+      value,
+      clearRowSelection: () => setRowSelection({}),
+      navigate,
     })
   }
 
