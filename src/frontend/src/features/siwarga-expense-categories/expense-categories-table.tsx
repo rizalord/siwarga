@@ -272,6 +272,7 @@ export function ExpenseCategoriesTable({
         onOpenChange={setMultiDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='kategori pengeluaran'
+        deletionType='soft'
         isLoading={bulkDeleteExpenseCategories.isPending}
         onConfirm={() => {
           bulkDeleteExpenseCategories.mutate(selectedIds, {
@@ -307,6 +308,7 @@ export function ExpenseCategoriesTable({
         onOpenChange={setBulkForceDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='kategori pengeluaran'
+        deletionType='permanent'
         isLoading={bulkForceDeleteExpenseCategories.isPending}
         onConfirm={() => {
           bulkForceDeleteExpenseCategories.mutate(selectedIds, {
