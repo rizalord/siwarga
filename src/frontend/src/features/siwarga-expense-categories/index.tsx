@@ -6,6 +6,8 @@ import useDialogState from '@/hooks/use-dialog-state'
 import {
   useExpenseCategories,
   useDeleteExpenseCategory,
+  useForceDeleteExpenseCategory,
+  useRestoreExpenseCategory,
 } from '@/hooks/use-expense-categories'
 import { Button } from '@/components/ui/button'
 import { ConfigDrawer } from '@/components/config-drawer'
@@ -26,16 +28,44 @@ function ExpenseCategoriesDialogs({
   currentRow,
   setCurrentRow,
 }: {
-  open: 'create' | 'update' | 'delete' | null
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   currentRow: ExpenseCategory | null
   setCurrentRow: (row: ExpenseCategory | null) => void
 }) {
   const deleteExpenseCategory = useDeleteExpenseCategory()
+  const restoreExpenseCategory = useRestoreExpenseCategory()
+  const forceDeleteExpenseCategory = useForceDeleteExpenseCategory()
 
   const handleDelete = () => {
     if (!currentRow) return
     deleteExpenseCategory.mutate(currentRow.id, {
+      onSuccess: () => {
+        setOpen(null)
+        setTimeout(() => {
+          setCurrentRow(null)
+        }, 500)
+      },
+    })
+  }
+
+  const handleRestore = () => {
+    if (!currentRow) return
+    restoreExpenseCategory.mutate(currentRow.id, {
+      onSuccess: () => {
+        setOpen(null)
+        setTimeout(() => {
+          setCurrentRow(null)
+        }, 500)
+      },
+    })
+  }
+
+  const handleForceDelete = () => {
+    if (!currentRow) return
+    forceDeleteExpenseCategory.mutate(currentRow.id, {
       onSuccess: () => {
         setOpen(null)
         setTimeout(() => {
@@ -92,11 +122,66 @@ function ExpenseCategoriesDialogs({
                 Apakah Anda yakin ingin menghapus{' '}
                 <span className='font-bold'>{currentRow.name}</span>?
                 <br />
-                Tindakan ini akan menghapus kategori pengeluaran secara permanen
-                dan tidak dapat dibatalkan.
+                Tindakan ini akan memindahkan kategori pengeluaran ke data
+                terhapus.
               </p>
             }
             confirmText='Hapus'
+            destructive
+          />
+
+          <ConfirmDialog
+            key={`expense-category-restore-${currentRow.id}`}
+            open={open === 'restore'}
+            onOpenChange={() => {
+              setOpen('restore')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={handleRestore}
+            disabled={restoreExpenseCategory.isPending}
+            isLoading={restoreExpenseCategory.isPending}
+            title='Pulihkan Kategori Pengeluaran'
+            desc={
+              <p>
+                Apakah Anda yakin ingin memulihkan{' '}
+                <span className='font-bold'>{currentRow.name}</span>?
+              </p>
+            }
+            confirmText='Pulihkan'
+          />
+
+          <ConfirmDialog
+            key={`expense-category-force-delete-${currentRow.id}`}
+            open={open === 'force-delete'}
+            onOpenChange={() => {
+              setOpen('force-delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={handleForceDelete}
+            disabled={forceDeleteExpenseCategory.isPending}
+            isLoading={forceDeleteExpenseCategory.isPending}
+            title={
+              <span className='text-destructive'>
+                <AlertTriangle
+                  className='me-1 inline-block stroke-destructive'
+                  size={18}
+                />{' '}
+                Hapus Permanen Kategori Pengeluaran
+              </span>
+            }
+            desc={
+              <p>
+                Apakah Anda yakin ingin menghapus permanen{' '}
+                <span className='font-bold'>{currentRow.name}</span>?
+                <br />
+                Tindakan ini tidak dapat dibatalkan.
+              </p>
+            }
+            confirmText='Hapus Permanen'
             destructive
           />
         </>
@@ -112,11 +197,14 @@ function ExpenseCategoriesPageInner() {
     page: search.page,
     per_page: search.pageSize,
     search: search.search,
+    trashed: search.trashed,
     sort: search.sort,
     order: search.order,
   })
 
-  const [open, setOpen] = useDialogState<'create' | 'update' | 'delete'>(null)
+  const [open, setOpen] = useDialogState<
+    'create' | 'update' | 'delete' | 'restore' | 'force-delete'
+  >(null)
   const [currentRow, setCurrentRow] = useState<ExpenseCategory | null>(null)
 
   return (
