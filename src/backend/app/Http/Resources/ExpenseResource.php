@@ -11,7 +11,7 @@ class ExpenseResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'category' => $this->category,
+            'category' => new ExpenseCategoryResource($this->whenLoaded('category')),
             'description' => $this->description,
             'amount' => (float) $this->amount,
             'expense_date' => $this->expense_date,

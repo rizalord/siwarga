@@ -11,7 +11,7 @@ class ExpenseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Expense::query();
+        $query = Expense::query()->with('category');
 
         if ($request->month) {
             $query->whereMonth('expense_date', $request->month);
@@ -21,20 +21,22 @@ class ExpenseController extends Controller
             $query->whereYear('expense_date', $request->year);
         }
 
-        if ($request->filled('category')) {
-            is_array($request->category)
-                ? $query->whereIn('category', $request->category)
-                : $query->where('category', $request->category);
+        if ($request->filled('category_id')) {
+            is_array($request->category_id)
+                ? $query->whereIn('category_id', $request->category_id)
+                : $query->where('category_id', $request->category_id);
         }
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('category', 'like', "%{$request->search}%")
-                    ->orWhere('description', 'like', "%{$request->search}%");
+                $q->where('description', 'like', "%{$request->search}%")
+                    ->orWhereHas('category', function ($q) use ($request) {
+                        $q->where('name', 'like', "%{$request->search}%");
+                    });
             });
         }
 
-        $this->applySorting($query, $request, ['category', 'amount', 'expense_date', 'created_at']);
+        $this->applySorting($query, $request, ['amount', 'expense_date', 'created_at']);
 
         return $this->paginated($query->paginate($request->per_page ?? 10), ExpenseResource::class);
     }
@@ -44,17 +46,10 @@ class ExpenseController extends Controller
         return $this->bulkDelete($request, Expense::class);
     }
 
-    public function categories()
-    {
-        return response()->json([
-            'data' => Expense::query()->distinct()->orderBy('category')->pluck('category'),
-        ]);
-    }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'category' => 'required|string|max:100',
+            'category_id' => 'required|exists:expense_categories,id',
             'description' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'expense_date' => 'required|date',
@@ -64,18 +59,18 @@ class ExpenseController extends Controller
 
         $expense = Expense::create($validated);
 
-        return new ExpenseResource($expense);
+        return new ExpenseResource($expense->load('category'));
     }
 
     public function show(Expense $expense)
     {
-        return new ExpenseResource($expense);
+        return new ExpenseResource($expense->load('category'));
     }
 
     public function update(Request $request, Expense $expense)
     {
         $validated = $request->validate([
-            'category' => 'sometimes|string|max:100',
+            'category_id' => 'sometimes|exists:expense_categories,id',
             'description' => 'nullable|string|max:255',
             'amount' => 'sometimes|numeric|min:0',
             'expense_date' => 'sometimes|date',
@@ -83,7 +78,7 @@ class ExpenseController extends Controller
 
         $expense->update($validated);
 
-        return new ExpenseResource($expense);
+        return new ExpenseResource($expense->load('category'));
     }
 
     public function destroy(Expense $expense)
