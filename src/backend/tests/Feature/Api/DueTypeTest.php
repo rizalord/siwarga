@@ -16,6 +16,8 @@ class DueTypeTest extends TestCase
 
     protected User $user;
 
+    protected User $warga;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,6 +27,10 @@ class DueTypeTest extends TestCase
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
         $this->user->load('roles.permissions');
+
+        $this->warga = User::factory()->create();
+        $this->warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+        $this->warga->load('roles.permissions');
         $this->actingAs($this->user);
     }
 
@@ -45,6 +51,29 @@ class DueTypeTest extends TestCase
         $response = $this->getJson('/api/due-types?search=Satpam');
 
         $response->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
+    public function test_can_filter_due_types_by_trashed_mode()
+    {
+        DueType::factory()->create(['name' => 'Iuran Aktif']);
+        $deletedDueType = DueType::factory()->create(['name' => 'Iuran Terhapus']);
+        $deletedDueType->delete();
+
+        $this->getJson('/api/due-types')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Iuran Aktif');
+
+        $this->getJson('/api/due-types?trashed=with')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['name' => 'Iuran Aktif'])
+            ->assertJsonFragment(['name' => 'Iuran Terhapus']);
+
+        $this->getJson('/api/due-types?trashed=only')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Iuran Terhapus');
     }
 
     public function test_can_create_due_type()
@@ -114,5 +143,98 @@ class DueTypeTest extends TestCase
         $this->assertSoftDeleted($dueTypes[0]);
         $this->assertSoftDeleted($dueTypes[1]);
         $this->assertDatabaseHas('due_types', ['id' => $dueTypes[2]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_restore_a_soft_deleted_due_type()
+    {
+        $dueType = DueType::factory()->create(['name' => 'Restore Due Type']);
+        $dueType->delete();
+
+        $this->postJson("/api/due-types/{$dueType->id}/restore")
+            ->assertStatus(200)
+            ->assertJsonPath('data.id', $dueType->id)
+            ->assertJsonPath('data.deleted_at', null);
+
+        $this->assertDatabaseHas('due_types', ['id' => $dueType->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_force_delete_a_soft_deleted_due_type()
+    {
+        $dueType = DueType::factory()->create(['name' => 'Force Due Type']);
+        $dueType->delete();
+
+        $this->deleteJson("/api/due-types/{$dueType->id}/force-delete")
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', 'Deleted permanently');
+
+        $this->assertDatabaseMissing('due_types', ['id' => $dueType->id]);
+    }
+
+    public function test_can_bulk_restore_due_types()
+    {
+        $dueTypes = DueType::factory()->count(2)->create();
+        $dueTypes->each->delete();
+
+        $this->postJson('/api/due-types/bulk-restore', [
+            'ids' => $dueTypes->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dipulihkan');
+
+        $this->assertDatabaseHas('due_types', ['id' => $dueTypes[0]->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('due_types', ['id' => $dueTypes[1]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_bulk_force_delete_due_types()
+    {
+        $dueTypes = DueType::factory()->count(2)->create();
+        $dueTypes->each->delete();
+
+        $this->postJson('/api/due-types/bulk-force-delete', [
+            'ids' => $dueTypes->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dihapus permanen');
+
+        $this->assertDatabaseMissing('due_types', ['id' => $dueTypes[0]->id]);
+        $this->assertDatabaseMissing('due_types', ['id' => $dueTypes[1]->id]);
+    }
+
+    public function test_warga_cannot_restore_or_permanently_delete_due_types()
+    {
+        $dueType = DueType::factory()->create();
+        $dueType->delete();
+
+        $this->actingAs($this->warga)
+            ->postJson("/api/due-types/{$dueType->id}/restore")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->deleteJson("/api/due-types/{$dueType->id}/force-delete")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/due-types/bulk-restore', ['ids' => [$dueType->id]])
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/due-types/bulk-force-delete', ['ids' => [$dueType->id]])
+            ->assertStatus(403);
+    }
+
+    public function test_bulk_restore_and_force_delete_validate_ids_payload_for_due_types()
+    {
+        foreach (['/api/due-types/bulk-restore', '/api/due-types/bulk-force-delete'] as $uri) {
+            $this->postJson($uri, ['ids' => []])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids');
+
+            $this->postJson($uri, ['ids' => ['invalid']])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids.0');
+        }
     }
 }

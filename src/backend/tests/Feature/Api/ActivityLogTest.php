@@ -81,6 +81,46 @@ class ActivityLogTest extends TestCase
         ]);
     }
 
+    public function test_restoring_a_resident_records_an_activity_log_with_exact_description()
+    {
+        $resident = Resident::create([
+            'full_name' => 'Budi Santoso',
+            'status' => 'tetap',
+            'phone_number' => '08123456789',
+            'marital_status' => 'menikah',
+        ]);
+        $this->deleteJson("/api/residents/{$resident->id}")->assertStatus(200);
+
+        $this->postJson("/api/residents/{$resident->id}/restore")->assertStatus(200);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'action' => 'restored',
+            'subject_type' => 'Resident',
+            'subject_id' => $resident->id,
+            'description' => 'Memulihkan Penghuni: Budi Santoso',
+        ]);
+    }
+
+    public function test_force_deleting_a_resident_records_an_activity_log_with_exact_description()
+    {
+        $resident = Resident::create([
+            'full_name' => 'Budi Santoso',
+            'status' => 'tetap',
+            'phone_number' => '08123456789',
+            'marital_status' => 'menikah',
+        ]);
+        $this->deleteJson("/api/residents/{$resident->id}")->assertStatus(200);
+
+        $this->deleteJson("/api/residents/{$resident->id}/force-delete")->assertStatus(200);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'action' => 'force_deleted',
+            'subject_type' => 'Resident',
+            'subject_id' => $resident->id,
+            'description' => 'Menghapus permanen Penghuni: Budi Santoso',
+        ]);
+    }
+
     public function test_login_records_an_activity_log()
     {
         $this->postJson('/api/auth/login', [

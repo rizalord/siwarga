@@ -30,8 +30,22 @@ class PermissionTest extends TestCase
     {
         $response = $this->getJson('/api/permissions?per_page=100');
 
-        $response->assertStatus(200);
-        $this->assertCount(count(Permission::SYSTEM_PERMISSIONS), $response->json('data'));
+        $response->assertStatus(200)->assertJsonCount(count(Permission::SYSTEM_PERMISSIONS), 'data');
+
+        $permissionNames = collect($response->json('data'))->pluck('name')->all();
+
+        foreach ([
+            'residents.trash',
+            'houses.trash',
+            'due-types.trash',
+            'expense-categories.trash',
+            'bills.trash',
+            'payments.trash',
+            'expenses.trash',
+            'users.trash',
+        ] as $permissionName) {
+            $this->assertContains($permissionName, $permissionNames);
+        }
     }
 
     public function test_can_create_custom_permission()

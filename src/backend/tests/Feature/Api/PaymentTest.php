@@ -18,6 +18,8 @@ class PaymentTest extends TestCase
 
     protected User $user;
 
+    protected User $warga;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,6 +29,10 @@ class PaymentTest extends TestCase
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
         $this->user->load('roles.permissions');
+
+        $this->warga = User::factory()->create();
+        $this->warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+        $this->warga->load('roles.permissions');
         $this->actingAs($this->user);
     }
 
@@ -81,6 +87,28 @@ class PaymentTest extends TestCase
 
         $this->getJson('/api/payments?search=A01')
             ->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
+    public function test_can_filter_payments_by_trashed_mode()
+    {
+        Payment::factory()->create();
+        $deletedPayment = Payment::factory()->create();
+        $deletedPayment->delete();
+
+        $this->getJson('/api/payments')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', Payment::query()->whereNull('deleted_at')->first()->id);
+
+        $this->getJson('/api/payments?trashed=with')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['id' => $deletedPayment->id]);
+
+        $this->getJson('/api/payments?trashed=only')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $deletedPayment->id);
     }
 
     public function test_can_create_payment()
@@ -162,5 +190,98 @@ class PaymentTest extends TestCase
         $this->assertSoftDeleted($payment);
         $this->assertSoftDeleted($other);
         $this->assertDatabaseHas('bills', ['id' => $bill->id, 'status' => 'belum_lunas']);
+    }
+
+    public function test_can_restore_a_soft_deleted_payment()
+    {
+        $payment = Payment::factory()->create();
+        $payment->delete();
+
+        $this->postJson("/api/payments/{$payment->id}/restore")
+            ->assertStatus(200)
+            ->assertJsonPath('data.id', $payment->id)
+            ->assertJsonPath('data.deleted_at', null);
+
+        $this->assertDatabaseHas('payments', ['id' => $payment->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_force_delete_a_soft_deleted_payment()
+    {
+        $payment = Payment::factory()->create();
+        $payment->delete();
+
+        $this->deleteJson("/api/payments/{$payment->id}/force-delete")
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', 'Deleted permanently');
+
+        $this->assertDatabaseMissing('payments', ['id' => $payment->id]);
+    }
+
+    public function test_can_bulk_restore_payments()
+    {
+        $payments = Payment::factory()->count(2)->create();
+        $payments->each->delete();
+
+        $this->postJson('/api/payments/bulk-restore', [
+            'ids' => $payments->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dipulihkan');
+
+        $this->assertDatabaseHas('payments', ['id' => $payments[0]->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('payments', ['id' => $payments[1]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_bulk_force_delete_payments()
+    {
+        $payments = Payment::factory()->count(2)->create();
+        $payments->each->delete();
+
+        $this->postJson('/api/payments/bulk-force-delete', [
+            'ids' => $payments->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dihapus permanen');
+
+        $this->assertDatabaseMissing('payments', ['id' => $payments[0]->id]);
+        $this->assertDatabaseMissing('payments', ['id' => $payments[1]->id]);
+    }
+
+    public function test_warga_cannot_restore_or_permanently_delete_payments()
+    {
+        $payment = Payment::factory()->create();
+        $payment->delete();
+
+        $this->actingAs($this->warga)
+            ->postJson("/api/payments/{$payment->id}/restore")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->deleteJson("/api/payments/{$payment->id}/force-delete")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/payments/bulk-restore', ['ids' => [$payment->id]])
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/payments/bulk-force-delete', ['ids' => [$payment->id]])
+            ->assertStatus(403);
+    }
+
+    public function test_bulk_restore_and_force_delete_validate_ids_payload_for_payments()
+    {
+        foreach (['/api/payments/bulk-restore', '/api/payments/bulk-force-delete'] as $uri) {
+            $this->postJson($uri, ['ids' => []])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids');
+
+            $this->postJson($uri, ['ids' => ['invalid']])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids.0');
+        }
     }
 }

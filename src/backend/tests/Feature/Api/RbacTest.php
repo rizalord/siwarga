@@ -3,7 +3,10 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Bill;
+use App\Models\DueType;
+use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\House;
 use App\Models\Payment;
 use App\Models\Resident;
 use App\Models\Role;
@@ -96,9 +99,14 @@ class RbacTest extends TestCase
 
     public function test_bendahara_receives_financial_trash_permissions(): void
     {
+        $this->assertFalse($this->bendahara->hasPermission('residents.trash'));
+        $this->assertFalse($this->bendahara->hasPermission('houses.trash'));
+        $this->assertFalse($this->bendahara->hasPermission('due-types.trash'));
         $this->assertTrue($this->bendahara->hasPermission('bills.trash'));
         $this->assertTrue($this->bendahara->hasPermission('payments.trash'));
         $this->assertTrue($this->bendahara->hasPermission('expenses.trash'));
+        $this->assertTrue($this->bendahara->hasPermission('expense-categories.trash'));
+        $this->assertFalse($this->bendahara->hasPermission('users.trash'));
     }
 
     public function test_bendahara_cannot_manage_users(): void
@@ -187,5 +195,80 @@ class RbacTest extends TestCase
             ->getJson('/api/reports/summary/2026');
 
         $response->assertStatus(200);
+    }
+
+    public function test_admin_can_invoke_every_trash_action(): void
+    {
+        foreach ($this->trashRestoreRoutes() as $uri) {
+            $this->actingAs($this->admin)
+                ->postJson($uri)
+                ->assertStatus(200);
+        }
+    }
+
+    public function test_bendahara_can_invoke_only_financial_trash_actions(): void
+    {
+        foreach ($this->trashRestoreRoutes() as $permission => $uri) {
+            $expectedStatus = in_array($permission, [
+                'expense-categories.trash',
+                'bills.trash',
+                'payments.trash',
+                'expenses.trash',
+            ], true) ? 200 : 403;
+
+            $this->actingAs($this->bendahara)
+                ->postJson($uri)
+                ->assertStatus($expectedStatus);
+        }
+    }
+
+    public function test_warga_receives_403_for_every_trash_action(): void
+    {
+        foreach ($this->trashRestoreRoutes() as $uri) {
+            $this->actingAs($this->warga)
+                ->postJson($uri)
+                ->assertStatus(403);
+        }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function trashRestoreRoutes(): array
+    {
+        $resident = Resident::factory()->create();
+        $resident->delete();
+
+        $house = House::factory()->create();
+        $house->delete();
+
+        $dueType = DueType::factory()->create();
+        $dueType->delete();
+
+        $expenseCategory = ExpenseCategory::factory()->create();
+        $expenseCategory->delete();
+
+        $bill = Bill::factory()->create();
+        $bill->delete();
+
+        $payment = Payment::factory()->create();
+        $payment->delete();
+
+        $expense = Expense::factory()->create();
+        $expense->delete();
+
+        $user = User::factory()->create();
+        $user->delete();
+
+        return [
+            'residents.trash' => "/api/residents/{$resident->id}/restore",
+            'houses.trash' => "/api/houses/{$house->id}/restore",
+            'due-types.trash' => "/api/due-types/{$dueType->id}/restore",
+            'expense-categories.trash' => "/api/expense-categories/{$expenseCategory->id}/restore",
+            'bills.trash' => "/api/bills/{$bill->id}/restore",
+            'payments.trash' => "/api/payments/{$payment->id}/restore",
+            'expenses.trash' => "/api/expenses/{$expense->id}/restore",
+            'users.trash' => "/api/users/{$user->id}/restore",
+        ];
     }
 }

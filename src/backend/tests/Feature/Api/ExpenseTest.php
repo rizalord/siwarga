@@ -17,6 +17,8 @@ class ExpenseTest extends TestCase
 
     protected User $user;
 
+    protected User $warga;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,6 +28,10 @@ class ExpenseTest extends TestCase
         $this->user = User::factory()->create();
         $this->user->roles()->attach(Role::where('name', 'admin')->first()->id);
         $this->user->load('roles.permissions');
+
+        $this->warga = User::factory()->create();
+        $this->warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+        $this->warga->load('roles.permissions');
         $this->actingAs($this->user);
     }
 
@@ -61,6 +67,29 @@ class ExpenseTest extends TestCase
 
         $this->getJson('/api/expenses?search=Gaji')
             ->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
+    public function test_can_filter_expenses_by_trashed_mode()
+    {
+        Expense::factory()->create(['description' => 'Expense Aktif']);
+        $deletedExpense = Expense::factory()->create(['description' => 'Expense Terhapus']);
+        $deletedExpense->delete();
+
+        $this->getJson('/api/expenses')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'Expense Aktif');
+
+        $this->getJson('/api/expenses?trashed=with')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment(['description' => 'Expense Aktif'])
+            ->assertJsonFragment(['description' => 'Expense Terhapus']);
+
+        $this->getJson('/api/expenses?trashed=only')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'Expense Terhapus');
     }
 
     public function test_can_create_expense()
@@ -158,5 +187,98 @@ class ExpenseTest extends TestCase
         $this->assertSoftDeleted($expenses[0]);
         $this->assertSoftDeleted($expenses[1]);
         $this->assertDatabaseHas('expenses', ['id' => $expenses[2]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_restore_a_soft_deleted_expense()
+    {
+        $expense = Expense::factory()->create(['description' => 'Restore Expense']);
+        $expense->delete();
+
+        $this->postJson("/api/expenses/{$expense->id}/restore")
+            ->assertStatus(200)
+            ->assertJsonPath('data.id', $expense->id)
+            ->assertJsonPath('data.deleted_at', null);
+
+        $this->assertDatabaseHas('expenses', ['id' => $expense->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_force_delete_a_soft_deleted_expense()
+    {
+        $expense = Expense::factory()->create(['description' => 'Force Expense']);
+        $expense->delete();
+
+        $this->deleteJson("/api/expenses/{$expense->id}/force-delete")
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', 'Deleted permanently');
+
+        $this->assertDatabaseMissing('expenses', ['id' => $expense->id]);
+    }
+
+    public function test_can_bulk_restore_expenses()
+    {
+        $expenses = Expense::factory()->count(2)->create();
+        $expenses->each->delete();
+
+        $this->postJson('/api/expenses/bulk-restore', [
+            'ids' => $expenses->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dipulihkan');
+
+        $this->assertDatabaseHas('expenses', ['id' => $expenses[0]->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('expenses', ['id' => $expenses[1]->id, 'deleted_at' => null]);
+    }
+
+    public function test_can_bulk_force_delete_expenses()
+    {
+        $expenses = Expense::factory()->count(2)->create();
+        $expenses->each->delete();
+
+        $this->postJson('/api/expenses/bulk-force-delete', [
+            'ids' => $expenses->modelKeys(),
+        ])
+            ->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dihapus permanen');
+
+        $this->assertDatabaseMissing('expenses', ['id' => $expenses[0]->id]);
+        $this->assertDatabaseMissing('expenses', ['id' => $expenses[1]->id]);
+    }
+
+    public function test_warga_cannot_restore_or_permanently_delete_expenses()
+    {
+        $expense = Expense::factory()->create();
+        $expense->delete();
+
+        $this->actingAs($this->warga)
+            ->postJson("/api/expenses/{$expense->id}/restore")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->deleteJson("/api/expenses/{$expense->id}/force-delete")
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/expenses/bulk-restore', ['ids' => [$expense->id]])
+            ->assertStatus(403);
+
+        $this->actingAs($this->warga)
+            ->postJson('/api/expenses/bulk-force-delete', ['ids' => [$expense->id]])
+            ->assertStatus(403);
+    }
+
+    public function test_bulk_restore_and_force_delete_validate_ids_payload_for_expenses()
+    {
+        foreach (['/api/expenses/bulk-restore', '/api/expenses/bulk-force-delete'] as $uri) {
+            $this->postJson($uri, ['ids' => []])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids');
+
+            $this->postJson($uri, ['ids' => ['invalid']])
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('ids.0');
+        }
     }
 }
