@@ -1,12 +1,7 @@
 import { useState, useMemo } from 'react'
+import type { Payment, Expense } from '@/types/api'
 import { TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import { useMonthlyReport } from '@/hooks/use-reports'
-import { Header } from '@/components/layout/header'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { Main } from '@/components/layout/main'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
@@ -23,7 +18,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Payment, Expense } from '@/types/api'
+import { ConfigDrawer } from '@/components/config-drawer'
+import { Header } from '@/components/layout/header'
+import { Main } from '@/components/layout/main'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
+import { ThemeSwitch } from '@/components/theme-switch'
 
 interface Transaction {
   id: string
@@ -77,33 +77,31 @@ export function MonthlyReportPage() {
   const transactions = useMemo<Transaction[]>(() => {
     if (!report) return []
 
-    const paymentTransactions: Transaction[] = (
-      report.payments ?? []
-    ).map((p: Payment) => ({
-      id: `payment-${p.id}`,
-      date: p.payment_date,
-      description: p.notes ?? `Pembayaran #${p.id}`,
-      income: p.amount_paid,
-      expense: 0,
-      balance: 0,
-    }))
+    const paymentTransactions: Transaction[] = (report.payments ?? []).map(
+      (p: Payment) => ({
+        id: `payment-${p.id}`,
+        date: p.payment_date,
+        description: p.notes ?? `Pembayaran #${p.id}`,
+        income: p.amount_paid,
+        expense: 0,
+        balance: 0,
+      })
+    )
 
-    const expenseTransactions: Transaction[] = (
-      report.expenses ?? []
-    ).map((e: Expense) => ({
-      id: `expense-${e.id}`,
-      date: e.expense_date,
-      description: e.description ?? e.category,
-      income: 0,
-      expense: e.amount,
-      balance: 0,
-    }))
+    const expenseTransactions: Transaction[] = (report.expenses ?? []).map(
+      (e: Expense) => ({
+        id: `expense-${e.id}`,
+        date: e.expense_date,
+        description: e.description ?? e.category.name,
+        income: 0,
+        expense: e.amount,
+        balance: 0,
+      })
+    )
 
     const all = [...paymentTransactions, ...expenseTransactions]
 
-    all.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-    )
+    all.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
     let balance = 0
     return all.map((tx) => {
@@ -238,15 +236,11 @@ export function MonthlyReportPage() {
                       <TableRow>
                         <TableHead>Tanggal</TableHead>
                         <TableHead>Keterangan</TableHead>
-                        <TableHead className='text-right'>
-                          Pemasukan
-                        </TableHead>
+                        <TableHead className='text-right'>Pemasukan</TableHead>
                         <TableHead className='text-right'>
                           Pengeluaran
                         </TableHead>
-                        <TableHead className='text-right'>
-                          Saldo
-                        </TableHead>
+                        <TableHead className='text-right'>Saldo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -267,9 +261,7 @@ export function MonthlyReportPage() {
                             </TableCell>
                             <TableCell>{tx.description}</TableCell>
                             <TableCell className='text-right font-medium tabular-nums'>
-                              {tx.income > 0
-                                ? formatCurrency(tx.income)
-                                : '-'}
+                              {tx.income > 0 ? formatCurrency(tx.income) : '-'}
                             </TableCell>
                             <TableCell className='text-right font-medium tabular-nums'>
                               {tx.expense > 0

@@ -88,7 +88,8 @@ export function expensesColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title='Kategori' />
       ),
-      accessorKey: 'category',
+      accessorFn: (row) => row.category.name,
+      cell: ({ row }) => <span>{row.original.category.name}</span>,
       meta: { label: 'Kategori' },
     },
     {

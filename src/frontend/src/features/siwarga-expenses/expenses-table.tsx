@@ -9,10 +9,8 @@ import {
 import type { Expense } from '@/types/api'
 import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import {
-  useExpenseCategories,
-  useBulkDeleteExpenses,
-} from '@/hooks/use-expenses'
+import { useExpenseCategories } from '@/hooks/use-expense-categories'
+import { useBulkDeleteExpenses } from '@/hooks/use-expenses'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import {
@@ -73,9 +71,10 @@ export function ExpensesTable({
 
   const month = search.month as number | undefined
   const year = search.year as number | undefined
-  const category = search.category as string | undefined
+  const categoryId = search.category_id as number | undefined
 
-  const { data: categories = [] } = useExpenseCategories()
+  const { data: categoriesData } = useExpenseCategories({ per_page: 100 })
+  const categories = categoriesData?.data ?? []
 
   const {
     globalFilter,
@@ -119,7 +118,7 @@ export function ExpensesTable({
     navigate({
       search: (prev) => ({
         ...(prev as Record<string, unknown>),
-        category: value || undefined,
+        category_id: value && value !== 'all' ? Number(value) : undefined,
         page: undefined,
       }),
     })
@@ -168,15 +167,18 @@ export function ExpensesTable({
       )}
     >
       <DataTableToolbar table={table} searchPlaceholder='Cari pengeluaran...'>
-        <Select value={category ?? ''} onValueChange={handleCategoryChange}>
+        <Select
+          value={categoryId ? String(categoryId) : ''}
+          onValueChange={handleCategoryChange}
+        >
           <SelectTrigger className='h-8 w-37.5'>
             <SelectValue placeholder='Semua Kategori' />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>Semua Kategori</SelectItem>
             {categories.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
+              <SelectItem key={cat.id} value={String(cat.id)}>
+                {cat.name}
               </SelectItem>
             ))}
           </SelectContent>

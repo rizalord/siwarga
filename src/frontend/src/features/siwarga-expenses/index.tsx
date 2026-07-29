@@ -87,7 +87,7 @@ function ExpensesDialogs({
             desc={
               <p>
                 Apakah Anda yakin ingin menghapus pengeluaran{' '}
-                <span className='font-bold'>{currentRow.category}</span>?
+                <span className='font-bold'>{currentRow.category.name}</span>?
                 <br />
                 Tindakan ini akan menghapus pengeluaran secara permanen dan
                 tidak dapat dibatalkan.
@@ -110,7 +110,7 @@ function ExpensesPageInner() {
     per_page: search.pageSize,
     month: search.month,
     year: search.year,
-    category: search.category,
+    category_id: search.category_id,
     search: search.search,
     sort: search.sort,
     order: search.order,

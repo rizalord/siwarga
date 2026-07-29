@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { expensesService } from '@/services/expenses'
 import type { ExpenseFilter, CreateExpenseRequest } from '@/types/api'
+import { toast } from 'sonner'
 
 export function useExpenses(params?: ExpenseFilter) {
   return useQuery({
@@ -9,14 +9,6 @@ export function useExpenses(params?: ExpenseFilter) {
     queryFn: () => expensesService.getAll(params),
     select: (res) => res.data,
     placeholderData: (prev) => prev,
-  })
-}
-
-export function useExpenseCategories() {
-  return useQuery({
-    queryKey: ['expenses', 'categories'],
-    queryFn: () => expensesService.getCategories(),
-    select: (res) => res.data.data,
   })
 }
 
@@ -43,7 +35,8 @@ export function useCreateExpense() {
 export function useUpdateExpense(id: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Partial<CreateExpenseRequest>) => expensesService.update(id, data),
+    mutationFn: (data: Partial<CreateExpenseRequest>) =>
+      expensesService.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['expenses'] })
       toast.success('Pengeluaran berhasil diperbarui')
