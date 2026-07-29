@@ -40,6 +40,8 @@ class Permission extends Model
         'expenses.create' => 'Catat pengeluaran',
         'expenses.edit' => 'Ubah pengeluaran',
         'expenses.delete' => 'Hapus pengeluaran',
+        'expense-categories.view' => 'Lihat kategori pengeluaran',
+        'expense-categories.manage' => 'Kelola kategori pengeluaran',
         'reports.view' => 'Lihat laporan',
         'users.view' => 'Lihat data user',
         'users.manage' => 'Kelola user',

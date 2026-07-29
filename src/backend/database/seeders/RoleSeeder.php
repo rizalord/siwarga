@@ -23,7 +23,8 @@ class RoleSeeder extends Seeder
         // Bendahara gets financial permissions
         $bendahara->permissions()->attach(Permission::whereIn('name', [
             'houses.view', 'bills.view', 'bills.generate', 'payments.view', 'payments.create',
-            'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'reports.view',
+            'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete',
+            'expense-categories.view', 'expense-categories.manage', 'reports.view',
         ])->pluck('id'));
 
         // Warga gets view-only

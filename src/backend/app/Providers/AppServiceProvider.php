@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\House;
 use App\Models\Payment;
 use App\Models\Permission;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Observers\ActivityLogObserver;
 use App\Policies\BillPolicy;
 use App\Policies\DueTypePolicy;
+use App\Policies\ExpenseCategoryPolicy;
 use App\Policies\ExpensePolicy;
 use App\Policies\HousePolicy;
 use App\Policies\PaymentPolicy;
@@ -94,6 +96,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('due-types.view', [DueTypePolicy::class, 'viewAny']);
         Gate::define('due-types.manage', [DueTypePolicy::class, 'create']);
 
+        // Expense Categories
+        Gate::define('expense-categories.view', [ExpenseCategoryPolicy::class, 'viewAny']);
+        Gate::define('expense-categories.manage', [ExpenseCategoryPolicy::class, 'create']);
+
         // Payments
         Gate::define('payments.view', [PaymentPolicy::class, 'viewAny']);
         Gate::define('payments.create', [PaymentPolicy::class, 'create']);
@@ -120,7 +126,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerActivityLogObservers(): void
     {
-        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, User::class, Role::class, Permission::class] as $model) {
+        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class] as $model) {
             $model::observe(ActivityLogObserver::class);
         }
     }
