@@ -15,8 +15,8 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { ExpenseCategoryFormDialog } from './expense-category-form'
 import { ExpenseCategoriesTable } from './expense-categories-table'
+import { ExpenseCategoryFormDialog } from './expense-category-form'
 
 const route = getRouteApi('/_authenticated/expense-categories/')
 

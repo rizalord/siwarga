@@ -49,7 +49,9 @@ class ReportService
             ->with('bill.dueType')
             ->get();
 
-        $expenses = Expense::whereBetween('expense_date', [$startDate, $endDate])->get();
+        $expenses = Expense::whereBetween('expense_date', [$startDate, $endDate])
+            ->with('category')
+            ->get();
 
         $totalIncome = $payments->sum('amount_paid');
         $totalExpense = $expenses->sum('amount');

@@ -123,6 +123,64 @@ class ExpenseCategoryTest extends TestCase
         $this->assertDatabaseHas('expense_categories', ['id' => $categories[2]->id, 'deleted_at' => null]);
     }
 
+    public function test_soft_deleted_expense_category_does_not_appear_in_list()
+    {
+        $category = ExpenseCategory::factory()->create(['name' => 'Keamanan']);
+        $category->delete();
+        ExpenseCategory::factory()->create(['name' => 'Kebersihan']);
+
+        $response = $this->actingAs($this->admin)->getJson('/api/expense-categories');
+
+        $response->assertStatus(200)->assertJsonCount(1, 'data');
+        $response->assertJsonMissing(['name' => 'Keamanan']);
+    }
+
+    public function test_creating_expense_category_with_duplicate_name_fails_validation()
+    {
+        ExpenseCategory::factory()->create(['name' => 'Keamanan']);
+
+        $response = $this->actingAs($this->admin)->postJson('/api/expense-categories', [
+            'name' => 'Keamanan',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('name');
+    }
+
+    public function test_creating_expense_category_with_name_of_soft_deleted_category_fails_validation()
+    {
+        $category = ExpenseCategory::factory()->create(['name' => 'Keamanan']);
+        $category->delete();
+
+        $response = $this->actingAs($this->admin)->postJson('/api/expense-categories', [
+            'name' => 'Keamanan',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('name');
+    }
+
+    public function test_updating_expense_category_to_keep_its_own_name_succeeds()
+    {
+        $category = ExpenseCategory::factory()->create(['name' => 'Keamanan']);
+
+        $response = $this->actingAs($this->admin)->putJson("/api/expense-categories/{$category->id}", [
+            'name' => 'Keamanan',
+        ]);
+
+        $response->assertStatus(200)->assertJsonPath('data.name', 'Keamanan');
+    }
+
+    public function test_updating_expense_category_to_duplicate_name_fails_validation()
+    {
+        ExpenseCategory::factory()->create(['name' => 'Keamanan']);
+        $category = ExpenseCategory::factory()->create(['name' => 'Kebersihan']);
+
+        $response = $this->actingAs($this->admin)->putJson("/api/expense-categories/{$category->id}", [
+            'name' => 'Keamanan',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('name');
+    }
+
     public function test_warga_cannot_manage_expense_categories()
     {
         $response = $this->actingAs($this->warga)->postJson('/api/expense-categories', [

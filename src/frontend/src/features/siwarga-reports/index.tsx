@@ -92,7 +92,7 @@ export function MonthlyReportPage() {
       (e: Expense) => ({
         id: `expense-${e.id}`,
         date: e.expense_date,
-        description: e.description ?? e.category.name,
+        description: e.description ?? e.category?.name ?? '-',
         income: 0,
         expense: e.amount,
         balance: 0,

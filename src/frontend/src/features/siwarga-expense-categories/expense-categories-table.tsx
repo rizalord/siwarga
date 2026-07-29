@@ -113,7 +113,10 @@ export function ExpenseCategoriesTable({
         'flex flex-1 flex-col gap-4 overflow-hidden'
       )}
     >
-      <DataTableToolbar table={table} searchPlaceholder='Cari kategori pengeluaran...' />
+      <DataTableToolbar
+        table={table}
+        searchPlaceholder='Cari kategori pengeluaran...'
+      />
       <div className='flex-1 overflow-auto'>
         <div
           className={cn(

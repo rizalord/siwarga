@@ -91,6 +91,7 @@ export function expensesColumns({
       accessorFn: (row) => row.category.name,
       cell: ({ row }) => <span>{row.original.category.name}</span>,
       meta: { label: 'Kategori' },
+      enableSorting: false,
     },
     {
       id: 'description',

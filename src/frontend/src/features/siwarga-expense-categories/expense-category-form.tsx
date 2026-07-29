@@ -69,7 +69,8 @@ export function ExpenseCategoryFormDialog({
     }
   }
 
-  const isPending = createExpenseCategory.isPending || updateExpenseCategory.isPending
+  const isPending =
+    createExpenseCategory.isPending || updateExpenseCategory.isPending
 
   return (
     <Dialog
@@ -82,7 +83,9 @@ export function ExpenseCategoryFormDialog({
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-start'>
           <DialogTitle>
-            {isUpdate ? 'Ubah Kategori Pengeluaran' : 'Tambah Kategori Pengeluaran'}
+            {isUpdate
+              ? 'Ubah Kategori Pengeluaran'
+              : 'Tambah Kategori Pengeluaran'}
           </DialogTitle>
           <DialogDescription>
             {isUpdate
@@ -119,7 +122,11 @@ export function ExpenseCategoryFormDialog({
           </form>
         </Form>
         <DialogFooter>
-          <Button type='submit' form='expense-category-form' disabled={isPending}>
+          <Button
+            type='submit'
+            form='expense-category-form'
+            disabled={isPending}
+          >
             {isPending ? 'Menyimpan...' : 'Simpan'}
           </Button>
         </DialogFooter>

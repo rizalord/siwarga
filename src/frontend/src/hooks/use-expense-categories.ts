@@ -1,7 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { expenseCategoriesService } from '@/services/expense-categories'
-import type { CreateExpenseCategoryRequest, ExpenseCategoryFilter } from '@/types/api'
+import type {
+  CreateExpenseCategoryRequest,
+  ExpenseCategoryFilter,
+} from '@/types/api'
+import { toast } from 'sonner'
 
 export function useExpenseCategories(params?: ExpenseCategoryFilter) {
   return useQuery({
@@ -24,7 +27,8 @@ export function useExpenseCategory(id: number) {
 export function useCreateExpenseCategory() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: CreateExpenseCategoryRequest) => expenseCategoriesService.create(data),
+    mutationFn: (data: CreateExpenseCategoryRequest) =>
+      expenseCategoriesService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['expense-categories'] })
       toast.success('Kategori pengeluaran berhasil ditambahkan')
@@ -35,7 +39,8 @@ export function useCreateExpenseCategory() {
 export function useUpdateExpenseCategory(id: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: CreateExpenseCategoryRequest) => expenseCategoriesService.update(id, data),
+    mutationFn: (data: CreateExpenseCategoryRequest) =>
+      expenseCategoriesService.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['expense-categories'] })
       toast.success('Kategori pengeluaran berhasil diperbarui')

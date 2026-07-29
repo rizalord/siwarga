@@ -156,7 +156,10 @@ export function ExpenseFormDialog({
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category.id} value={String(category.id)}>
+                          <SelectItem
+                            key={category.id}
+                            value={String(category.id)}
+                          >
                             {category.name}
                           </SelectItem>
                         ))}

@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\House;
 use App\Models\Payment;
 use App\Models\Permission;
@@ -29,6 +30,7 @@ class ActivityLogObserver
         Bill::class => ['label' => 'Tagihan', 'name' => 'id'],
         Payment::class => ['label' => 'Pembayaran', 'name' => 'id'],
         Expense::class => ['label' => 'Pengeluaran', 'name' => 'description'],
+        ExpenseCategory::class => ['label' => 'Kategori Pengeluaran', 'name' => 'name'],
         User::class => ['label' => 'User', 'name' => 'name'],
         Role::class => ['label' => 'Role', 'name' => 'name'],
         Permission::class => ['label' => 'Permission', 'name' => 'name'],

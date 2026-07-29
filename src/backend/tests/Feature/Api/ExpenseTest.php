@@ -134,6 +134,18 @@ class ExpenseTest extends TestCase
         $this->assertEquals(200000, $response->json('data.1.amount'));
     }
 
+    public function test_expense_still_shows_category_name_after_category_is_soft_deleted()
+    {
+        $category = ExpenseCategory::factory()->create(['name' => 'Keamanan']);
+        $expense = Expense::factory()->create(['category_id' => $category->id]);
+
+        $category->delete();
+
+        $response = $this->getJson("/api/expenses/{$expense->id}");
+
+        $response->assertStatus(200)->assertJsonPath('data.category.name', 'Keamanan');
+    }
+
     public function test_can_bulk_delete_expenses()
     {
         $expenses = Expense::factory()->count(3)->create();

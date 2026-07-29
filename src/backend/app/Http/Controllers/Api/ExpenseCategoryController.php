@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseCategoryResource;
 use App\Models\ExpenseCategory;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ExpenseCategoryController extends Controller
 {
@@ -30,7 +31,7 @@ class ExpenseCategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', Rule::unique('expense_categories', 'name')],
         ]);
 
         $expenseCategory = ExpenseCategory::create($validated);
@@ -46,7 +47,7 @@ class ExpenseCategoryController extends Controller
     public function update(Request $request, ExpenseCategory $expenseCategory)
     {
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:100',
+            'name' => ['sometimes', 'string', 'max:100', Rule::unique('expense_categories', 'name')->ignore($expenseCategory->id)],
         ]);
 
         $expenseCategory->update($validated);

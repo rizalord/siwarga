@@ -28,6 +28,6 @@ class Expense extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(ExpenseCategory::class);
+        return $this->belongsTo(ExpenseCategory::class)->withTrashed();
     }
 }

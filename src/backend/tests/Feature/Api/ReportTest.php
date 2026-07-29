@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Bill;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Payment;
 use App\Models\Role;
 use App\Models\User;
@@ -107,5 +108,22 @@ class ReportTest extends TestCase
         $response->assertJsonStructure(['data' => [
             'year', 'month', 'total_income', 'total_expense', 'balance',
         ]]);
+    }
+
+    public function test_monthly_report_includes_category_for_expense_without_description()
+    {
+        $category = ExpenseCategory::factory()->create(['name' => 'Keamanan']);
+        Expense::factory()->create([
+            'category_id' => $category->id,
+            'description' => null,
+            'amount' => 75000,
+            'expense_date' => '2026-01-12',
+        ]);
+
+        $response = $this->getJson('/api/reports/monthly/2026/1');
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.expenses.0.category.name', 'Keamanan');
+        $response->assertJsonPath('data.expenses.0.description', null);
     }
 }

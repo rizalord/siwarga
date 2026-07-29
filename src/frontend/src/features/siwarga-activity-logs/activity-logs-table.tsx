@@ -37,6 +37,7 @@ const subjectTypeOptions = [
   { label: 'Tagihan', value: 'Bill' },
   { label: 'Pembayaran', value: 'Payment' },
   { label: 'Pengeluaran', value: 'Expense' },
+  { label: 'Kategori Pengeluaran', value: 'ExpenseCategory' },
   { label: 'User', value: 'User' },
   { label: 'Role', value: 'Role' },
   { label: 'Permission', value: 'Permission' },
