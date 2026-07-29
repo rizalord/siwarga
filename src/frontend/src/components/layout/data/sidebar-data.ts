@@ -5,6 +5,7 @@ import {
   Receipt,
   Wallet,
   ShoppingCart,
+  Tag,
   FileText,
   UserCog,
   Banknote,
@@ -68,6 +69,12 @@ export const sidebarData: SidebarData = {
           url: '/expenses',
           icon: ShoppingCart,
           permission: 'expenses.view',
+        },
+        {
+          title: 'Kategori Pengeluaran',
+          url: '/expense-categories',
+          icon: Tag,
+          permission: 'expense-categories.view',
         },
         {
           title: 'Laporan',
