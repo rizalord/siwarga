@@ -1,8 +1,13 @@
 import { getRouteApi } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
-import { useResidents } from '@/hooks/use-residents'
+import { AlertTriangle, Plus } from 'lucide-react'
+import {
+  useResidents,
+  useForceDeleteResident,
+  useRestoreResident,
+} from '@/hooks/use-residents'
 import { Button } from '@/components/ui/button'
 import { ConfigDrawer } from '@/components/config-drawer'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -26,6 +31,8 @@ function ResidentsPrimaryButtons() {
 
 function ResidentsDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useResidentsContext()
+  const restoreResident = useRestoreResident()
+  const forceDeleteResident = useForceDeleteResident()
   return (
     <>
       <ResidentFormDialog
@@ -59,6 +66,79 @@ function ResidentsDialogs() {
             }}
             currentRow={currentRow}
           />
+
+          <ConfirmDialog
+            key={`resident-restore-${currentRow.id}`}
+            open={open === 'restore'}
+            onOpenChange={() => {
+              setOpen('restore')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={() => {
+              restoreResident.mutate(currentRow.id, {
+                onSuccess: () => {
+                  setOpen(null)
+                  setTimeout(() => {
+                    setCurrentRow(null)
+                  }, 500)
+                },
+              })
+            }}
+            disabled={restoreResident.isPending}
+            isLoading={restoreResident.isPending}
+            title='Pulihkan Penghuni'
+            desc={
+              <p>
+                Apakah Anda yakin ingin memulihkan{' '}
+                <span className='font-bold'>{currentRow.full_name}</span>?
+              </p>
+            }
+            confirmText='Pulihkan'
+          />
+
+          <ConfirmDialog
+            key={`resident-force-delete-${currentRow.id}`}
+            open={open === 'force-delete'}
+            onOpenChange={() => {
+              setOpen('force-delete')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            handleConfirm={() => {
+              forceDeleteResident.mutate(currentRow.id, {
+                onSuccess: () => {
+                  setOpen(null)
+                  setTimeout(() => {
+                    setCurrentRow(null)
+                  }, 500)
+                },
+              })
+            }}
+            disabled={forceDeleteResident.isPending}
+            isLoading={forceDeleteResident.isPending}
+            title={
+              <span className='text-destructive'>
+                <AlertTriangle
+                  className='me-1 inline-block stroke-destructive'
+                  size={18}
+                />{' '}
+                Hapus Permanen Penghuni
+              </span>
+            }
+            desc={
+              <p>
+                Apakah Anda yakin ingin menghapus permanen{' '}
+                <span className='font-bold'>{currentRow.full_name}</span>?
+                <br />
+                Tindakan ini tidak dapat dibatalkan.
+              </p>
+            }
+            confirmText='Hapus Permanen'
+            destructive
+          />
         </>
       )}
     </>
@@ -74,6 +154,7 @@ function ResidentsPageInner() {
     status: search.status,
     marital_status: search.marital_status,
     search: search.search,
+    trashed: search.trashed,
     sort: search.sort,
     order: search.order,
   })

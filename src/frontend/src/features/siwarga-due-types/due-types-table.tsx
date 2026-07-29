@@ -6,10 +6,15 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { DueType } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import type { DueType, TrashedFilterValue } from '@/types/api'
+import { RotateCcw, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
-import { useBulkDeleteDueTypes } from '@/hooks/use-due-types'
+import {
+  useBulkDeleteDueTypes,
+  useBulkForceDeleteDueTypes,
+  useBulkRestoreDueTypes,
+} from '@/hooks/use-due-types'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,21 +25,27 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
+  TrashedFilter,
 } from '@/components/data-table'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import { dueTypesColumns as columns } from './due-types-columns'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 type DataTableProps = {
   data: DueType[]
   pageCount: number
   isFetching?: boolean
-  search: Record<string, unknown>
+  search: Record<string, unknown> & { trashed?: TrashedFilterValue }
   navigate: NavigateFn
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   setCurrentRow: (row: DueType | null) => void
 }
 
@@ -50,8 +61,18 @@ export function DueTypesTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkForceDeleteOpen, setBulkForceDeleteOpen] = useState(false)
 
   const bulkDeleteDueTypes = useBulkDeleteDueTypes()
+  const bulkRestoreDueTypes = useBulkRestoreDueTypes()
+  const bulkForceDeleteDueTypes = useBulkForceDeleteDueTypes()
+  const permissions = useAuthStore(
+    (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+  )
+  const canManageTrash = permissions.includes('due-types.trash')
+  const trashedFilter = search.trashed
+  const isOnlyTrashed = trashedFilter === 'only'
 
   const {
     globalFilter,
@@ -106,6 +127,23 @@ export function DueTypesTable({
     .filter((id) => rowSelection[id])
     .map(Number)
 
+  const handleTrashedChange = (value: TrashedFilterValue | undefined) => {
+    navigate({
+      search: (prev) => ({
+        ...(prev as Record<string, unknown>),
+        page: 1,
+        trashed: value,
+      }),
+    })
+  }
+
+  const resetSelectionAfterSuccess = (onClose: () => void) => {
+    onClose()
+    table.resetRowSelection()
+  }
+
+  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+
   return (
     <div
       className={cn(
@@ -113,7 +151,9 @@ export function DueTypesTable({
         'flex flex-1 flex-col gap-4 overflow-hidden'
       )}
     >
-      <DataTableToolbar table={table} searchPlaceholder='Cari jenis iuran...' />
+      <DataTableToolbar table={table} searchPlaceholder='Cari jenis iuran...'>
+        <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
+      </DataTableToolbar>
       <div className='flex-1 overflow-auto'>
         <div
           className={cn(
@@ -188,28 +228,87 @@ export function DueTypesTable({
         </div>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
-      <DataTableBulkActions table={table} entityName='jenis iuran'>
-        <Button
-          variant='destructive'
-          size='sm'
-          className='h-7'
-          onClick={() => setMultiDeleteOpen(true)}
-        >
-          <Trash2 />
-          Hapus
-        </Button>
-      </DataTableBulkActions>
+      {shouldShowBulkActions && (
+        <DataTableBulkActions table={table} entityName='jenis iuran'>
+          {isOnlyTrashed ? (
+            <>
+              <Button
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkRestoreOpen(true)}
+              >
+                <RotateCcw />
+                Pulihkan
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkForceDeleteOpen(true)}
+              >
+                <Trash2 />
+                Hapus Permanen
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant='destructive'
+              size='sm'
+              className='h-7'
+              onClick={() => setMultiDeleteOpen(true)}
+            >
+              <Trash2 />
+              Hapus
+            </Button>
+          )}
+        </DataTableBulkActions>
+      )}
       <MultiDeleteDialog
         open={multiDeleteOpen}
         onOpenChange={setMultiDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='jenis iuran'
+        deletionType='soft'
         isLoading={bulkDeleteDueTypes.isPending}
         onConfirm={() => {
           bulkDeleteDueTypes.mutate(selectedIds, {
             onSuccess: () => {
-              setMultiDeleteOpen(false)
-              table.resetRowSelection()
+              resetSelectionAfterSuccess(() => setMultiDeleteOpen(false))
+            },
+          })
+        }}
+      />
+      <ConfirmDialog
+        open={bulkRestoreOpen}
+        onOpenChange={setBulkRestoreOpen}
+        handleConfirm={() => {
+          bulkRestoreDueTypes.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkRestoreOpen(false))
+            },
+          })
+        }}
+        disabled={bulkRestoreDueTypes.isPending}
+        isLoading={bulkRestoreDueTypes.isPending}
+        title='Pulihkan Jenis Iuran'
+        desc={
+          <p>
+            Apakah Anda yakin ingin memulihkan {selectedIds.length} jenis iuran
+            terpilih?
+          </p>
+        }
+        confirmText='Pulihkan'
+      />
+      <MultiDeleteDialog
+        open={bulkForceDeleteOpen}
+        onOpenChange={setBulkForceDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='jenis iuran'
+        isLoading={bulkForceDeleteDueTypes.isPending}
+        onConfirm={() => {
+          bulkForceDeleteDueTypes.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkForceDeleteOpen(false))
             },
           })
         }}

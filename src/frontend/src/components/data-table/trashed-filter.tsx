@@ -18,7 +18,9 @@ export function TrashedFilter({ value, onChange }: TrashedFilterProps) {
     <Select
       value={value ?? ALL_OPTION}
       onValueChange={(nextValue) =>
-        onChange(nextValue === ALL_OPTION ? undefined : nextValue)
+        onChange(
+          nextValue === ALL_OPTION ? undefined : (nextValue as 'with' | 'only')
+        )
       }
     >
       <SelectTrigger size='sm' aria-label='Filter data terhapus'>

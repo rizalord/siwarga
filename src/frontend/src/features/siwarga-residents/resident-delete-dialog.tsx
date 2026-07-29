@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import type { Resident } from '@/types/api'
 import { AlertTriangle } from 'lucide-react'
+import { useDeleteResident } from '@/hooks/use-residents'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { useDeleteResident } from '@/hooks/use-residents'
-import type { Resident } from '@/types/api'
 
 type ResidentDeleteDialogProps = {
   open: boolean
@@ -60,8 +60,7 @@ export function ResidentDeleteDialog({
             Apakah Anda yakin ingin menghapus{' '}
             <span className='font-bold'>{currentRow.full_name}</span>?
             <br />
-            Tindakan ini akan menghapus data penghuni secara permanen dan
-            tidak dapat dibatalkan.
+            Tindakan ini akan memindahkan data penghuni ke data terhapus.
           </p>
 
           <Label className='my-2'>
@@ -77,7 +76,7 @@ export function ResidentDeleteDialog({
           <Alert variant='destructive'>
             <AlertTitle>Peringatan!</AlertTitle>
             <AlertDescription>
-              Harap berhati-hati, operasi ini tidak dapat dibatalkan.
+              Data yang dipindahkan masih dapat dipulihkan nanti.
             </AlertDescription>
           </Alert>
         </form>

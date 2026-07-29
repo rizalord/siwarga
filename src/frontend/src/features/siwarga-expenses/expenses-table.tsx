@@ -6,11 +6,16 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { Expense } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import type { Expense, TrashedFilterValue } from '@/types/api'
+import { RotateCcw, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
 import { useExpenseCategories } from '@/hooks/use-expense-categories'
-import { useBulkDeleteExpenses } from '@/hooks/use-expenses'
+import {
+  useBulkDeleteExpenses,
+  useBulkForceDeleteExpenses,
+  useBulkRestoreExpenses,
+} from '@/hooks/use-expenses'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,13 +33,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
+  TrashedFilter,
 } from '@/components/data-table'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import { expensesColumns as columns } from './expenses-columns'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 const monthOptions = Array.from({ length: 12 }, (_, i) => ({
   label: new Date(0, i).toLocaleDateString('id-ID', { month: 'long' }),
@@ -48,9 +57,11 @@ type DataTableProps = {
   data: Expense[]
   pageCount: number
   isFetching?: boolean
-  search: Record<string, unknown>
+  search: Record<string, unknown> & { trashed?: TrashedFilterValue }
   navigate: NavigateFn
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   setCurrentRow: (row: Expense | null) => void
 }
 
@@ -66,8 +77,18 @@ export function ExpensesTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkForceDeleteOpen, setBulkForceDeleteOpen] = useState(false)
 
   const bulkDeleteExpenses = useBulkDeleteExpenses()
+  const bulkRestoreExpenses = useBulkRestoreExpenses()
+  const bulkForceDeleteExpenses = useBulkForceDeleteExpenses()
+  const permissions = useAuthStore(
+    (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+  )
+  const canManageTrash = permissions.includes('expenses.trash')
+  const trashedFilter = search.trashed
+  const isOnlyTrashed = trashedFilter === 'only'
 
   const month = search.month as number | undefined
   const year = search.year as number | undefined
@@ -98,7 +119,7 @@ export function ExpensesTable({
     navigate({
       search: (prev) => ({
         ...(prev as Record<string, unknown>),
-        month: value ? Number(value) : undefined,
+        month: value && value !== 'all' ? Number(value) : undefined,
         page: undefined,
       }),
     })
@@ -108,7 +129,7 @@ export function ExpensesTable({
     navigate({
       search: (prev) => ({
         ...(prev as Record<string, unknown>),
-        year: value ? Number(value) : undefined,
+        year: value && value !== 'all' ? Number(value) : undefined,
         page: undefined,
       }),
     })
@@ -120,6 +141,16 @@ export function ExpensesTable({
         ...(prev as Record<string, unknown>),
         category_id: value && value !== 'all' ? Number(value) : undefined,
         page: undefined,
+      }),
+    })
+  }
+
+  const handleTrashedChange = (value: TrashedFilterValue | undefined) => {
+    navigate({
+      search: (prev) => ({
+        ...(prev as Record<string, unknown>),
+        page: 1,
+        trashed: value,
       }),
     })
   }
@@ -159,6 +190,13 @@ export function ExpensesTable({
     .filter((id) => rowSelection[id])
     .map(Number)
 
+  const resetSelectionAfterSuccess = (onClose: () => void) => {
+    onClose()
+    table.resetRowSelection()
+  }
+
+  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+
   return (
     <div
       className={cn(
@@ -168,7 +206,7 @@ export function ExpensesTable({
     >
       <DataTableToolbar table={table} searchPlaceholder='Cari pengeluaran...'>
         <Select
-          value={categoryId ? String(categoryId) : ''}
+          value={categoryId ? String(categoryId) : 'all'}
           onValueChange={handleCategoryChange}
         >
           <SelectTrigger className='h-8 w-37.5'>
@@ -184,7 +222,7 @@ export function ExpensesTable({
           </SelectContent>
         </Select>
         <Select
-          value={month ? String(month) : ''}
+          value={month ? String(month) : 'all'}
           onValueChange={handleMonthChange}
         >
           <SelectTrigger className='h-8 w-37.5'>
@@ -200,7 +238,7 @@ export function ExpensesTable({
           </SelectContent>
         </Select>
         <Select
-          value={year ? String(year) : ''}
+          value={year ? String(year) : 'all'}
           onValueChange={handleYearChange}
         >
           <SelectTrigger className='h-8 w-30'>
@@ -215,6 +253,7 @@ export function ExpensesTable({
             ))}
           </SelectContent>
         </Select>
+        <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
       </DataTableToolbar>
       <div className='flex-1 overflow-auto'>
         <div
@@ -290,28 +329,87 @@ export function ExpensesTable({
         </div>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
-      <DataTableBulkActions table={table} entityName='pengeluaran'>
-        <Button
-          variant='destructive'
-          size='sm'
-          className='h-7'
-          onClick={() => setMultiDeleteOpen(true)}
-        >
-          <Trash2 />
-          Hapus
-        </Button>
-      </DataTableBulkActions>
+      {shouldShowBulkActions && (
+        <DataTableBulkActions table={table} entityName='pengeluaran'>
+          {isOnlyTrashed ? (
+            <>
+              <Button
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkRestoreOpen(true)}
+              >
+                <RotateCcw />
+                Pulihkan
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkForceDeleteOpen(true)}
+              >
+                <Trash2 />
+                Hapus Permanen
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant='destructive'
+              size='sm'
+              className='h-7'
+              onClick={() => setMultiDeleteOpen(true)}
+            >
+              <Trash2 />
+              Hapus
+            </Button>
+          )}
+        </DataTableBulkActions>
+      )}
       <MultiDeleteDialog
         open={multiDeleteOpen}
         onOpenChange={setMultiDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='pengeluaran'
+        deletionType='soft'
         isLoading={bulkDeleteExpenses.isPending}
         onConfirm={() => {
           bulkDeleteExpenses.mutate(selectedIds, {
             onSuccess: () => {
-              setMultiDeleteOpen(false)
-              table.resetRowSelection()
+              resetSelectionAfterSuccess(() => setMultiDeleteOpen(false))
+            },
+          })
+        }}
+      />
+      <ConfirmDialog
+        open={bulkRestoreOpen}
+        onOpenChange={setBulkRestoreOpen}
+        handleConfirm={() => {
+          bulkRestoreExpenses.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkRestoreOpen(false))
+            },
+          })
+        }}
+        disabled={bulkRestoreExpenses.isPending}
+        isLoading={bulkRestoreExpenses.isPending}
+        title='Pulihkan Pengeluaran'
+        desc={
+          <p>
+            Apakah Anda yakin ingin memulihkan {selectedIds.length} pengeluaran
+            terpilih?
+          </p>
+        }
+        confirmText='Pulihkan'
+      />
+      <MultiDeleteDialog
+        open={bulkForceDeleteOpen}
+        onOpenChange={setBulkForceDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='pengeluaran'
+        isLoading={bulkForceDeleteExpenses.isPending}
+        onConfirm={() => {
+          bulkForceDeleteExpenses.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkForceDeleteOpen(false))
             },
           })
         }}

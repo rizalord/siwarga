@@ -40,6 +40,7 @@ function PaymentsPageInner() {
     month: search.month,
     year: search.year,
     search: search.search,
+    trashed: search.trashed,
     sort: search.sort,
     order: search.order,
   })

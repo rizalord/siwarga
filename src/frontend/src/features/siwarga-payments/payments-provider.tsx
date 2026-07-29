@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import useDialogState from '@/hooks/use-dialog-state'
 import type { Payment } from '@/types/api'
+import useDialogState from '@/hooks/use-dialog-state'
 
-type PaymentsDialogType = 'create' | 'delete'
+type PaymentsDialogType = 'create' | 'delete' | 'restore' | 'force-delete'
 
 type PaymentsContextType = {
   open: PaymentsDialogType | null

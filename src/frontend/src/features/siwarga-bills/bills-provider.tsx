@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import useDialogState from '@/hooks/use-dialog-state'
 import type { Bill } from '@/types/api'
+import useDialogState from '@/hooks/use-dialog-state'
 
-type BillsDialogType = 'generate' | 'delete'
+type BillsDialogType = 'generate' | 'delete' | 'restore' | 'force-delete'
 
 type BillsContextType = {
   open: BillsDialogType | null
@@ -29,9 +29,7 @@ export const useBillsContext = () => {
   const billsContext = React.useContext(BillsContext)
 
   if (!billsContext) {
-    throw new Error(
-      'useBillsContext has to be used within <BillsProvider>'
-    )
+    throw new Error('useBillsContext has to be used within <BillsProvider>')
   }
 
   return billsContext

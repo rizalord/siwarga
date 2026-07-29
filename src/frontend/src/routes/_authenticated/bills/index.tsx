@@ -14,7 +14,11 @@ const billsSearchSchema = z.object({
   due_type_id: z.array(z.string()).optional().catch([]),
   search: z.string().optional().catch(''),
   sort: z.string().optional().catch(undefined),
-  order: z.union([z.literal('asc'), z.literal('desc')]).optional().catch(undefined),
+  trashed: z.enum(['with', 'only']).optional().catch(undefined),
+  order: z
+    .union([z.literal('asc'), z.literal('desc')])
+    .optional()
+    .catch(undefined),
 })
 
 export const Route = createFileRoute('/_authenticated/bills/')({

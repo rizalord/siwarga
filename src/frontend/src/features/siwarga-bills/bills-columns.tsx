@@ -1,7 +1,8 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import type { Bill } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import { RotateCcw, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +14,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 import { useBillsContext } from './bills-provider'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 function formatRupiah(amount: number) {
   return new Intl.NumberFormat('id-ID', {
@@ -33,6 +36,16 @@ function formatDate(dateStr: string) {
 
 function DataTableRowActions({ row }: { row: Row<Bill> }) {
   const { setOpen, setCurrentRow } = useBillsContext()
+  const permissions = useAuthStore(
+    (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+  )
+  const canManageTrash = permissions.includes('bills.trash')
+  const isTrashed = row.original.deleted_at !== null
+
+  if (isTrashed && !canManageTrash) {
+    return null
+  }
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -45,18 +58,46 @@ function DataTableRowActions({ row }: { row: Row<Bill> }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-40'>
-        <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(row.original)
-            setOpen('delete')
-          }}
-          className='text-red-500!'
-        >
-          Hapus
-          <DropdownMenuShortcut>
-            <Trash2 size={16} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
+        {isTrashed ? (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(row.original)
+                setOpen('restore')
+              }}
+            >
+              Pulihkan
+              <DropdownMenuShortcut>
+                <RotateCcw size={16} />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(row.original)
+                setOpen('force-delete')
+              }}
+              className='text-red-500!'
+            >
+              Hapus Permanen
+              <DropdownMenuShortcut>
+                <Trash2 size={16} />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original)
+              setOpen('delete')
+            }}
+            className='text-red-500!'
+          >
+            Hapus
+            <DropdownMenuShortcut>
+              <Trash2 size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

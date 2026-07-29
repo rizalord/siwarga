@@ -1,7 +1,8 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import type { ColumnDef, Row } from '@tanstack/react-table'
 import type { User } from '@/types/api'
-import { Trash2, UserPen } from 'lucide-react'
+import { RotateCcw, Trash2, UserPen } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,8 +15,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { DataTableColumnHeader, selectColumn } from '@/components/data-table'
 
+const EMPTY_PERMISSIONS: string[] = []
+
 type UsersColumnsProps = {
-  setOpen: (open: 'create' | 'update' | 'delete' | null) => void
+  setOpen: (
+    open: 'create' | 'update' | 'delete' | 'restore' | 'force-delete' | null
+  ) => void
   setCurrentRow: (row: User | null) => void
 }
 
@@ -24,6 +29,16 @@ export function usersColumns({
   setCurrentRow,
 }: UsersColumnsProps): ColumnDef<User>[] {
   function DataTableRowActions({ row }: { row: Row<User> }) {
+    const permissions = useAuthStore(
+      (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+    )
+    const canManageTrash = permissions.includes('users.trash')
+    const isTrashed = row.original.deleted_at !== null
+
+    if (isTrashed && !canManageTrash) {
+      return null
+    }
+
     return (
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
@@ -36,30 +51,61 @@ export function usersColumns({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-40'>
-          <DropdownMenuItem
-            onClick={() => {
-              setCurrentRow(row.original)
-              setOpen('update')
-            }}
-          >
-            Ubah
-            <DropdownMenuShortcut>
-              <UserPen size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              setCurrentRow(row.original)
-              setOpen('delete')
-            }}
-            className='text-red-500!'
-          >
-            Hapus
-            <DropdownMenuShortcut>
-              <Trash2 size={16} />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
+          {isTrashed ? (
+            <>
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('restore')
+                }}
+              >
+                Pulihkan
+                <DropdownMenuShortcut>
+                  <RotateCcw size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('force-delete')
+                }}
+                className='text-red-500!'
+              >
+                Hapus Permanen
+                <DropdownMenuShortcut>
+                  <Trash2 size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('update')
+                }}
+              >
+                Ubah
+                <DropdownMenuShortcut>
+                  <UserPen size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('delete')
+                }}
+                className='text-red-500!'
+              >
+                Hapus
+                <DropdownMenuShortcut>
+                  <Trash2 size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     )

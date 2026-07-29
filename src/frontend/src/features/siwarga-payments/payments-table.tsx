@@ -6,10 +6,15 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import type { Payment } from '@/types/api'
-import { Trash2 } from 'lucide-react'
+import type { Payment, TrashedFilterValue } from '@/types/api'
+import { RotateCcw, Trash2 } from 'lucide-react'
+import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
-import { useBulkDeletePayments } from '@/hooks/use-payments'
+import {
+  useBulkDeletePayments,
+  useBulkForceDeletePayments,
+  useBulkRestorePayments,
+} from '@/hooks/use-payments'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,13 +32,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
+  TrashedFilter,
 } from '@/components/data-table'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import { paymentsColumns as columns } from './payments-columns'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 const monthOptions = Array.from({ length: 12 }, (_, i) => ({
   label: new Date(0, i).toLocaleDateString('id-ID', { month: 'long' }),
@@ -47,7 +56,7 @@ type DataTableProps = {
   data: Payment[]
   pageCount: number
   isFetching?: boolean
-  search: Record<string, unknown>
+  search: Record<string, unknown> & { trashed?: TrashedFilterValue }
   navigate: NavigateFn
 }
 
@@ -61,8 +70,18 @@ export function PaymentsTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [multiDeleteOpen, setMultiDeleteOpen] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkForceDeleteOpen, setBulkForceDeleteOpen] = useState(false)
 
   const bulkDeletePayments = useBulkDeletePayments()
+  const bulkRestorePayments = useBulkRestorePayments()
+  const bulkForceDeletePayments = useBulkForceDeletePayments()
+  const permissions = useAuthStore(
+    (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+  )
+  const canManageTrash = permissions.includes('payments.trash')
+  const trashedFilter = search.trashed
+  const isOnlyTrashed = trashedFilter === 'only'
 
   const month = search.month as number | undefined
   const year = search.year as number | undefined
@@ -89,7 +108,7 @@ export function PaymentsTable({
     navigate({
       search: (prev) => ({
         ...(prev as Record<string, unknown>),
-        month: value ? Number(value) : undefined,
+        month: value && value !== 'all' ? Number(value) : undefined,
         page: undefined,
       }),
     })
@@ -99,8 +118,18 @@ export function PaymentsTable({
     navigate({
       search: (prev) => ({
         ...(prev as Record<string, unknown>),
-        year: value ? Number(value) : undefined,
+        year: value && value !== 'all' ? Number(value) : undefined,
         page: undefined,
+      }),
+    })
+  }
+
+  const handleTrashedChange = (value: TrashedFilterValue | undefined) => {
+    navigate({
+      search: (prev) => ({
+        ...(prev as Record<string, unknown>),
+        page: 1,
+        trashed: value,
       }),
     })
   }
@@ -140,6 +169,13 @@ export function PaymentsTable({
     .filter((id) => rowSelection[id])
     .map(Number)
 
+  const resetSelectionAfterSuccess = (onClose: () => void) => {
+    onClose()
+    table.resetRowSelection()
+  }
+
+  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+
   return (
     <div
       className={cn(
@@ -152,7 +188,7 @@ export function PaymentsTable({
         searchPlaceholder='Cari penghuni atau rumah...'
       >
         <Select
-          value={month ? String(month) : ''}
+          value={month ? String(month) : 'all'}
           onValueChange={handleMonthChange}
         >
           <SelectTrigger className='h-8 w-37.5'>
@@ -168,7 +204,7 @@ export function PaymentsTable({
           </SelectContent>
         </Select>
         <Select
-          value={year ? String(year) : ''}
+          value={year ? String(year) : 'all'}
           onValueChange={handleYearChange}
         >
           <SelectTrigger className='h-8 w-30'>
@@ -183,6 +219,7 @@ export function PaymentsTable({
             ))}
           </SelectContent>
         </Select>
+        <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
       </DataTableToolbar>
       <div className='flex-1 overflow-auto'>
         <div
@@ -258,28 +295,87 @@ export function PaymentsTable({
         </div>
       </div>
       <DataTablePagination table={table} className='mt-auto' />
-      <DataTableBulkActions table={table} entityName='pembayaran'>
-        <Button
-          variant='destructive'
-          size='sm'
-          className='h-7'
-          onClick={() => setMultiDeleteOpen(true)}
-        >
-          <Trash2 />
-          Hapus
-        </Button>
-      </DataTableBulkActions>
+      {shouldShowBulkActions && (
+        <DataTableBulkActions table={table} entityName='pembayaran'>
+          {isOnlyTrashed ? (
+            <>
+              <Button
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkRestoreOpen(true)}
+              >
+                <RotateCcw />
+                Pulihkan
+              </Button>
+              <Button
+                variant='destructive'
+                size='sm'
+                className='h-7'
+                onClick={() => setBulkForceDeleteOpen(true)}
+              >
+                <Trash2 />
+                Hapus Permanen
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant='destructive'
+              size='sm'
+              className='h-7'
+              onClick={() => setMultiDeleteOpen(true)}
+            >
+              <Trash2 />
+              Hapus
+            </Button>
+          )}
+        </DataTableBulkActions>
+      )}
       <MultiDeleteDialog
         open={multiDeleteOpen}
         onOpenChange={setMultiDeleteOpen}
         selectedCount={selectedIds.length}
         entityLabel='pembayaran'
+        deletionType='soft'
         isLoading={bulkDeletePayments.isPending}
         onConfirm={() => {
           bulkDeletePayments.mutate(selectedIds, {
             onSuccess: () => {
-              setMultiDeleteOpen(false)
-              table.resetRowSelection()
+              resetSelectionAfterSuccess(() => setMultiDeleteOpen(false))
+            },
+          })
+        }}
+      />
+      <ConfirmDialog
+        open={bulkRestoreOpen}
+        onOpenChange={setBulkRestoreOpen}
+        handleConfirm={() => {
+          bulkRestorePayments.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkRestoreOpen(false))
+            },
+          })
+        }}
+        disabled={bulkRestorePayments.isPending}
+        isLoading={bulkRestorePayments.isPending}
+        title='Pulihkan Pembayaran'
+        desc={
+          <p>
+            Apakah Anda yakin ingin memulihkan {selectedIds.length} pembayaran
+            terpilih?
+          </p>
+        }
+        confirmText='Pulihkan'
+      />
+      <MultiDeleteDialog
+        open={bulkForceDeleteOpen}
+        onOpenChange={setBulkForceDeleteOpen}
+        selectedCount={selectedIds.length}
+        entityLabel='pembayaran'
+        isLoading={bulkForceDeletePayments.isPending}
+        onConfirm={() => {
+          bulkForceDeletePayments.mutate(selectedIds, {
+            onSuccess: () => {
+              resetSelectionAfterSuccess(() => setBulkForceDeleteOpen(false))
             },
           })
         }}

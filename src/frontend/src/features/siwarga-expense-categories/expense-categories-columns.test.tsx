@@ -1,8 +1,8 @@
 import type { Row } from '@tanstack/react-table'
+import type { ExpenseCategory } from '@/types/api'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { userEvent } from 'vitest/browser'
-import type { ExpenseCategory } from '@/types/api'
 import { useAuthStore } from '@/stores/auth-store'
 import { expenseCategoriesColumns } from './expense-categories-columns'
 
@@ -30,10 +30,12 @@ function renderActionsCell(row: ExpenseCategory) {
     throw new Error('Actions column is not renderable')
   }
 
+  const renderCell = actionsColumn.cell
+
   function CellUnderTest() {
     return (
       <>
-        {actionsColumn.cell?.({
+        {renderCell({
           row: { original: row } as Row<ExpenseCategory>,
         } as never)}
       </>
@@ -85,6 +87,8 @@ describe('expenseCategoriesColumns row actions', () => {
     const { renderResult } = renderActionsCell(trashedExpenseCategory)
     await renderResult
 
-    expect(document.querySelector('[data-slot="dropdown-menu-trigger"]')).toBeNull()
+    expect(
+      document.querySelector('[data-slot="dropdown-menu-trigger"]')
+    ).toBeNull()
   })
 })
