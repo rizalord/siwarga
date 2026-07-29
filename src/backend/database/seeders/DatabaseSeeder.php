@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             BillSeeder::class,
             PaymentSeeder::class,
+            ExpenseCategorySeeder::class,
             ExpenseSeeder::class,
         ]);
     }

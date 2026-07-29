@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +20,7 @@ class ExpenseFactory extends Factory
     public function definition(): array
     {
         return [
-            'category' => fake()->randomElement(['listrik', 'air', 'kebersihan', 'keamanan', 'lainnya']),
+            'category_id' => ExpenseCategory::factory(),
             'description' => fake()->sentence(),
             'amount' => fake()->randomFloat(2, 10000, 1000000),
             'expense_date' => now(),
