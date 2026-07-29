@@ -2,6 +2,7 @@ import { activityLogHandlers } from './activity-logs'
 import { authHandlers } from './auth'
 import { billHandlers } from './bills'
 import { dueTypeHandlers } from './due-types'
+import { expenseCategoryHandlers } from './expense-categories'
 import { expenseHandlers } from './expenses'
 import { houseHandlers } from './houses'
 import { paymentHandlers } from './payments'
@@ -18,6 +19,7 @@ export const handlers = [
   ...dueTypeHandlers,
   ...billHandlers,
   ...paymentHandlers,
+  ...expenseCategoryHandlers,
   ...expenseHandlers,
   ...reportHandlers,
   ...userHandlers,

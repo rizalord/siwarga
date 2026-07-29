@@ -1,9 +1,10 @@
 import type { Expense } from '@/types/api'
+import { mockExpenseCategories } from './expense-categories'
 
 export const mockExpenses: Expense[] = [
   {
     id: 1,
-    category: 'Gaji Satpam',
+    category: mockExpenseCategories[0],
     description: 'Gaji satpam bulan Juli 2026',
     amount: 500000,
     expense_date: '2026-07-01',
