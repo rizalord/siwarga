@@ -41,6 +41,15 @@ abstract class Controller
         return $query->orderBy($defaultColumn, $defaultOrder);
     }
 
+    protected function applyTrashedFilter(Builder $query, Request $request): Builder
+    {
+        return match ($request->string('trashed')->toString()) {
+            'with' => $query->withTrashed(),
+            'only' => $query->onlyTrashed(),
+            default => $query,
+        };
+    }
+
     /**
      * Bulk delete records by id, restricted to ids that actually belong to the model.
      */
@@ -54,5 +63,29 @@ abstract class Controller
         $deleted = $modelClass::destroy($validated['ids']);
 
         return response()->json(['data' => null, 'message' => "{$deleted} data berhasil dihapus"]);
+    }
+
+    protected function bulkRestore(Request $request, string $modelClass): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $restored = $modelClass::withTrashed()->whereIn('id', $validated['ids'])->restore();
+
+        return response()->json(['data' => null, 'message' => "{$restored} data berhasil dipulihkan"]);
+    }
+
+    protected function bulkForceDelete(Request $request, string $modelClass): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $deleted = $modelClass::withTrashed()->whereIn('id', $validated['ids'])->forceDelete();
+
+        return response()->json(['data' => null, 'message' => "{$deleted} data berhasil dihapus permanen"]);
     }
 }

@@ -135,6 +135,82 @@ class ExpenseCategoryTest extends TestCase
         $response->assertJsonMissing(['name' => 'Keamanan']);
     }
 
+    public function test_trashed_with_returns_active_and_soft_deleted_expense_categories()
+    {
+        ExpenseCategory::factory()->create(['name' => 'Aktif']);
+        $deleted = ExpenseCategory::factory()->create(['name' => 'Terhapus']);
+        $deleted->delete();
+
+        $response = $this->actingAs($this->admin)->getJson('/api/expense-categories?trashed=with');
+
+        $response->assertStatus(200)->assertJsonCount(2, 'data');
+        $response->assertJsonFragment(['name' => 'Aktif']);
+        $response->assertJsonFragment(['name' => 'Terhapus']);
+    }
+
+    public function test_trashed_only_returns_only_soft_deleted_expense_categories()
+    {
+        ExpenseCategory::factory()->create(['name' => 'Aktif']);
+        $deleted = ExpenseCategory::factory()->create(['name' => 'Terhapus']);
+        $deleted->delete();
+
+        $response = $this->actingAs($this->admin)->getJson('/api/expense-categories?trashed=only');
+
+        $response->assertStatus(200)->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.name', 'Terhapus');
+    }
+
+    public function test_absent_or_invalid_trashed_filter_returns_only_active_expense_categories()
+    {
+        ExpenseCategory::factory()->create(['name' => 'Aktif']);
+        $deleted = ExpenseCategory::factory()->create(['name' => 'Terhapus']);
+        $deleted->delete();
+
+        $this->actingAs($this->admin)
+            ->getJson('/api/expense-categories')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Aktif');
+
+        $this->actingAs($this->admin)
+            ->getJson('/api/expense-categories?trashed=invalid')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Aktif');
+    }
+
+    public function test_bulk_restore_returns_the_restored_count()
+    {
+        $categories = ExpenseCategory::factory()->count(2)->create();
+        $categories->each->delete();
+
+        $response = $this->actingAs($this->admin)->postJson('/api/expense-categories/bulk-restore', [
+            'ids' => $categories->pluck('id')->toArray(),
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dipulihkan');
+        $this->assertDatabaseHas('expense_categories', ['id' => $categories[0]->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('expense_categories', ['id' => $categories[1]->id, 'deleted_at' => null]);
+    }
+
+    public function test_bulk_force_delete_returns_the_permanently_removed_count()
+    {
+        $categories = ExpenseCategory::factory()->count(2)->create();
+        $categories->each->delete();
+
+        $response = $this->actingAs($this->admin)->postJson('/api/expense-categories/bulk-force-delete', [
+            'ids' => $categories->pluck('id')->toArray(),
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('message', '2 data berhasil dihapus permanen');
+        $this->assertDatabaseMissing('expense_categories', ['id' => $categories[0]->id]);
+        $this->assertDatabaseMissing('expense_categories', ['id' => $categories[1]->id]);
+    }
+
     public function test_creating_expense_category_with_duplicate_name_fails_validation()
     {
         ExpenseCategory::factory()->create(['name' => 'Keamanan']);
