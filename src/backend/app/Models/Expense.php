@@ -11,7 +11,7 @@ class Expense extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['category', 'description', 'amount', 'expense_date', 'created_by'];
+    protected $fillable = ['category_id', 'description', 'amount', 'expense_date', 'created_by'];
 
     protected function casts(): array
     {
@@ -24,5 +24,10 @@ class Expense extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseCategory::class);
     }
 }
