@@ -1,5 +1,16 @@
 import { http, HttpResponse } from 'msw'
 import { mockResidents } from '../data/residents'
+import {
+  applyTrashedFilter,
+  buildPaginatedResponse,
+  bulkForceDelete,
+  bulkRestore,
+  bulkSoftDelete,
+  forceDeleteById,
+  readIds,
+  restoreById,
+  softDeleteById,
+} from './soft-delete'
 
 const residents = [...mockResidents]
 let nextId = 100
@@ -10,19 +21,13 @@ export const residentHandlers = [
     const status = url.searchParams.get('status')
     const maritalStatus = url.searchParams.get('marital_status')
     const search = url.searchParams.get('search')
-    let filtered = [...residents]
+    let filtered = applyTrashedFilter(residents, url.searchParams.get('trashed'))
     if (status) filtered = filtered.filter((r) => r.status === status)
     if (maritalStatus) filtered = filtered.filter((r) => r.marital_status === maritalStatus)
     if (search) filtered = filtered.filter((r) =>
       r.full_name.toLowerCase().includes(search.toLowerCase()),
     )
-    return HttpResponse.json({
-      data: filtered,
-      current_page: 1,
-      last_page: 1,
-      per_page: 10,
-      total: filtered.length,
-    })
+    return HttpResponse.json(buildPaginatedResponse(filtered))
   }),
 
   http.get('/api/residents/:id', ({ params }) => {
@@ -57,9 +62,41 @@ export const residentHandlers = [
   }),
 
   http.delete('/api/residents/:id', ({ params }) => {
-    const idx = residents.findIndex((r) => r.id === Number(params.id))
-    if (idx === -1) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
-    residents[idx] = { ...residents[idx], deleted_at: new Date().toISOString() }
+    const resident = softDeleteById(residents, Number(params.id))
+    if (!resident) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     return HttpResponse.json({ data: null, message: 'Deleted' })
+  }),
+
+  http.post('/api/residents/:id/restore', ({ params }) => {
+    const resident = restoreById(residents, Number(params.id))
+    if (!resident) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: resident })
+  }),
+
+  http.delete('/api/residents/:id/force-delete', ({ params }) => {
+    const deleted = forceDeleteById(residents, Number(params.id))
+    if (!deleted) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: null, message: 'Deleted permanently' })
+  }),
+
+  http.post('/api/residents/bulk-delete', async ({ request }) => {
+    const deleted = bulkSoftDelete(residents, await readIds(request))
+    return HttpResponse.json({ data: null, message: `${deleted} data berhasil dihapus` })
+  }),
+
+  http.post('/api/residents/bulk-restore', async ({ request }) => {
+    const restored = bulkRestore(residents, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${restored} data berhasil dipulihkan`,
+    })
+  }),
+
+  http.post('/api/residents/bulk-force-delete', async ({ request }) => {
+    const deleted = bulkForceDelete(residents, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${deleted} data berhasil dihapus permanen`,
+    })
   }),
 ]

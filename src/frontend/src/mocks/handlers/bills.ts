@@ -1,6 +1,17 @@
 import { http, HttpResponse } from 'msw'
 import { mockBills } from '../data/bills'
 import type { Bill } from '@/types/api'
+import {
+  applyTrashedFilter,
+  buildPaginatedResponse,
+  bulkForceDelete,
+  bulkRestore,
+  bulkSoftDelete,
+  forceDeleteById,
+  readIds,
+  restoreById,
+  softDeleteById,
+} from './soft-delete'
 
 const bills = [...mockBills]
 let nextId = 100
@@ -11,17 +22,11 @@ export const billHandlers = [
     const status = url.searchParams.get('status')
     const houseId = url.searchParams.get('house_id')
     const dueTypeId = url.searchParams.get('due_type_id')
-    let filtered = [...bills]
+    let filtered = applyTrashedFilter(bills, url.searchParams.get('trashed'))
     if (status) filtered = filtered.filter((b) => b.status === status)
     if (houseId) filtered = filtered.filter((b) => b.house.id === Number(houseId))
     if (dueTypeId) filtered = filtered.filter((b) => b.due_type.id === Number(dueTypeId))
-    return HttpResponse.json({
-      data: filtered,
-      current_page: 1,
-      last_page: 1,
-      per_page: 10,
-      total: filtered.length,
-    })
+    return HttpResponse.json(buildPaginatedResponse(filtered))
   }),
 
   http.get('/api/bills/:id', ({ params }) => {
@@ -58,9 +63,41 @@ export const billHandlers = [
   }),
 
   http.delete('/api/bills/:id', ({ params }) => {
-    const idx = bills.findIndex((b) => b.id === Number(params.id))
-    if (idx === -1) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
-    bills[idx] = { ...bills[idx], deleted_at: new Date().toISOString() }
+    const bill = softDeleteById(bills, Number(params.id))
+    if (!bill) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     return HttpResponse.json({ data: null, message: 'Deleted' })
+  }),
+
+  http.post('/api/bills/:id/restore', ({ params }) => {
+    const bill = restoreById(bills, Number(params.id))
+    if (!bill) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: bill })
+  }),
+
+  http.delete('/api/bills/:id/force-delete', ({ params }) => {
+    const deleted = forceDeleteById(bills, Number(params.id))
+    if (!deleted) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: null, message: 'Deleted permanently' })
+  }),
+
+  http.post('/api/bills/bulk-delete', async ({ request }) => {
+    const deleted = bulkSoftDelete(bills, await readIds(request))
+    return HttpResponse.json({ data: null, message: `${deleted} data berhasil dihapus` })
+  }),
+
+  http.post('/api/bills/bulk-restore', async ({ request }) => {
+    const restored = bulkRestore(bills, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${restored} data berhasil dipulihkan`,
+    })
+  }),
+
+  http.post('/api/bills/bulk-force-delete', async ({ request }) => {
+    const deleted = bulkForceDelete(bills, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${deleted} data berhasil dihapus permanen`,
+    })
   }),
 ]

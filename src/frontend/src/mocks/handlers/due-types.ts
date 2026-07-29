@@ -1,12 +1,27 @@
 import { http, HttpResponse } from 'msw'
 import { mockDueTypes } from '../data/due-types'
+import {
+  applyTrashedFilter,
+  buildPaginatedResponse,
+  bulkForceDelete,
+  bulkRestore,
+  bulkSoftDelete,
+  forceDeleteById,
+  readIds,
+  restoreById,
+  softDeleteById,
+} from './soft-delete'
 
 const dueTypes = [...mockDueTypes]
 let nextId = 100
 
 export const dueTypeHandlers = [
-  http.get('/api/due-types', () =>
-    HttpResponse.json({ data: dueTypes, current_page: 1, last_page: 1, per_page: 10, total: dueTypes.length })),
+  http.get('/api/due-types', ({ request }) => {
+    const url = new URL(request.url)
+    const filtered = applyTrashedFilter(dueTypes, url.searchParams.get('trashed'))
+
+    return HttpResponse.json(buildPaginatedResponse(filtered))
+  }),
 
   http.get('/api/due-types/:id', ({ params }) => {
     const dueType = dueTypes.find((d) => d.id === Number(params.id))
@@ -38,9 +53,41 @@ export const dueTypeHandlers = [
   }),
 
   http.delete('/api/due-types/:id', ({ params }) => {
-    const idx = dueTypes.findIndex((d) => d.id === Number(params.id))
-    if (idx === -1) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
-    dueTypes[idx] = { ...dueTypes[idx], deleted_at: new Date().toISOString() }
+    const dueType = softDeleteById(dueTypes, Number(params.id))
+    if (!dueType) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     return HttpResponse.json({ data: null, message: 'Deleted' })
+  }),
+
+  http.post('/api/due-types/:id/restore', ({ params }) => {
+    const dueType = restoreById(dueTypes, Number(params.id))
+    if (!dueType) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: dueType })
+  }),
+
+  http.delete('/api/due-types/:id/force-delete', ({ params }) => {
+    const deleted = forceDeleteById(dueTypes, Number(params.id))
+    if (!deleted) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
+    return HttpResponse.json({ data: null, message: 'Deleted permanently' })
+  }),
+
+  http.post('/api/due-types/bulk-delete', async ({ request }) => {
+    const deleted = bulkSoftDelete(dueTypes, await readIds(request))
+    return HttpResponse.json({ data: null, message: `${deleted} data berhasil dihapus` })
+  }),
+
+  http.post('/api/due-types/bulk-restore', async ({ request }) => {
+    const restored = bulkRestore(dueTypes, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${restored} data berhasil dipulihkan`,
+    })
+  }),
+
+  http.post('/api/due-types/bulk-force-delete', async ({ request }) => {
+    const deleted = bulkForceDelete(dueTypes, await readIds(request))
+    return HttpResponse.json({
+      data: null,
+      message: `${deleted} data berhasil dihapus permanen`,
+    })
   }),
 ]
