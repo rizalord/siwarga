@@ -62,6 +62,26 @@ class RbacTest extends TestCase
         $response->assertStatus(403);
     }
 
+    public function test_warga_cannot_create_expense_category(): void
+    {
+        $response = $this->actingAs($this->warga)
+            ->postJson('/api/expense-categories', [
+                'name' => 'Test',
+            ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_bendahara_can_manage_expense_categories(): void
+    {
+        $response = $this->actingAs($this->bendahara)
+            ->postJson('/api/expense-categories', [
+                'name' => 'Test',
+            ]);
+
+        $response->assertStatus(201);
+    }
+
     public function test_bendahara_cannot_manage_users(): void
     {
         $response = $this->actingAs($this->bendahara)

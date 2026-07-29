@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
@@ -39,53 +40,57 @@ class ExpenseTest extends TestCase
 
     public function test_can_filter_expenses_by_month_year_category_and_search()
     {
+        $satpam = ExpenseCategory::factory()->create(['name' => 'Satpam']);
+        $kebersihan = ExpenseCategory::factory()->create(['name' => 'Kebersihan']);
+
         Expense::factory()->create([
-            'category' => 'Satpam',
+            'category_id' => $satpam->id,
             'description' => 'Gaji satpam bulan ini',
             'expense_date' => '2026-01-15',
         ]);
         Expense::factory()->create([
-            'category' => 'Kebersihan',
+            'category_id' => $kebersihan->id,
             'expense_date' => '2026-02-15',
         ]);
 
         $this->getJson('/api/expenses?month=1&year=2026')
             ->assertStatus(200)->assertJsonCount(1, 'data');
 
-        $this->getJson('/api/expenses?category=Satpam')
+        $this->getJson("/api/expenses?category_id={$satpam->id}")
             ->assertStatus(200)->assertJsonCount(1, 'data');
 
         $this->getJson('/api/expenses?search=Gaji')
             ->assertStatus(200)->assertJsonCount(1, 'data');
     }
 
-    public function test_can_get_distinct_expense_categories()
-    {
-        Expense::factory()->create(['category' => 'Satpam']);
-        Expense::factory()->create(['category' => 'Kebersihan']);
-        Expense::factory()->create(['category' => 'Satpam']);
-
-        $response = $this->getJson('/api/expenses/categories');
-
-        $response->assertStatus(200);
-        $this->assertCount(2, $response->json('data'));
-    }
-
     public function test_can_create_expense()
     {
+        $category = ExpenseCategory::factory()->create(['name' => 'Listrik']);
+
         $response = $this->postJson('/api/expenses', [
-            'category' => 'listrik',
+            'category_id' => $category->id,
             'description' => 'Tagihan listrik Januari',
             'amount' => 500000,
             'expense_date' => '2026-01-10',
         ]);
 
-        $response->assertStatus(201)->assertJsonPath('data.category', 'listrik');
+        $response->assertStatus(201)->assertJsonPath('data.category.id', $category->id);
     }
 
     public function test_validates_required_expense_fields()
     {
         $response = $this->postJson('/api/expenses', []);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_validates_category_id_must_exist()
+    {
+        $response = $this->postJson('/api/expenses', [
+            'category_id' => 999999,
+            'amount' => 100000,
+            'expense_date' => '2026-01-10',
+        ]);
 
         $response->assertStatus(422);
     }
