@@ -80,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('houses.create', [HousePolicy::class, 'create']);
         Gate::define('houses.edit', [HousePolicy::class, 'update']);
         Gate::define('houses.delete', [HousePolicy::class, 'delete']);
+        Gate::define('houses.trash', [HousePolicy::class, 'restore']);
         Gate::define('houses.assign', [HousePolicy::class, 'assign']);
 
         // Residents
@@ -87,14 +88,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('residents.create', [ResidentPolicy::class, 'create']);
         Gate::define('residents.edit', [ResidentPolicy::class, 'update']);
         Gate::define('residents.delete', [ResidentPolicy::class, 'delete']);
+        Gate::define('residents.trash', [ResidentPolicy::class, 'restore']);
 
         // Bills
         Gate::define('bills.view', [BillPolicy::class, 'viewAny']);
         Gate::define('bills.generate', [BillPolicy::class, 'create']);
+        Gate::define('bills.trash', [BillPolicy::class, 'restore']);
 
         // Due Types
         Gate::define('due-types.view', [DueTypePolicy::class, 'viewAny']);
         Gate::define('due-types.manage', [DueTypePolicy::class, 'create']);
+        Gate::define('due-types.trash', [DueTypePolicy::class, 'restore']);
 
         // Expense Categories
         Gate::define('expense-categories.view', [ExpenseCategoryPolicy::class, 'viewAny']);
@@ -104,12 +108,14 @@ class AppServiceProvider extends ServiceProvider
         // Payments
         Gate::define('payments.view', [PaymentPolicy::class, 'viewAny']);
         Gate::define('payments.create', [PaymentPolicy::class, 'create']);
+        Gate::define('payments.trash', [PaymentPolicy::class, 'restore']);
 
         // Expenses
         Gate::define('expenses.view', [ExpensePolicy::class, 'viewAny']);
         Gate::define('expenses.create', [ExpensePolicy::class, 'create']);
         Gate::define('expenses.edit', [ExpensePolicy::class, 'update']);
         Gate::define('expenses.delete', [ExpensePolicy::class, 'delete']);
+        Gate::define('expenses.trash', [ExpensePolicy::class, 'restore']);
 
         // Reports
         Gate::define('reports.view', fn (User $user) => $user->hasPermission('reports.view'));
@@ -117,6 +123,7 @@ class AppServiceProvider extends ServiceProvider
         // Users
         Gate::define('users.view', [UserPolicy::class, 'viewAny']);
         Gate::define('users.manage', [UserPolicy::class, 'create']);
+        Gate::define('users.trash', [UserPolicy::class, 'restore']);
 
         // Activity Logs
         Gate::define('activity-logs.view', fn (User $user) => $user->hasPermission('activity-logs.view'));

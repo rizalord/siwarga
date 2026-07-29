@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ResidentResource;
 use App\Models\Resident;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ResidentController extends Controller
@@ -32,6 +33,7 @@ class ResidentController extends Controller
             });
         }
 
+        $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['full_name', 'status', 'phone_number', 'marital_status', 'created_at']);
 
         return $this->paginated($query->paginate($request->per_page ?? 10), ResidentResource::class);
@@ -58,6 +60,16 @@ class ResidentController extends Controller
         }
 
         return response()->json(['data' => null, 'message' => "{$deleted} penghuni berhasil dihapus"]);
+    }
+
+    public function bulkRestore(Request $request, string $modelClass = Resident::class): JsonResponse
+    {
+        return parent::bulkRestore($request, $modelClass);
+    }
+
+    public function bulkForceDestroy(Request $request)
+    {
+        return $this->bulkForceDelete($request, Resident::class);
     }
 
     public function store(Request $request)
@@ -114,5 +126,19 @@ class ResidentController extends Controller
         $resident->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function restore(Resident $resident)
+    {
+        $resident->restore();
+
+        return new ResidentResource($resident);
+    }
+
+    public function forceDestroy(Resident $resident)
+    {
+        $resident->forceDelete();
+
+        return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 }

@@ -30,4 +30,9 @@ class ResidentPolicy
     {
         return $user->hasPermission('residents.delete');
     }
+
+    public function restore(User $user): bool
+    {
+        return $user->hasPermission('residents.trash');
+    }
 }

@@ -30,4 +30,9 @@ class BillPolicy
     {
         return $user->hasPermission('bills.generate');
     }
+
+    public function restore(User $user): bool
+    {
+        return $user->hasPermission('bills.trash');
+    }
 }

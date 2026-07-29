@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
 use App\Models\Bill;
 use App\Models\Payment;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -44,6 +45,7 @@ class PaymentController extends Controller
             });
         }
 
+        $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['amount_paid', 'payment_date', 'created_at']);
 
         return $this->paginated($query->paginate($request->per_page ?? 10), PaymentResource::class);
@@ -67,6 +69,16 @@ class PaymentController extends Controller
         });
 
         return response()->json(['data' => null, 'message' => "{$deleted} pembayaran berhasil dihapus"]);
+    }
+
+    public function bulkRestore(Request $request, string $modelClass = Payment::class): JsonResponse
+    {
+        return parent::bulkRestore($request, $modelClass);
+    }
+
+    public function bulkForceDestroy(Request $request)
+    {
+        return $this->bulkForceDelete($request, Payment::class);
     }
 
     public function store(Request $request)
@@ -148,5 +160,20 @@ class PaymentController extends Controller
         }
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function restore(Payment $payment)
+    {
+        $payment->restore();
+        $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
+
+        return new PaymentResource($payment);
+    }
+
+    public function forceDestroy(Payment $payment)
+    {
+        $payment->forceDelete();
+
+        return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 }

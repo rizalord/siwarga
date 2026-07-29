@@ -30,4 +30,9 @@ class DueTypePolicy
     {
         return $user->hasPermission('due-types.manage');
     }
+
+    public function restore(User $user): bool
+    {
+        return $user->hasPermission('due-types.trash');
+    }
 }

@@ -30,4 +30,9 @@ class PaymentPolicy
     {
         return $user->hasPermission('payments.create');
     }
+
+    public function restore(User $user): bool
+    {
+        return $user->hasPermission('payments.trash');
+    }
 }

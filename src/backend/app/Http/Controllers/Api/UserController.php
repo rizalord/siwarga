@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,6 +22,7 @@ class UserController extends Controller
             });
         }
 
+        $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['name', 'email', 'is_active', 'created_at']);
 
         return $query->paginate($request->per_page ?? 10);
@@ -29,6 +31,16 @@ class UserController extends Controller
     public function bulkDestroy(Request $request)
     {
         return $this->bulkDelete($request, User::class);
+    }
+
+    public function bulkRestore(Request $request, string $modelClass = User::class): JsonResponse
+    {
+        return parent::bulkRestore($request, $modelClass);
+    }
+
+    public function bulkForceDestroy(Request $request)
+    {
+        return $this->bulkForceDelete($request, User::class);
     }
 
     public function store(Request $request)
@@ -108,6 +120,20 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function restore(User $user)
+    {
+        $user->restore();
+
+        return response()->json(['data' => $user->load('roles')]);
+    }
+
+    public function forceDestroy(User $user)
+    {
+        $user->forceDelete();
+
+        return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 
     /**

@@ -35,4 +35,9 @@ class HousePolicy
     {
         return $user->hasPermission('houses.assign');
     }
+
+    public function restore(User $user): bool
+    {
+        return $user->hasPermission('houses.trash');
+    }
 }

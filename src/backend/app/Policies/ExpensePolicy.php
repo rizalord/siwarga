@@ -30,4 +30,9 @@ class ExpensePolicy
     {
         return $user->hasPermission('expenses.delete');
     }
+
+    public function restore(User $user): bool
+    {
+        return $user->hasPermission('expenses.trash');
+    }
 }
