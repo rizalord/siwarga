@@ -152,6 +152,18 @@ export interface CreateDueTypeRequest {
   billing_cycle: 'bulanan' | 'fleksibel'
 }
 
+export interface ExpenseCategory {
+  id: number
+  name: string
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface CreateExpenseCategoryRequest {
+  name: string
+}
+
 // Bills
 export interface Bill {
   id: number
@@ -196,7 +208,7 @@ export interface CreatePaymentRequest {
 // Expenses
 export interface Expense {
   id: number
-  category: string
+  category: ExpenseCategory
   description: string | null
   amount: number
   expense_date: string
@@ -207,7 +219,7 @@ export interface Expense {
 }
 
 export interface CreateExpenseRequest {
-  category: string
+  category_id: number
   description?: string
   amount: number
   expense_date: string
@@ -282,7 +294,7 @@ export interface PaymentFilter {
 export interface ExpenseFilter {
   month?: number
   year?: number
-  category?: string | string[]
+  category_id?: number | number[]
   search?: string
   page?: number
   per_page?: number
@@ -291,6 +303,14 @@ export interface ExpenseFilter {
 }
 
 export interface DueTypeFilter {
+  search?: string
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+export interface ExpenseCategoryFilter {
   search?: string
   page?: number
   per_page?: number
