@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PermissionController extends Controller
 {
+    public function __construct(private PermissionService $permissionService) {}
+
     public function index(Request $request)
     {
         $query = Permission::query()->withCount('roles');
@@ -32,7 +36,7 @@ class PermissionController extends Controller
             'description' => 'nullable|string|max:255',
         ]);
 
-        $permission = Permission::create($validated);
+        $permission = $this->permissionService->create($validated);
 
         return response()->json(['data' => $permission], 201);
     }
@@ -58,20 +62,20 @@ class PermissionController extends Controller
             ]);
         }
 
-        $permission->update($validated);
+        $permission = $this->permissionService->update($permission, $validated);
 
         return response()->json(['data' => $permission]);
     }
 
     public function destroy(Permission $permission)
     {
-        if ($permission->isSystem()) {
+        try {
+            $this->permissionService->delete($permission);
+        } catch (ValidationException $exception) {
             return response()->json([
                 'message' => 'Permission ini adalah permission inti sistem dan tidak bisa dihapus.',
             ], 422);
         }
-
-        $permission->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
