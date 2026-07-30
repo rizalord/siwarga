@@ -7,18 +7,18 @@ use App\Services\ReportService;
 
 class ReportController extends Controller
 {
+    public function __construct(private ReportService $reportService) {}
+
     public function summary(int $year)
     {
-        $service = new ReportService;
-        $data = $service->yearlySummary($year);
+        $data = $this->reportService->yearlySummary($year);
 
         return response()->json(['data' => $data]);
     }
 
     public function monthly(int $year, int $month)
     {
-        $service = new ReportService;
-        $data = $service->monthlyDetail($year, $month);
+        $data = $this->reportService->monthlyDetail($year, $month);
 
         return response()->json(['data' => $data]);
     }
