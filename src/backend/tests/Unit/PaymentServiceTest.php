@@ -51,4 +51,18 @@ class PaymentServiceTest extends TestCase
         $this->assertEquals('belum_lunas', $bill->fresh()->status);
         $this->assertSoftDeleted($payment);
     }
+
+    public function test_create_downgrades_bill_from_lunas_to_belum_lunas_when_actual_payments_are_insufficient()
+    {
+        $bill = Bill::factory()->create(['amount_due' => 100000, 'status' => 'lunas']);
+        $user = User::factory()->create();
+
+        (new PaymentService)->create([
+            'bill_id' => $bill->id,
+            'amount_paid' => 40000,
+            'payment_date' => now()->toDateString(),
+        ], $user->id);
+
+        $this->assertEquals('belum_lunas', $bill->fresh()->status);
+    }
 }
