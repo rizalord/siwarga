@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ResidentResource;
 use App\Models\Resident;
+use App\Services\ResidentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class ResidentController extends Controller
 {
+    public function __construct(private ResidentService $residentService) {}
+
     public function index(Request $request)
     {
         $query = Resident::query();
@@ -46,10 +50,7 @@ class ResidentController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $deletableIds = Resident::whereIn('id', $validated['ids'])
-            ->whereDoesntHave('activeHouse')
-            ->pluck('id');
-
+        $deletableIds = $this->residentService->deletableIds($validated['ids']);
         $deleted = Resident::destroy($deletableIds);
 
         if ($deleted < count($validated['ids'])) {
@@ -82,11 +83,7 @@ class ResidentController extends Controller
             'ktp_photo' => 'nullable|image|max:2048',
         ]);
 
-        if ($request->hasFile('ktp_photo')) {
-            $validated['ktp_photo_path'] = $request->file('ktp_photo')->store('ktp-photos', 'public');
-        }
-
-        $resident = Resident::create($validated);
+        $resident = $this->residentService->create($validated, $request->file('ktp_photo'));
 
         return new ResidentResource($resident, 201);
     }
@@ -106,24 +103,20 @@ class ResidentController extends Controller
             'ktp_photo' => 'nullable|image|max:2048',
         ]);
 
-        if ($request->hasFile('ktp_photo')) {
-            $validated['ktp_photo_path'] = $request->file('ktp_photo')->store('ktp-photos', 'public');
-        }
-
-        $resident->update($validated);
+        $resident = $this->residentService->update($resident, $validated, $request->file('ktp_photo'));
 
         return new ResidentResource($resident);
     }
 
     public function destroy(Resident $resident)
     {
-        if ($resident->activeHouse()->exists()) {
+        try {
+            $this->residentService->delete($resident);
+        } catch (ValidationException $exception) {
             return response()->json([
                 'message' => 'Penghuni tidak bisa dihapus karena masih ditempatkan di sebuah rumah. Kosongkan rumah terlebih dahulu.',
             ], 422);
         }
-
-        $resident->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
