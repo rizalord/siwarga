@@ -18,7 +18,8 @@ Aplikasi web untuk mengelola administrasi RT: penghuni, rumah, iuran bulanan, pe
 - [Struktur Repository](#struktur-repository)
 - [Instalasi](#instalasi)
   - [Opsi 1 — Docker (Direkomendasikan)](#opsi-1--docker-direkomendasikan)
-  - [Opsi 2 — Native / Manual (untuk VPS Production)](#opsi-2--native--manual-untuk-vps-production)
+  - [Opsi 2 — Native Tanpa Docker (Development Lokal)](#opsi-2--native-tanpa-docker-development-lokal)
+  - [Opsi 3 — Native / Manual (untuk VPS Production)](#opsi-3--native--manual-untuk-vps-production)
 - [Akun Demo](#akun-demo)
 - [API Endpoints](#api-endpoints)
 - [Testing](#testing)
@@ -97,7 +98,7 @@ siwarga/
 
 ## Instalasi
 
-Ada dua cara menjalankan SIWarga. **Docker direkomendasikan** untuk kebanyakan kasus karena tidak perlu install PHP/MySQL/Node langsung di mesin. Panduan native cocok untuk deploy langsung ke VPS tanpa Docker.
+Ada beberapa cara menjalankan SIWarga. **Docker direkomendasikan** untuk kebanyakan kasus karena tidak perlu install PHP/MySQL/Node langsung di mesin. Kalau tidak mau pakai Docker sama sekali, ikuti Opsi 2 untuk development lokal di laptop sendiri. Opsi 3 (native, lebih panjang) khusus untuk deploy ke VPS production tanpa Docker.
 
 ### Opsi 1 — Docker (Direkomendasikan)
 
@@ -166,11 +167,84 @@ docker compose -f docker-compose.prd.yml exec backend php artisan db:seed --forc
 
 ---
 
-### Opsi 2 — Native / Manual (untuk VPS Production)
+### Opsi 2 — Native Tanpa Docker (Development Lokal)
+
+Panduan ini untuk menjalankan SIWarga langsung di laptop/komputer sendiri untuk keperluan development, tanpa Docker dan tanpa Nginx/systemd.
+
+**Prasyarat** (install manual sesuai OS masing-masing):
+
+| Kebutuhan | Versi | Cek dengan |
+|---|---|---|
+| PHP | 8.3 (+ ekstensi `mbstring`, `xml`, `bcmath`, `curl`, `zip`, `gd`, `tokenizer`, `pdo_mysql`) | `php -v` |
+| Composer | 2.x | `composer --version` |
+| Node.js | 20+ | `node -v` |
+| MySQL | 8.x (server jalan di `localhost:3306`) | `mysql --version` |
+
+> Belum punya salah satu di atas? Lihat langkah 2–5 di [Opsi 3](#opsi-3--native--manual-untuk-vps-production) untuk cara install PHP/Composer/Node/MySQL di Ubuntu — lewati bagian Nginx/systemd/PHP-FPM-nya.
+
+#### 1. Clone repository & siapkan database
+
+```bash
+git clone https://github.com/rizalord/siwarga.git
+cd siwarga
+
+mysql -u root -p -e "CREATE DATABASE siwarga CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
+
+#### 2. Setup & jalankan backend
+
+```bash
+cd src/backend
+composer install
+
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit `.env`, sesuaikan kredensial database (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`) dengan yang Anda buat di langkah 1.
+
+```bash
+php artisan migrate --seed
+php artisan storage:link   # wajib, agar foto KTP penghuni bisa diakses
+
+php artisan serve
+```
+
+Backend API berjalan di `http://localhost:8000`.
+
+#### 3. Setup & jalankan frontend
+
+Buka terminal baru:
+
+```bash
+cd src/frontend
+npm install
+
+cp .env.example .env
+```
+
+Pastikan `.env` berisi:
+
+```ini
+VITE_API_URL=http://localhost:8000
+VITE_USE_MOCK=false
+```
+
+```bash
+npm run dev
+```
+
+Frontend berjalan di `http://localhost:5173` dengan hot reload. Buka di browser dan login dengan salah satu [akun demo](#akun-demo).
+
+> Ingin coba tampilan frontend tanpa backend sama sekali? Set `VITE_USE_MOCK=true` di `.env` — data akan disimulasikan lewat MSW (Mock Service Worker), tidak perlu backend/MySQL jalan.
+
+---
+
+### Opsi 3 — Native / Manual (untuk VPS Production)
 
 Panduan ini untuk deploy langsung di server (VPS) tanpa Docker: PHP-FPM + Nginx + MySQL native. Setiap langkah runtut dari server kosong sampai aplikasi bisa diakses. Contoh di bawah pakai Ubuntu 22.04/24.04; sesuaikan nama package kalau pakai distro lain.
 
-> Untuk development di laptop sendiri, ikuti langkah 1–7 lalu jalankan `php artisan serve` & `npm run dev` langsung (lewati bagian Nginx/systemd) — lihat catatan di setiap langkah.
+> Untuk development di laptop sendiri, gunakan [Opsi 2](#opsi-2--native-tanpa-docker-development-lokal) — lebih ringkas.
 
 #### 1. Update sistem & install dependency dasar
 
@@ -261,8 +335,6 @@ DB_USERNAME=siwarga
 DB_PASSWORD=GANTI_DENGAN_PASSWORD_KUAT
 ```
 
-> Untuk development lokal (bukan VPS): cukup set `APP_ENV=local`, `APP_DEBUG=true`, `APP_URL=http://localhost:8000`, lalu lewati langkah 8–9 dan langsung jalankan `php artisan serve` di akhir langkah ini.
-
 Lanjutkan setup:
 
 ```bash
@@ -345,8 +417,6 @@ Build untuk production:
 ```bash
 npm run build   # hasil static di ./dist
 ```
-
-> Untuk development lokal: lewati `npm run build`, cukup jalankan `npm run dev` — otomatis membuka dev server dengan hot reload di `http://localhost:5173`.
 
 Buat `/etc/nginx/sites-available/siwarga-app`:
 

@@ -18,7 +18,8 @@ A web application for managing RT (Indonesian neighborhood association) administ
 - [Repository Structure](#repository-structure)
 - [Installation](#installation)
   - [Option 1 — Docker (Recommended)](#option-1--docker-recommended)
-  - [Option 2 — Native / Manual (for VPS Production)](#option-2--native--manual-for-vps-production)
+  - [Option 2 — Native Without Docker (Local Development)](#option-2--native-without-docker-local-development)
+  - [Option 3 — Native / Manual (for VPS Production)](#option-3--native--manual-for-vps-production)
 - [Demo Accounts](#demo-accounts)
 - [API Endpoints](#api-endpoints)
 - [Testing](#testing)
@@ -97,7 +98,7 @@ siwarga/
 
 ## Installation
 
-There are two ways to run SIWarga. **Docker is recommended** for most cases since it doesn't require installing PHP/MySQL/Node directly on your machine. The native guide is for deploying straight to a VPS without Docker.
+There are a few ways to run SIWarga. **Docker is recommended** for most cases since it doesn't require installing PHP/MySQL/Node directly on your machine. If you'd rather not use Docker at all, follow Option 2 for local development on your own machine. Option 3 (native, longer) is specifically for deploying to a VPS in production without Docker.
 
 ### Option 1 — Docker (Recommended)
 
@@ -166,11 +167,84 @@ docker compose -f docker-compose.prd.yml exec backend php artisan db:seed --forc
 
 ---
 
-### Option 2 — Native / Manual (for VPS Production)
+### Option 2 — Native Without Docker (Local Development)
+
+This guide runs SIWarga directly on your own laptop/computer for development purposes, without Docker and without Nginx/systemd.
+
+**Prerequisites** (install manually for your OS):
+
+| Requirement | Version | Check with |
+|---|---|---|
+| PHP | 8.3 (+ extensions `mbstring`, `xml`, `bcmath`, `curl`, `zip`, `gd`, `tokenizer`, `pdo_mysql`) | `php -v` |
+| Composer | 2.x | `composer --version` |
+| Node.js | 20+ | `node -v` |
+| MySQL | 8.x (server running on `localhost:3306`) | `mysql --version` |
+
+> Missing one of the above? See steps 2–5 in [Option 3](#option-3--native--manual-for-vps-production) for how to install PHP/Composer/Node/MySQL on Ubuntu — skip the Nginx/PHP-FPM/systemd parts.
+
+#### 1. Clone the repository & prepare the database
+
+```bash
+git clone https://github.com/rizalord/siwarga.git
+cd siwarga
+
+mysql -u root -p -e "CREATE DATABASE siwarga CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
+
+#### 2. Set up & run the backend
+
+```bash
+cd src/backend
+composer install
+
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit `.env` and adjust the database credentials (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`) to match what you created in step 1.
+
+```bash
+php artisan migrate --seed
+php artisan storage:link   # required, so resident ID photos are accessible
+
+php artisan serve
+```
+
+The backend API runs at `http://localhost:8000`.
+
+#### 3. Set up & run the frontend
+
+Open a new terminal:
+
+```bash
+cd src/frontend
+npm install
+
+cp .env.example .env
+```
+
+Make sure `.env` contains:
+
+```ini
+VITE_API_URL=http://localhost:8000
+VITE_USE_MOCK=false
+```
+
+```bash
+npm run dev
+```
+
+The frontend runs at `http://localhost:5173` with hot reload. Open it in your browser and log in with one of the [demo accounts](#demo-accounts).
+
+> Want to try the frontend UI without a backend at all? Set `VITE_USE_MOCK=true` in `.env` — data is simulated via MSW (Mock Service Worker), no backend/MySQL needed.
+
+---
+
+### Option 3 — Native / Manual (for VPS Production)
 
 This guide deploys directly on a server (VPS) without Docker: native PHP-FPM + Nginx + MySQL. Every step is sequential, from a clean server to a reachable application. Examples below use Ubuntu 22.04/24.04; adjust package names for other distros.
 
-> For local development on your own machine, follow steps 1–7, then run `php artisan serve` & `npm run dev` directly (skip the Nginx/systemd parts) — see the notes inline.
+> For local development on your own machine, use [Option 2](#option-2--native-without-docker-local-development) instead — it's much shorter.
 
 #### 1. Update the system & install base dependencies
 
@@ -261,8 +335,6 @@ DB_USERNAME=siwarga
 DB_PASSWORD=REPLACE_WITH_A_STRONG_PASSWORD
 ```
 
-> For local development (not a VPS): just set `APP_ENV=local`, `APP_DEBUG=true`, `APP_URL=http://localhost:8000`, skip steps 8–9, and run `php artisan serve` right after this step.
-
 Continue setup:
 
 ```bash
@@ -345,8 +417,6 @@ Build for production:
 ```bash
 npm run build   # static output in ./dist
 ```
-
-> For local development: skip `npm run build` and just run `npm run dev` — it starts a dev server with hot reload at `http://localhost:5173`.
 
 Create `/etc/nginx/sites-available/siwarga-app`:
 
