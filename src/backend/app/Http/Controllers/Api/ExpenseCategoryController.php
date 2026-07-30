@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseCategoryResource;
 use App\Models\ExpenseCategory;
+use App\Services\ExpenseCategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ExpenseCategoryController extends Controller
 {
+    public function __construct(private ExpenseCategoryService $expenseCategoryService) {}
+
     public function index(Request $request)
     {
         $query = ExpenseCategory::query();
@@ -46,7 +49,7 @@ class ExpenseCategoryController extends Controller
             'name' => ['required', 'string', 'max:100', Rule::unique('expense_categories', 'name')],
         ]);
 
-        $expenseCategory = ExpenseCategory::create($validated);
+        $expenseCategory = $this->expenseCategoryService->create($validated);
 
         return new ExpenseCategoryResource($expenseCategory);
     }
@@ -62,14 +65,14 @@ class ExpenseCategoryController extends Controller
             'name' => ['sometimes', 'string', 'max:100', Rule::unique('expense_categories', 'name')->ignore($expenseCategory->id)],
         ]);
 
-        $expenseCategory->update($validated);
+        $expenseCategory = $this->expenseCategoryService->update($expenseCategory, $validated);
 
         return new ExpenseCategoryResource($expenseCategory);
     }
 
     public function destroy(ExpenseCategory $expenseCategory)
     {
-        $expenseCategory->delete();
+        $this->expenseCategoryService->delete($expenseCategory);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
