@@ -30,6 +30,17 @@ class UserController extends Controller
 
     public function bulkDestroy(Request $request)
     {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        if ($this->anyUserHasAdminRole($validated['ids'])) {
+            return response()->json([
+                'message' => 'User dengan role admin tidak bisa dihapus.',
+            ], 422);
+        }
+
         return $this->bulkDelete($request, User::class);
     }
 
@@ -40,6 +51,17 @@ class UserController extends Controller
 
     public function bulkForceDestroy(Request $request)
     {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        if ($this->anyUserHasAdminRole($validated['ids'])) {
+            return response()->json([
+                'message' => 'User dengan role admin tidak bisa dihapus.',
+            ], 422);
+        }
+
         return $this->bulkForceDelete($request, User::class);
     }
 
@@ -117,6 +139,12 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if ($this->userHasAdminRole($user)) {
+            return response()->json([
+                'message' => 'User dengan role admin tidak bisa dihapus.',
+            ], 422);
+        }
+
         $user->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
@@ -131,6 +159,12 @@ class UserController extends Controller
 
     public function forceDestroy(User $user)
     {
+        if ($this->userHasAdminRole($user)) {
+            return response()->json([
+                'message' => 'User dengan role admin tidak bisa dihapus.',
+            ], 422);
+        }
+
         $this->forceDeleteModel($user);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
@@ -149,6 +183,18 @@ class UserController extends Controller
     private function userHasAdminRole(User $user): bool
     {
         return $user->roles()->where('name', Role::ADMIN_ROLE_NAME)->exists();
+    }
+
+    /**
+     * @param  array<int, int>  $userIds
+     */
+    private function anyUserHasAdminRole(array $userIds): bool
+    {
+        return User::whereIn('id', $userIds)
+            ->whereHas('roles', function ($query) {
+                $query->where('name', Role::ADMIN_ROLE_NAME);
+            })
+            ->exists();
     }
 
     private function otherAdminExists(?int $excludeUserId = null): bool

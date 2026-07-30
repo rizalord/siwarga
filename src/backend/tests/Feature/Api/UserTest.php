@@ -133,6 +133,27 @@ class UserTest extends TestCase
         $this->assertSoftDeleted($users[1]);
     }
 
+    public function test_cannot_delete_admin_user()
+    {
+        $response = $this->deleteJson("/api/users/{$this->admin->id}");
+
+        $response->assertStatus(422);
+        $this->assertNotSoftDeleted($this->admin);
+    }
+
+    public function test_cannot_bulk_delete_admin_user()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->postJson('/api/users/bulk-delete', [
+            'ids' => [$this->admin->id, $user->id],
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertNotSoftDeleted($this->admin);
+        $this->assertNotSoftDeleted($user);
+    }
+
     public function test_cannot_assign_admin_role_to_a_second_user_on_create()
     {
         $adminRoleId = Role::where('name', 'admin')->first()->id;

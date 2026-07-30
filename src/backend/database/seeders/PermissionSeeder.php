@@ -10,7 +10,10 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         foreach (Permission::SYSTEM_PERMISSIONS as $name => $description) {
-            Permission::create(['name' => $name, 'description' => $description]);
+            Permission::updateOrCreate(
+                ['name' => $name],
+                ['description' => $description]
+            );
         }
     }
 }
