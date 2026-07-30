@@ -1,0 +1,2637 @@
+openapi: 3.0.3
+info:
+  title: SIWarga API
+  description: >
+    API for SIWarga, an RT (neighborhood association) administration system:
+    residents, houses, monthly dues (iuran), bills, payments, expenses,
+    users/roles/permissions (RBAC), activity logs, and financial reports.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+
+tags:
+  - name: Auth
+  - name: Residents
+  - name: Houses
+  - name: Due Types
+  - name: Expense Categories
+  - name: Bills
+  - name: Payments
+  - name: Expenses
+  - name: Reports
+  - name: Users
+  - name: Roles
+  - name: Permissions
+  - name: Activity Logs
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and obtain an API token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@siwarga.test
+                password:
+                  type: string
+                  format: password
+                  example: password
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: "#/components/schemas/User"
+                      token:
+                        type: string
+                      permissions:
+                        type: array
+                        items:
+                          type: string
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current access token
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Revoke the current token and issue a new one
+      responses:
+        "200":
+          description: New token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get the authenticated user, roles, permissions
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: "#/components/schemas/User"
+                      permissions:
+                        type: array
+                        items:
+                          type: string
+
+  # ---------------------------------------------------------------- Residents
+  /residents:
+    get:
+      tags: [Residents]
+      summary: List residents
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Trashed"
+        - name: status
+          in: query
+          schema:
+            oneOf:
+              - type: string
+                enum: [kontrak, tetap]
+              - type: array
+                items:
+                  type: string
+                  enum: [kontrak, tetap]
+        - name: marital_status
+          in: query
+          schema:
+            oneOf:
+              - type: string
+                enum: [menikah, belum_menikah]
+              - type: array
+                items:
+                  type: string
+                  enum: [menikah, belum_menikah]
+      responses:
+        "200":
+          description: Paginated list of residents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentPaginated"
+    post:
+      tags: [Residents]
+      summary: Create a resident
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [full_name, status, phone_number, marital_status]
+              properties:
+                full_name:
+                  type: string
+                  maxLength: 150
+                status:
+                  type: string
+                  enum: [kontrak, tetap]
+                phone_number:
+                  type: string
+                  maxLength: 20
+                marital_status:
+                  type: string
+                  enum: [menikah, belum_menikah]
+                ktp_photo:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Resident created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /residents/bulk-delete:
+    post:
+      tags: [Residents]
+      summary: Bulk delete residents (skips residents currently housed)
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          description: All requested residents deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "207":
+          description: Partial success — some residents could not be deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /residents/bulk-restore:
+    post:
+      tags: [Residents]
+      summary: Bulk restore soft-deleted residents
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /residents/bulk-force-delete:
+    post:
+      tags: [Residents]
+      summary: Bulk permanently delete soft-deleted residents
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /residents/{resident}/restore:
+    post:
+      tags: [Residents]
+      summary: Restore a soft-deleted resident
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+      responses:
+        "200":
+          description: Resident restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentEnvelope"
+
+  /residents/{resident}/force-delete:
+    delete:
+      tags: [Residents]
+      summary: Permanently delete a soft-deleted resident
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /residents/{resident}:
+    get:
+      tags: [Residents]
+      summary: Get a resident
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+      responses:
+        "200":
+          description: Resident
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Residents]
+      summary: Update a resident
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                  maxLength: 150
+                status:
+                  type: string
+                  enum: [kontrak, tetap]
+                phone_number:
+                  type: string
+                  maxLength: 20
+                marital_status:
+                  type: string
+                  enum: [menikah, belum_menikah]
+                ktp_photo:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Resident updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResidentEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Residents]
+      summary: Delete a resident (fails if currently housed)
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  # -------------------------------------------------------------------- Houses
+  /houses:
+    get:
+      tags: [Houses]
+      summary: List houses
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Trashed"
+        - name: status
+          in: query
+          schema:
+            oneOf:
+              - type: string
+                enum: [dihuni, kosong]
+              - type: array
+                items:
+                  type: string
+                  enum: [dihuni, kosong]
+      responses:
+        "200":
+          description: Paginated list of houses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HousePaginated"
+    post:
+      tags: [Houses]
+      summary: Create a house
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [house_number]
+              properties:
+                house_number:
+                  type: string
+                  maxLength: 20
+                address:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                status:
+                  type: string
+                  enum: [dihuni, kosong]
+      responses:
+        "201":
+          description: House created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /houses/bulk-delete:
+    post:
+      tags: [Houses]
+      summary: Bulk delete houses (skips houses with bill history)
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          description: All requested houses deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "207":
+          description: Partial success — some houses could not be deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /houses/bulk-restore:
+    post:
+      tags: [Houses]
+      summary: Bulk restore soft-deleted houses
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /houses/bulk-force-delete:
+    post:
+      tags: [Houses]
+      summary: Bulk permanently delete soft-deleted houses
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /houses/{house}/restore:
+    post:
+      tags: [Houses]
+      summary: Restore a soft-deleted house
+      parameters:
+        - $ref: "#/components/parameters/HouseId"
+      responses:
+        "200":
+          description: House restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseEnvelope"
+
+  /houses/{house}/force-delete:
+    delete:
+      tags: [Houses]
+      summary: Permanently delete a soft-deleted house
+      parameters:
+        - $ref: "#/components/parameters/HouseId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /houses/{house}:
+    get:
+      tags: [Houses]
+      summary: Get a house
+      parameters:
+        - $ref: "#/components/parameters/HouseId"
+      responses:
+        "200":
+          description: House
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Houses]
+      summary: Update a house
+      parameters:
+        - $ref: "#/components/parameters/HouseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                house_number:
+                  type: string
+                  maxLength: 20
+                address:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                status:
+                  type: string
+                  enum: [dihuni, kosong]
+      responses:
+        "200":
+          description: House updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HouseEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Houses]
+      summary: Delete a house (fails if it has bill history)
+      parameters:
+        - $ref: "#/components/parameters/HouseId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  /houses/{house}/history:
+    get:
+      tags: [Houses]
+      summary: Get the resident-occupancy history for a house
+      parameters:
+        - $ref: "#/components/parameters/HouseId"
+      responses:
+        "200":
+          description: House-resident assignment history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/HouseResident"
+
+  /houses/{house}/assign-resident:
+    post:
+      tags: [Houses]
+      summary: Assign a resident to a house
+      parameters:
+        - $ref: "#/components/parameters/HouseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resident_id, start_date]
+              properties:
+                resident_id:
+                  type: integer
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+                  nullable: true
+      responses:
+        "201":
+          description: Resident assigned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/HouseResident"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /houses/{house}/vacate-resident:
+    post:
+      tags: [Houses]
+      summary: Vacate the current resident from a house
+      parameters:
+        - $ref: "#/components/parameters/HouseId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                end_date:
+                  type: string
+                  format: date
+                  nullable: true
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  # ----------------------------------------------------------------- Due Types
+  /due-types:
+    get:
+      tags: [Due Types]
+      summary: List due types
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Trashed"
+      responses:
+        "200":
+          description: Paginated list of due types
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DueTypePaginated"
+    post:
+      tags: [Due Types]
+      summary: Create a due type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, amount]
+              properties:
+                name:
+                  type: string
+                  maxLength: 50
+                amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                billing_cycle:
+                  type: string
+                  enum: [bulanan, fleksibel]
+      responses:
+        "201":
+          description: Due type created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DueTypeEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /due-types/bulk-delete:
+    post:
+      tags: [Due Types]
+      summary: Bulk delete due types
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /due-types/bulk-restore:
+    post:
+      tags: [Due Types]
+      summary: Bulk restore soft-deleted due types
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /due-types/bulk-force-delete:
+    post:
+      tags: [Due Types]
+      summary: Bulk permanently delete soft-deleted due types
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /due-types/{dueType}/restore:
+    post:
+      tags: [Due Types]
+      summary: Restore a soft-deleted due type
+      parameters:
+        - $ref: "#/components/parameters/DueTypeId"
+      responses:
+        "200":
+          description: Due type restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DueTypeEnvelope"
+
+  /due-types/{dueType}/force-delete:
+    delete:
+      tags: [Due Types]
+      summary: Permanently delete a soft-deleted due type
+      parameters:
+        - $ref: "#/components/parameters/DueTypeId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /due-types/{dueType}:
+    get:
+      tags: [Due Types]
+      summary: Get a due type
+      parameters:
+        - $ref: "#/components/parameters/DueTypeId"
+      responses:
+        "200":
+          description: Due type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DueTypeEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Due Types]
+      summary: Update a due type
+      parameters:
+        - $ref: "#/components/parameters/DueTypeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 50
+                amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                billing_cycle:
+                  type: string
+                  enum: [bulanan, fleksibel]
+      responses:
+        "200":
+          description: Due type updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DueTypeEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Due Types]
+      summary: Delete a due type
+      parameters:
+        - $ref: "#/components/parameters/DueTypeId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  # ---------------------------------------------------------- Expense Categories
+  /expense-categories:
+    get:
+      tags: [Expense Categories]
+      summary: List expense categories
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Trashed"
+      responses:
+        "200":
+          description: Paginated list of expense categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseCategoryPaginated"
+    post:
+      tags: [Expense Categories]
+      summary: Create an expense category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+      responses:
+        "201":
+          description: Expense category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseCategoryEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /expense-categories/bulk-delete:
+    post:
+      tags: [Expense Categories]
+      summary: Bulk delete expense categories
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /expense-categories/bulk-restore:
+    post:
+      tags: [Expense Categories]
+      summary: Bulk restore soft-deleted expense categories
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /expense-categories/bulk-force-delete:
+    post:
+      tags: [Expense Categories]
+      summary: Bulk permanently delete soft-deleted expense categories
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /expense-categories/{expenseCategory}/restore:
+    post:
+      tags: [Expense Categories]
+      summary: Restore a soft-deleted expense category
+      parameters:
+        - $ref: "#/components/parameters/ExpenseCategoryId"
+      responses:
+        "200":
+          description: Expense category restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseCategoryEnvelope"
+
+  /expense-categories/{expenseCategory}/force-delete:
+    delete:
+      tags: [Expense Categories]
+      summary: Permanently delete a soft-deleted expense category
+      parameters:
+        - $ref: "#/components/parameters/ExpenseCategoryId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /expense-categories/{expenseCategory}:
+    get:
+      tags: [Expense Categories]
+      summary: Get an expense category
+      parameters:
+        - $ref: "#/components/parameters/ExpenseCategoryId"
+      responses:
+        "200":
+          description: Expense category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseCategoryEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Expense Categories]
+      summary: Update an expense category
+      parameters:
+        - $ref: "#/components/parameters/ExpenseCategoryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+      responses:
+        "200":
+          description: Expense category updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseCategoryEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Expense Categories]
+      summary: Delete an expense category
+      parameters:
+        - $ref: "#/components/parameters/ExpenseCategoryId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  # -------------------------------------------------------------------- Bills
+  /bills:
+    get:
+      tags: [Bills]
+      summary: List bills (Warga users only see their own)
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Trashed"
+        - name: month
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: due_type_id
+          in: query
+          schema:
+            oneOf:
+              - type: integer
+              - type: array
+                items:
+                  type: integer
+        - name: status
+          in: query
+          schema:
+            oneOf:
+              - type: string
+                enum: [belum_lunas, lunas]
+              - type: array
+                items:
+                  type: string
+                  enum: [belum_lunas, lunas]
+      responses:
+        "200":
+          description: Paginated list of bills
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillPaginated"
+
+  /bills/generate:
+    post:
+      tags: [Bills]
+      summary: Generate monthly bills for all occupied houses (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [month, year]
+              properties:
+                month:
+                  type: integer
+                  minimum: 1
+                  maximum: 12
+                year:
+                  type: integer
+                  minimum: 2020
+      responses:
+        "201":
+          description: Bills generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Bill"
+                  message:
+                    type: string
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /bills/bulk-delete:
+    post:
+      tags: [Bills]
+      summary: Bulk delete bills
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /bills/bulk-restore:
+    post:
+      tags: [Bills]
+      summary: Bulk restore soft-deleted bills
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /bills/bulk-force-delete:
+    post:
+      tags: [Bills]
+      summary: Bulk permanently delete soft-deleted bills
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /bills/{bill}/restore:
+    post:
+      tags: [Bills]
+      summary: Restore a soft-deleted bill
+      parameters:
+        - $ref: "#/components/parameters/BillId"
+      responses:
+        "200":
+          description: Bill restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillEnvelope"
+
+  /bills/{bill}/force-delete:
+    delete:
+      tags: [Bills]
+      summary: Permanently delete a soft-deleted bill
+      parameters:
+        - $ref: "#/components/parameters/BillId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /bills/{bill}:
+    get:
+      tags: [Bills]
+      summary: Get a bill (403 if it does not belong to the requesting Warga user)
+      parameters:
+        - $ref: "#/components/parameters/BillId"
+      responses:
+        "200":
+          description: Bill
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillEnvelope"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Bills]
+      summary: Delete a bill
+      parameters:
+        - $ref: "#/components/parameters/BillId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  # ----------------------------------------------------------------- Payments
+  /payments:
+    get:
+      tags: [Payments]
+      summary: List payments (Warga users only see payments on their own bills)
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Trashed"
+        - name: month
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: bill_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paginated list of payments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentPaginated"
+    post:
+      tags: [Payments]
+      summary: Record a payment against a bill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bill_id, amount_paid, payment_date]
+              properties:
+                bill_id:
+                  type: integer
+                amount_paid:
+                  type: number
+                  format: float
+                  minimum: 0
+                payment_date:
+                  type: string
+                  format: date
+                notes:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+      responses:
+        "200":
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /payments/bulk-delete:
+    post:
+      tags: [Payments]
+      summary: Bulk delete payments (recomputes affected bill statuses)
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /payments/bulk-restore:
+    post:
+      tags: [Payments]
+      summary: Bulk restore soft-deleted payments (recomputes affected bill statuses)
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /payments/bulk-force-delete:
+    post:
+      tags: [Payments]
+      summary: Bulk permanently delete soft-deleted payments
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /payments/{payment}/restore:
+    post:
+      tags: [Payments]
+      summary: Restore a soft-deleted payment
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      responses:
+        "200":
+          description: Payment restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentEnvelope"
+
+  /payments/{payment}/force-delete:
+    delete:
+      tags: [Payments]
+      summary: Permanently delete a soft-deleted payment
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /payments/{payment}:
+    get:
+      tags: [Payments]
+      summary: Get a payment (403 if its bill does not belong to the requesting Warga user)
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      responses:
+        "200":
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentEnvelope"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Payments]
+      summary: Update a payment (recomputes the related bill status)
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bill_id:
+                  type: integer
+                amount_paid:
+                  type: number
+                  format: float
+                  minimum: 0
+                payment_date:
+                  type: string
+                  format: date
+                notes:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+      responses:
+        "200":
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Payments]
+      summary: Delete a payment (recomputes the related bill status)
+      parameters:
+        - $ref: "#/components/parameters/PaymentId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  # ----------------------------------------------------------------- Expenses
+  /expenses:
+    get:
+      tags: [Expenses]
+      summary: List expenses
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Trashed"
+        - name: month
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: category_id
+          in: query
+          schema:
+            oneOf:
+              - type: integer
+              - type: array
+                items:
+                  type: integer
+      responses:
+        "200":
+          description: Paginated list of expenses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpensePaginated"
+    post:
+      tags: [Expenses]
+      summary: Create an expense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category_id, amount, expense_date]
+              properties:
+                category_id:
+                  type: integer
+                description:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                expense_date:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: Expense created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /expenses/bulk-delete:
+    post:
+      tags: [Expenses]
+      summary: Bulk delete expenses
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /expenses/bulk-restore:
+    post:
+      tags: [Expenses]
+      summary: Bulk restore soft-deleted expenses
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /expenses/bulk-force-delete:
+    post:
+      tags: [Expenses]
+      summary: Bulk permanently delete soft-deleted expenses
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /expenses/{expense}/restore:
+    post:
+      tags: [Expenses]
+      summary: Restore a soft-deleted expense
+      parameters:
+        - $ref: "#/components/parameters/ExpenseId"
+      responses:
+        "200":
+          description: Expense restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseEnvelope"
+
+  /expenses/{expense}/force-delete:
+    delete:
+      tags: [Expenses]
+      summary: Permanently delete a soft-deleted expense
+      parameters:
+        - $ref: "#/components/parameters/ExpenseId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /expenses/{expense}:
+    get:
+      tags: [Expenses]
+      summary: Get an expense
+      parameters:
+        - $ref: "#/components/parameters/ExpenseId"
+      responses:
+        "200":
+          description: Expense
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Expenses]
+      summary: Update an expense
+      parameters:
+        - $ref: "#/components/parameters/ExpenseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_id:
+                  type: integer
+                description:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                expense_date:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: Expense updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Expenses]
+      summary: Delete an expense
+      parameters:
+        - $ref: "#/components/parameters/ExpenseId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  # ------------------------------------------------------------------ Reports
+  /reports/summary/{year}:
+    get:
+      tags: [Reports]
+      summary: Yearly income/expense/balance summary, broken down by month
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Yearly summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      year:
+                        type: integer
+                      monthly_data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            month:
+                              type: integer
+                            total_income:
+                              type: number
+                            total_expense:
+                              type: number
+                            balance:
+                              type: number
+                      year_balance:
+                        type: number
+
+  /reports/monthly/{year}/{month}:
+    get:
+      tags: [Reports]
+      summary: Detailed report for a single month (payments and expenses)
+      parameters:
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      responses:
+        "200":
+          description: Monthly detail report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      year:
+                        type: integer
+                      month:
+                        type: integer
+                      total_income:
+                        type: number
+                      total_expense:
+                        type: number
+                      balance:
+                        type: number
+                      payments:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Payment"
+                      expenses:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Expense"
+
+  # -------------------------------------------------------------------- Users
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Trashed"
+      responses:
+        "200":
+          description: Paginated list of users (Laravel default paginator shape)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LaravelPaginated"
+    post:
+      tags: [Users]
+      summary: Create a user (fails if attempting to assign a second Admin role)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                role_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /users/bulk-delete:
+    post:
+      tags: [Users]
+      summary: Bulk delete users (fails if any target user has the Admin role)
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  /users/bulk-restore:
+    post:
+      tags: [Users]
+      summary: Bulk restore soft-deleted users
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+
+  /users/bulk-force-delete:
+    post:
+      tags: [Users]
+      summary: Bulk permanently delete soft-deleted users (fails if any has the Admin role)
+      requestBody:
+        $ref: "#/components/requestBodies/BulkIds"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  /users/{user}/restore:
+    post:
+      tags: [Users]
+      summary: Restore a soft-deleted user
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+
+  /users/{user}/force-delete:
+    delete:
+      tags: [Users]
+      summary: Permanently delete a soft-deleted user (fails if it has the Admin role)
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  /users/{user}:
+    get:
+      tags: [Users]
+      summary: Get a user
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Users]
+      summary: Update a user
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                is_active:
+                  type: boolean
+                role_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Users]
+      summary: Delete a user (fails if it has the Admin role)
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  # -------------------------------------------------------------------- Roles
+  /roles:
+    get:
+      tags: [Roles]
+      summary: List roles
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+      responses:
+        "200":
+          description: Paginated list of roles (Laravel default paginator shape)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LaravelPaginated"
+    post:
+      tags: [Roles]
+      summary: Create a role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 50
+                description:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                permission_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "201":
+          description: Role created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /roles/{role}:
+    get:
+      tags: [Roles]
+      summary: Get a role
+      parameters:
+        - $ref: "#/components/parameters/RoleId"
+      responses:
+        "200":
+          description: Role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Roles]
+      summary: Update a role (Admin role's name cannot be changed)
+      parameters:
+        - $ref: "#/components/parameters/RoleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 50
+                description:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                permission_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleEnvelope"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+    delete:
+      tags: [Roles]
+      summary: Delete a role (fails if Admin role or still assigned to users)
+      parameters:
+        - $ref: "#/components/parameters/RoleId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  # ------------------------------------------------------------------- Permissions
+  /permissions:
+    get:
+      tags: [Permissions]
+      summary: List permissions
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+      responses:
+        "200":
+          description: Paginated list of permissions (Laravel default paginator shape)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LaravelPaginated"
+    post:
+      tags: [Permissions]
+      summary: Create a permission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                  pattern: '^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*$'
+                  example: houses.export
+                description:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+      responses:
+        "201":
+          description: Permission created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /permissions/{permission}:
+    get:
+      tags: [Permissions]
+      summary: Get a permission
+      parameters:
+        - $ref: "#/components/parameters/PermissionId"
+      responses:
+        "200":
+          description: Permission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Permissions]
+      summary: Update a permission (system permissions only allow description changes)
+      parameters:
+        - $ref: "#/components/parameters/PermissionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                  pattern: '^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*$'
+                description:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+      responses:
+        "200":
+          description: Permission updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionEnvelope"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Permissions]
+      summary: Delete a permission (fails for system permissions)
+      parameters:
+        - $ref: "#/components/parameters/PermissionId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Message"
+        "422":
+          $ref: "#/components/responses/UnprocessableMessage"
+
+  # -------------------------------------------------------------- Activity Logs
+  /activity-logs:
+    get:
+      tags: [Activity Logs]
+      summary: List activity logs
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - name: action
+          in: query
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - name: subject_type
+          in: query
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Paginated list of activity logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityLogPaginated"
+
+  /activity-logs/track:
+    post:
+      tags: [Activity Logs]
+      summary: Record a client-side page-view/navigation event from the SPA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [path]
+              properties:
+                path:
+                  type: string
+                  maxLength: 255
+                title:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+      responses:
+        "200":
+          description: Tracked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: "Laravel Sanctum token"
+      description: >
+        Obtain via POST /auth/login. Pass as `Authorization: Bearer <token>`.
+        Tokens expire 24 hours after issuance.
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PerPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        default: 10
+    Search:
+      name: search
+      in: query
+      schema:
+        type: string
+    Sort:
+      name: sort
+      in: query
+      description: Column to sort by (whitelisted per resource)
+      schema:
+        type: string
+    Order:
+      name: order
+      in: query
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+    Trashed:
+      name: trashed
+      in: query
+      description: "`with` includes soft-deleted rows, `only` returns only soft-deleted rows"
+      schema:
+        type: string
+        enum: [with, only]
+    ResidentId:
+      name: resident
+      in: path
+      required: true
+      schema:
+        type: integer
+    HouseId:
+      name: house
+      in: path
+      required: true
+      schema:
+        type: integer
+    DueTypeId:
+      name: dueType
+      in: path
+      required: true
+      schema:
+        type: integer
+    ExpenseCategoryId:
+      name: expenseCategory
+      in: path
+      required: true
+      schema:
+        type: integer
+    BillId:
+      name: bill
+      in: path
+      required: true
+      schema:
+        type: integer
+    PaymentId:
+      name: payment
+      in: path
+      required: true
+      schema:
+        type: integer
+    ExpenseId:
+      name: expense
+      in: path
+      required: true
+      schema:
+        type: integer
+    UserId:
+      name: user
+      in: path
+      required: true
+      schema:
+        type: integer
+    RoleId:
+      name: role
+      in: path
+      required: true
+      schema:
+        type: integer
+    PermissionId:
+      name: permission
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  requestBodies:
+    BulkIds:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ids]
+            properties:
+              ids:
+                type: array
+                minItems: 1
+                items:
+                  type: integer
+
+  responses:
+    Message:
+      description: Success message
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageResponse"
+    UnprocessableMessage:
+      description: Request could not be processed (business rule violation)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationErrorResponse"
+
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    LaravelPaginated:
+      description: Default Laravel paginator JSON shape (used by Users, Roles, Permissions endpoints)
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        links:
+          type: array
+          items:
+            type: object
+
+    Resident:
+      type: object
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+        phone_number:
+          type: string
+        status:
+          type: string
+          enum: [kontrak, tetap]
+        marital_status:
+          type: string
+          enum: [menikah, belum_menikah]
+        ktp_photo_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    ResidentEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Resident"
+    ResidentPaginated:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Resident"
+
+    HouseResident:
+      type: object
+      properties:
+        id:
+          type: integer
+        house_id:
+          type: integer
+        resident_id:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        resident:
+          $ref: "#/components/schemas/Resident"
+
+    House:
+      type: object
+      properties:
+        id:
+          type: integer
+        house_number:
+          type: string
+        address:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [dihuni, kosong]
+        current_resident:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Resident"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    HouseEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/House"
+    HousePaginated:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/House"
+
+    DueType:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        amount:
+          type: number
+          format: float
+        billing_cycle:
+          type: string
+          enum: [bulanan, fleksibel]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    DueTypeEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/DueType"
+    DueTypePaginated:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/DueType"
+
+    ExpenseCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    ExpenseCategoryEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/ExpenseCategory"
+    ExpenseCategoryPaginated:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ExpenseCategory"
+
+    Bill:
+      type: object
+      properties:
+        id:
+          type: integer
+        house:
+          $ref: "#/components/schemas/House"
+        resident:
+          $ref: "#/components/schemas/Resident"
+        due_type:
+          $ref: "#/components/schemas/DueType"
+        period_start:
+          type: string
+          format: date
+        period_end:
+          type: string
+          format: date
+        amount_due:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [belum_lunas, lunas]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    BillEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Bill"
+    BillPaginated:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Bill"
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+        bill:
+          $ref: "#/components/schemas/Bill"
+        amount_paid:
+          type: number
+          format: float
+        payment_date:
+          type: string
+          format: date
+        notes:
+          type: string
+          nullable: true
+        created_by:
+          $ref: "#/components/schemas/User"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    PaymentEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Payment"
+    PaymentPaginated:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Payment"
+
+    Expense:
+      type: object
+      properties:
+        id:
+          type: integer
+        category:
+          $ref: "#/components/schemas/ExpenseCategory"
+        description:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          format: float
+        expense_date:
+          type: string
+          format: date
+        created_by:
+          $ref: "#/components/schemas/User"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    ExpenseEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Expense"
+    ExpensePaginated:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Expense"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        resident_id:
+          type: integer
+          nullable: true
+        is_active:
+          type: boolean
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+    UserEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/User"
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        users_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    RoleEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Role"
+
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          example: houses.view
+        description:
+          type: string
+          nullable: true
+        roles_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PermissionEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Permission"
+
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        user:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            email:
+              type: string
+        action:
+          type: string
+        subject_type:
+          type: string
+          nullable: true
+        subject_id:
+          type: integer
+          nullable: true
+        description:
+          type: string
+        changes:
+          type: object
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    ActivityLogPaginated:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ActivityLog"
+
+    PaginationMeta:
+      description: Flat pagination envelope used by list endpoints (see `Controller::paginated()`)
+      type: object
+      properties:
+        current_page:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
