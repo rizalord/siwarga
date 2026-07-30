@@ -4,14 +4,13 @@ namespace App\Services;
 
 use App\Models\ActivityLog;
 use App\Models\User;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
     /**
-     * @return array{user: User, token: string, permissions: Collection}
+     * @return array{user: User, token: string, permissions: array<int, string>}
      */
     public function login(string $email, string $password): array
     {
@@ -49,7 +48,7 @@ class AuthService
     }
 
     /**
-     * @return array{user: User, permissions: Collection}
+     * @return array{user: User, permissions: array<int, string>}
      */
     public function me(User $user): array
     {
