@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
+use App\Services\ExpenseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
+    public function __construct(private ExpenseService $expenseService) {}
+
     public function index(Request $request)
     {
         $query = Expense::query()->with('category');
@@ -67,11 +70,9 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
         ]);
 
-        $validated['created_by'] = $request->user()->id;
+        $expense = $this->expenseService->create($validated, $request->user()->id);
 
-        $expense = Expense::create($validated);
-
-        return new ExpenseResource($expense->load('category'));
+        return new ExpenseResource($expense);
     }
 
     public function show(Expense $expense)
@@ -88,14 +89,14 @@ class ExpenseController extends Controller
             'expense_date' => 'sometimes|date',
         ]);
 
-        $expense->update($validated);
+        $expense = $this->expenseService->update($expense, $validated);
 
-        return new ExpenseResource($expense->load('category'));
+        return new ExpenseResource($expense);
     }
 
     public function destroy(Expense $expense)
     {
-        $expense->delete();
+        $this->expenseService->delete($expense);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
