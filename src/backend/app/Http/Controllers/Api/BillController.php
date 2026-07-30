@@ -6,11 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BillResource;
 use App\Models\Bill;
 use App\Services\BillGenerationService;
+use App\Services\BillService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class BillController extends Controller
 {
+    public function __construct(
+        private BillService $billService,
+        private BillGenerationService $billGenerationService,
+    ) {}
+
     public function index(Request $request)
     {
         $query = Bill::with(['house', 'resident', 'dueType']);
@@ -62,10 +69,7 @@ class BillController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $deletableIds = Bill::whereIn('id', $validated['ids'])
-            ->whereDoesntHave('payments')
-            ->pluck('id');
-
+        $deletableIds = $this->billService->deletableIds($validated['ids']);
         $deleted = Bill::destroy($deletableIds);
 
         if ($deleted < count($validated['ids'])) {
@@ -107,8 +111,7 @@ class BillController extends Controller
             'year' => 'required|integer|min:2020',
         ]);
 
-        $service = new BillGenerationService;
-        $bills = $service->generate(
+        $bills = $this->billGenerationService->generate(
             $validated['month'],
             $validated['year'],
             $request->user()->id
@@ -122,13 +125,13 @@ class BillController extends Controller
 
     public function destroy(Bill $bill)
     {
-        if ($bill->payments()->exists()) {
+        try {
+            $this->billService->delete($bill);
+        } catch (ValidationException $exception) {
             return response()->json([
-                'message' => 'Tagihan tidak bisa dihapus karena sudah memiliki pembayaran.',
+                'message' => $exception->errors()['bill'][0],
             ], 422);
         }
-
-        $bill->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
