@@ -452,10 +452,14 @@ npx playwright test e2e/siwarga/auth.spec.ts   # single spec
 
 | | |
 |---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) Dashboard | ![Residents](docs/screenshots/residents.png) Resident List |
-| ![Houses](docs/screenshots/houses.png) House List | ![House History](docs/screenshots/house-detail.png) House Detail + History |
+| ![Login](docs/screenshots/login.png) Login | ![Dashboard](docs/screenshots/dashboard.png) Dashboard |
+| ![Residents](docs/screenshots/residents.png) Resident List | ![Houses](docs/screenshots/houses.png) House List |
+| ![House Detail](docs/screenshots/house-detail.png) House Detail + History | ![Due Types](docs/screenshots/due-types.png) Due Types |
 | ![Bills](docs/screenshots/bills.png) Bills | ![Payments](docs/screenshots/payments.png) Payments |
-| ![Expenses](docs/screenshots/expenses.png) Expenses | ![Users](docs/screenshots/users.png) User Management |
+| ![Expenses](docs/screenshots/expenses.png) Expenses | ![Expense Categories](docs/screenshots/expense-categories.png) Expense Categories |
+| ![Reports](docs/screenshots/reports.png) Monthly Report | ![Users](docs/screenshots/users.png) User Management |
+| ![Roles](docs/screenshots/roles.png) Role Management | ![Permissions](docs/screenshots/permissions.png) Permission Management |
+| ![Activity Log](docs/screenshots/activity-logs.png) Activity Log | |
 
 ## License
 

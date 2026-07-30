@@ -452,10 +452,14 @@ npx playwright test e2e/siwarga/auth.spec.ts   # satu spec saja
 
 | | |
 |---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) Dashboard | ![Penghuni](docs/screenshots/residents.png) Daftar Penghuni |
-| ![Rumah](docs/screenshots/houses.png) Daftar Rumah | ![Histori Rumah](docs/screenshots/house-detail.png) Detail Rumah + Histori |
+| ![Login](docs/screenshots/login.png) Login | ![Dashboard](docs/screenshots/dashboard.png) Dashboard |
+| ![Penghuni](docs/screenshots/residents.png) Daftar Penghuni | ![Rumah](docs/screenshots/houses.png) Daftar Rumah |
+| ![Detail Rumah](docs/screenshots/house-detail.png) Detail Rumah + Histori | ![Jenis Iuran](docs/screenshots/due-types.png) Jenis Iuran |
 | ![Tagihan](docs/screenshots/bills.png) Tagihan | ![Pembayaran](docs/screenshots/payments.png) Pembayaran |
-| ![Pengeluaran](docs/screenshots/expenses.png) Pengeluaran | ![User](docs/screenshots/users.png) Manajemen User |
+| ![Pengeluaran](docs/screenshots/expenses.png) Pengeluaran | ![Kategori Pengeluaran](docs/screenshots/expense-categories.png) Kategori Pengeluaran |
+| ![Laporan](docs/screenshots/reports.png) Laporan Bulanan | ![User](docs/screenshots/users.png) Manajemen User |
+| ![Role](docs/screenshots/roles.png) Manajemen Role | ![Permission](docs/screenshots/permissions.png) Manajemen Permission |
+| ![Log Aktivitas](docs/screenshots/activity-logs.png) Log Aktivitas | |
 
 ## Lisensi
 
