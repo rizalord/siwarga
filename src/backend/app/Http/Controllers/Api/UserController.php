@@ -139,7 +139,7 @@ class UserController extends Controller
 
     public function forceDestroy(User $user)
     {
-        if ($this->userService->bulkDeletable([$user->id]) === false) {
+        if ($this->userService->isAdmin($user)) {
             return response()->json([
                 'message' => 'User dengan role admin tidak bisa dihapus.',
             ], 422);

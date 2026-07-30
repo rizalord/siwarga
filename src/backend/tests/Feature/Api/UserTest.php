@@ -189,6 +189,16 @@ class UserTest extends TestCase
         $this->assertNotSoftDeleted($this->admin);
     }
 
+    public function test_cannot_force_delete_a_soft_deleted_admin_user()
+    {
+        $this->admin->delete();
+
+        $response = $this->deleteJson("/api/users/{$this->admin->id}/force-delete");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('users', ['id' => $this->admin->id]);
+    }
+
     public function test_cannot_bulk_delete_admin_user()
     {
         $user = User::factory()->create();

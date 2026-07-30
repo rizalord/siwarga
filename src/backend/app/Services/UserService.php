@@ -39,7 +39,7 @@ class UserService
     public function update(User $user, array $data): User
     {
         if (array_key_exists('role_ids', $data)) {
-            $userIsAdmin = $this->userHasAdminRole($user);
+            $userIsAdmin = $this->isAdmin($user);
             $willBeAdmin = $this->assignsAdminRole($data['role_ids']);
 
             if ($userIsAdmin && ! $willBeAdmin) {
@@ -73,7 +73,7 @@ class UserService
 
     public function delete(User $user): void
     {
-        if ($this->userHasAdminRole($user)) {
+        if ($this->isAdmin($user)) {
             throw ValidationException::withMessages([
                 'user' => ['User dengan role admin tidak bisa dihapus.'],
             ]);
@@ -84,13 +84,22 @@ class UserService
 
     public function forceDelete(User $user): void
     {
-        if ($this->userHasAdminRole($user)) {
+        if ($this->isAdmin($user)) {
             throw ValidationException::withMessages([
                 'user' => ['User dengan role admin tidak bisa dihapus.'],
             ]);
         }
 
         $user->forceDelete();
+    }
+
+    /**
+     * Direct relation query on the model instance, unaffected by the SoftDeletes
+     * global scope that `anyUserHasAdminRole()`/`bulkDeletable()` are subject to.
+     */
+    public function isAdmin(User $user): bool
+    {
+        return $this->userHasAdminRole($user);
     }
 
     /**
