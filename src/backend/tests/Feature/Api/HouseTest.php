@@ -42,7 +42,9 @@ class HouseTest extends TestCase
 
         $response = $this->getJson('/api/houses');
 
-        $response->assertStatus(200)->assertJsonCount(3, 'data');
+        $response->assertStatus(200)
+            ->assertJsonCount(3, 'data')
+            ->assertJsonPath('data.0.deleted_at', null);
     }
 
     public function test_house_list_returns_flat_pagination_shape()
