@@ -147,16 +147,16 @@ export function DueTypesTable({
     <div
       className={cn(
         'max-sm:has-[div[role="toolbar"]]:mb-16',
-        'flex flex-1 flex-col gap-4 overflow-hidden'
+        'flex min-h-0 flex-1 flex-col gap-4'
       )}
     >
       <DataTableToolbar table={table} searchPlaceholder='Cari jenis iuran...'>
         <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
       </DataTableToolbar>
-      <div className='flex-1 overflow-auto'>
+      <div className='min-h-0 flex-1 overflow-auto'>
         <div
           className={cn(
-            'rounded-md border transition-opacity',
+            'overflow-hidden rounded-md border transition-opacity',
             isFetching && 'opacity-60'
           )}
         >

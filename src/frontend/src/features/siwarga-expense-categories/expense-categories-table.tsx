@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   DataTableBulkActions,
   DataTablePagination,
@@ -32,7 +33,6 @@ import {
   handleTrashedFilterChange,
   TrashedFilter,
 } from '@/components/data-table'
-import { ConfirmDialog } from '@/components/confirm-dialog'
 import { MultiDeleteDialog } from '@/components/multi-delete-dialog'
 import { expenseCategoriesColumns as columns } from './expense-categories-columns'
 
@@ -67,8 +67,7 @@ export function ExpenseCategoriesTable({
 
   const bulkDeleteExpenseCategories = useBulkDeleteExpenseCategories()
   const bulkRestoreExpenseCategories = useBulkRestoreExpenseCategories()
-  const bulkForceDeleteExpenseCategories =
-    useBulkForceDeleteExpenseCategories()
+  const bulkForceDeleteExpenseCategories = useBulkForceDeleteExpenseCategories()
   const permissions = useAuthStore(
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
@@ -148,7 +147,7 @@ export function ExpenseCategoriesTable({
     <div
       className={cn(
         'max-sm:has-[div[role="toolbar"]]:mb-16',
-        'flex flex-1 flex-col gap-4 overflow-hidden'
+        'flex min-h-0 flex-1 flex-col gap-4'
       )}
     >
       <DataTableToolbar
@@ -157,10 +156,10 @@ export function ExpenseCategoriesTable({
       >
         <TrashedFilter value={trashedFilter} onChange={handleTrashedChange} />
       </DataTableToolbar>
-      <div className='flex-1 overflow-auto'>
+      <div className='min-h-0 flex-1 overflow-auto'>
         <div
           className={cn(
-            'rounded-md border transition-opacity',
+            'overflow-hidden rounded-md border transition-opacity',
             isFetching && 'opacity-60'
           )}
         >
