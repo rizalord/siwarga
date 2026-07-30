@@ -3,14 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
+    public function __construct(private UserService $userService) {}
+
     public function index(Request $request)
     {
         $query = User::with('roles');
@@ -35,7 +37,7 @@ class UserController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        if ($this->anyUserHasAdminRole($validated['ids'])) {
+        if (! $this->userService->bulkDeletable($validated['ids'])) {
             return response()->json([
                 'message' => 'User dengan role admin tidak bisa dihapus.',
             ], 422);
@@ -56,7 +58,7 @@ class UserController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        if ($this->anyUserHasAdminRole($validated['ids'])) {
+        if (! $this->userService->bulkDeletable($validated['ids'])) {
             return response()->json([
                 'message' => 'User dengan role admin tidak bisa dihapus.',
             ], 422);
@@ -76,20 +78,15 @@ class UserController extends Controller
             'role_ids.*' => 'exists:roles,id',
         ]);
 
-        if ($request->has('role_ids') && $this->assignsAdminRole($request->role_ids) && $this->otherAdminExists()) {
+        try {
+            $user = $this->userService->create($validated);
+        } catch (ValidationException $exception) {
             return response()->json([
-                'message' => 'Sudah ada user dengan role admin. Hanya diperbolehkan satu admin untuk menghindari konflik kepentingan.',
+                'message' => $exception->errors()['role_ids'][0],
             ], 422);
         }
 
-        $validated['password'] = Hash::make($validated['password']);
-        $user = User::create($validated);
-
-        if ($request->has('role_ids')) {
-            $user->roles()->attach($request->role_ids);
-        }
-
-        return response()->json(['data' => $user->load('roles')], 201);
+        return response()->json(['data' => $user], 201);
     }
 
     public function show(User $user)
@@ -109,45 +106,26 @@ class UserController extends Controller
             'role_ids.*' => 'exists:roles,id',
         ]);
 
-        if ($request->has('role_ids')) {
-            $userIsAdmin = $this->userHasAdminRole($user);
-            $willBeAdmin = $this->assignsAdminRole($request->role_ids);
-
-            if ($userIsAdmin && ! $willBeAdmin) {
-                return response()->json([
-                    'message' => 'User dengan role admin tidak bisa dipindahkan ke role lain.',
-                ], 422);
-            }
-
-            if (! $userIsAdmin && $willBeAdmin && $this->otherAdminExists($user->id)) {
-                return response()->json([
-                    'message' => 'Sudah ada user dengan role admin. Hanya diperbolehkan satu admin untuk menghindari konflik kepentingan.',
-                ], 422);
-            }
+        try {
+            $user = $this->userService->update($user, $validated);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => $exception->errors()['role_ids'][0],
+            ], 422);
         }
 
-        if (isset($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
-        }
-
-        $user->update($validated);
-
-        if ($request->has('role_ids')) {
-            $user->roles()->sync($request->role_ids);
-        }
-
-        return response()->json(['data' => $user->load('roles')]);
+        return response()->json(['data' => $user]);
     }
 
     public function destroy(User $user)
     {
-        if ($this->userHasAdminRole($user)) {
+        try {
+            $this->userService->delete($user);
+        } catch (ValidationException $exception) {
             return response()->json([
-                'message' => 'User dengan role admin tidak bisa dihapus.',
+                'message' => $exception->errors()['user'][0],
             ], 422);
         }
-
-        $user->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
@@ -161,7 +139,7 @@ class UserController extends Controller
 
     public function forceDestroy(User $user)
     {
-        if ($this->userHasAdminRole($user)) {
+        if ($this->userService->bulkDeletable([$user->id]) === false) {
             return response()->json([
                 'message' => 'User dengan role admin tidak bisa dihapus.',
             ], 422);
@@ -170,41 +148,5 @@ class UserController extends Controller
         $this->forceDeleteModel($user);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
-    }
-
-    /**
-     * @param  array<int, int>  $roleIds
-     */
-    private function assignsAdminRole(array $roleIds): bool
-    {
-        $adminRoleId = Role::where('name', Role::ADMIN_ROLE_NAME)->value('id');
-
-        return $adminRoleId && in_array($adminRoleId, $roleIds);
-    }
-
-    private function userHasAdminRole(User $user): bool
-    {
-        return $user->roles()->where('name', Role::ADMIN_ROLE_NAME)->exists();
-    }
-
-    /**
-     * @param  array<int, int>  $userIds
-     */
-    private function anyUserHasAdminRole(array $userIds): bool
-    {
-        return User::whereIn('id', $userIds)
-            ->whereHas('roles', function ($query) {
-                $query->where('name', Role::ADMIN_ROLE_NAME);
-            })
-            ->exists();
-    }
-
-    private function otherAdminExists(?int $excludeUserId = null): bool
-    {
-        return User::whereHas('roles', function ($query) {
-            $query->where('name', Role::ADMIN_ROLE_NAME);
-        })
-            ->when($excludeUserId, fn ($query) => $query->where('users.id', '!=', $excludeUserId))
-            ->exists();
     }
 }
