@@ -23,6 +23,16 @@ function otherAdminExists(excludeUserId?: number) {
   )
 }
 
+function userHasAdminRole(id: number) {
+  return users.find((u) => u.id === id)?.roles.some((r) => r.is_admin) ?? false
+}
+
+function anyUserHasAdminRole(ids: number[]) {
+  return ids.some((id) => userHasAdminRole(id))
+}
+
+const ADMIN_DELETE_MESSAGE = 'User dengan role admin tidak bisa dihapus.'
+
 export const userHandlers = [
   http.get('/api/users', ({ request }) => {
     const url = new URL(request.url)
@@ -97,7 +107,11 @@ export const userHandlers = [
   }),
 
   http.delete('/api/users/:id', ({ params }) => {
-    const user = softDeleteById(users, Number(params.id))
+    const id = Number(params.id)
+    if (userHasAdminRole(id)) {
+      return HttpResponse.json({ message: ADMIN_DELETE_MESSAGE }, { status: 422 })
+    }
+    const user = softDeleteById(users, id)
     if (!user) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     return HttpResponse.json({ data: null, message: 'Deleted' })
   }),
@@ -109,13 +123,21 @@ export const userHandlers = [
   }),
 
   http.delete('/api/users/:id/force-delete', ({ params }) => {
-    const deleted = forceDeleteById(users, Number(params.id))
+    const id = Number(params.id)
+    if (userHasAdminRole(id)) {
+      return HttpResponse.json({ message: ADMIN_DELETE_MESSAGE }, { status: 422 })
+    }
+    const deleted = forceDeleteById(users, id)
     if (!deleted) return HttpResponse.json({ message: 'Not found' }, { status: 404 })
     return HttpResponse.json({ data: null, message: 'Deleted permanently' })
   }),
 
   http.post('/api/users/bulk-delete', async ({ request }) => {
-    const deleted = bulkSoftDelete(users, await readIds(request))
+    const ids = await readIds(request)
+    if (anyUserHasAdminRole(ids)) {
+      return HttpResponse.json({ message: ADMIN_DELETE_MESSAGE }, { status: 422 })
+    }
+    const deleted = bulkSoftDelete(users, ids)
     return HttpResponse.json({ data: null, message: `${deleted} data berhasil dihapus` })
   }),
 
@@ -128,7 +150,11 @@ export const userHandlers = [
   }),
 
   http.post('/api/users/bulk-force-delete', async ({ request }) => {
-    const deleted = bulkForceDelete(users, await readIds(request))
+    const ids = await readIds(request)
+    if (anyUserHasAdminRole(ids)) {
+      return HttpResponse.json({ message: ADMIN_DELETE_MESSAGE }, { status: 422 })
+    }
+    const deleted = bulkForceDelete(users, ids)
     return HttpResponse.json({
       data: null,
       message: `${deleted} data berhasil dihapus permanen`,

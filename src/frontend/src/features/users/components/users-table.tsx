@@ -110,7 +110,7 @@ export function UsersTable({
     manualFiltering: true,
     manualSorting: true,
     getRowId: (row) => String(row.id),
-    enableRowSelection: true,
+    enableRowSelection: (row) => !row.original.roles.some((r) => r.is_admin),
     onRowSelectionChange: setRowSelection,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),

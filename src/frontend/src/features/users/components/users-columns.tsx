@@ -34,6 +34,7 @@ export function usersColumns({
     )
     const canManageTrash = permissions.includes('users.trash')
     const isTrashed = row.original.deleted_at !== null
+    const isAdmin = row.original.roles.some((r) => r.is_admin)
 
     if (isTrashed && !canManageTrash) {
       return null
@@ -91,19 +92,23 @@ export function usersColumns({
                   <UserPen size={16} />
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  setCurrentRow(row.original)
-                  setOpen('delete')
-                }}
-                className='text-red-500!'
-              >
-                Hapus
-                <DropdownMenuShortcut>
-                  <Trash2 size={16} />
-                </DropdownMenuShortcut>
-              </DropdownMenuItem>
+              {!isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setCurrentRow(row.original)
+                      setOpen('delete')
+                    }}
+                    className='text-red-500!'
+                  >
+                    Hapus
+                    <DropdownMenuShortcut>
+                      <Trash2 size={16} />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                </>
+              )}
             </>
           )}
         </DropdownMenuContent>

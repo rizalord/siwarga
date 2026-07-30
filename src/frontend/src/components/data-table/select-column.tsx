@@ -19,6 +19,7 @@ export function selectColumn<TData>(): ColumnDef<TData> {
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
+        disabled={!row.getCanSelect()}
         aria-label='Pilih baris'
         className='translate-y-0.5'
       />

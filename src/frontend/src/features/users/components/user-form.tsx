@@ -55,9 +55,13 @@ export function UserFormDialog({
   const createUser = useCreateUser()
   const updateUser = useUpdateUser(currentRow?.id ?? 0)
   const { data: roles } = useRoles({ per_page: 100 })
+  const otherAdminExists = (roles?.data ?? []).some(
+    (role) => role.is_admin && (role.users_count ?? 0) > 0 && !isCurrentlyAdmin
+  )
   const roleOptions = (roles?.data ?? []).map((role) => ({
     label: role.description || role.name,
     value: String(role.id),
+    disable: role.is_admin && otherAdminExists,
   }))
 
   const form = useForm({
@@ -228,6 +232,12 @@ export function UserFormDialog({
                     <p className='col-span-4 col-start-3 text-sm text-muted-foreground'>
                       User dengan role admin tidak bisa dipindahkan ke role
                       lain.
+                    </p>
+                  )}
+                  {!isCurrentlyAdmin && otherAdminExists && (
+                    <p className='col-span-4 col-start-3 text-sm text-muted-foreground'>
+                      Role admin tidak tersedia karena sudah ada user dengan
+                      role admin.
                     </p>
                   )}
                   <FormMessage className='col-span-4 col-start-3' />
