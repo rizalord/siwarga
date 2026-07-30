@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\HouseResource;
-use App\Models\ActivityLog;
 use App\Models\House;
-use App\Models\Resident;
+use App\Services\HouseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class HouseController extends Controller
 {
+    public function __construct(private HouseService $houseService) {}
+
     public function index(Request $request)
     {
         $query = House::query()->with('currentResident');
@@ -42,13 +44,7 @@ class HouseController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $deletableIds = House::whereIn('id', $validated['ids'])
-            ->whereDoesntHave('bills')
-            ->whereDoesntHave('houseResidents', function ($query) {
-                $query->whereNull('end_date');
-            })
-            ->pluck('id');
-
+        $deletableIds = $this->houseService->deletableIds($validated['ids']);
         $deleted = House::destroy($deletableIds);
 
         if ($deleted < count($validated['ids'])) {
@@ -106,19 +102,13 @@ class HouseController extends Controller
 
     public function destroy(House $house)
     {
-        if ($house->houseResidents()->whereNull('end_date')->exists()) {
+        try {
+            $this->houseService->delete($house);
+        } catch (ValidationException $exception) {
             return response()->json([
-                'message' => 'Rumah tidak bisa dihapus karena masih memiliki penghuni aktif.',
+                'message' => $exception->errors()['house'][0],
             ], 422);
         }
-
-        if ($house->bills()->exists()) {
-            return response()->json([
-                'message' => 'Rumah tidak bisa dihapus karena memiliki histori transaksi.',
-            ], 422);
-        }
-
-        $house->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
@@ -156,19 +146,11 @@ class HouseController extends Controller
             'end_date' => 'nullable|date|after:start_date',
         ]);
 
-        // End current active assignment
-        $house->houseResidents()->whereNull('end_date')->update(['end_date' => $validated['start_date']]);
-
-        $houseResident = $house->houseResidents()->create($validated);
-
-        // Update house status to occupied
-        $house->update(['status' => 'dihuni']);
-
-        $resident = Resident::find($validated['resident_id']);
-        ActivityLog::record(
-            'assigned',
-            "Menempatkan penghuni {$resident?->full_name} ke rumah {$house->house_number}",
-            $house
+        $houseResident = $this->houseService->assignResident(
+            $house,
+            $validated['resident_id'],
+            $validated['start_date'],
+            $validated['end_date'] ?? null
         );
 
         return response()->json(['data' => $houseResident], 201);
@@ -180,24 +162,13 @@ class HouseController extends Controller
             'end_date' => 'nullable|date',
         ]);
 
-        $activeAssignment = $house->houseResidents()->whereNull('end_date')->first();
-
-        if (! $activeAssignment) {
+        try {
+            $this->houseService->vacateResident($house, $validated['end_date'] ?? null);
+        } catch (ValidationException $exception) {
             return response()->json([
-                'message' => 'Rumah ini tidak memiliki penghuni aktif.',
+                'message' => $exception->errors()['house'][0],
             ], 422);
         }
-
-        $activeAssignment->update(['end_date' => $validated['end_date'] ?? now()->toDateString()]);
-
-        $house->update(['status' => 'kosong']);
-
-        $resident = $activeAssignment->resident;
-        ActivityLog::record(
-            'vacated',
-            "Mencopot penghuni {$resident?->full_name} dari rumah {$house->house_number}",
-            $house
-        );
 
         return response()->json(['data' => null, 'message' => 'Penghuni berhasil dicopot dari rumah']);
     }
