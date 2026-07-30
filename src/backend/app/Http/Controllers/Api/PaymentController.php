@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
-use App\Models\Bill;
 use App\Models\Payment;
+use App\Services\PaymentService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
+    public function __construct(private PaymentService $paymentService) {}
+
     public function index(Request $request)
     {
         $query = Payment::with(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
@@ -60,15 +61,7 @@ class PaymentController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $payments = Payment::whereIn('id', $validated['ids'])->get();
-        $billIds = $payments->pluck('bill_id')->unique();
-
-        $deleted = DB::transaction(function () use ($payments, $billIds) {
-            $deleted = Payment::destroy($payments->pluck('id'));
-            $this->refreshBillStatuses($billIds->all());
-
-            return $deleted;
-        });
+        $deleted = $this->paymentService->bulkDelete($validated['ids']);
 
         return response()->json(['data' => null, 'message' => "{$deleted} pembayaran berhasil dihapus"]);
     }
@@ -76,7 +69,7 @@ class PaymentController extends Controller
     public function bulkRestore(Request $request, string $modelClass = Payment::class): JsonResponse
     {
         return $this->bulkRestoreWithCallback($request, $modelClass, function (EloquentCollection $payments): void {
-            $this->refreshBillStatuses($payments->pluck('bill_id')->all());
+            $this->paymentService->afterBulkRestore($payments);
         });
     }
 
@@ -94,18 +87,7 @@ class PaymentController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
-        $validated['created_by'] = $request->user()->id;
-
-        $payment = Payment::create($validated);
-
-        // Auto-update bill status to 'lunas' when fully paid
-        $bill = $payment->bill;
-        $totalPaid = $bill->payments()->sum('amount_paid');
-        if ($totalPaid >= $bill->amount_due) {
-            $bill->update(['status' => 'lunas']);
-        }
-
-        $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
+        $payment = $this->paymentService->create($validated, $request->user()->id);
 
         return new PaymentResource($payment);
     }
@@ -131,24 +113,14 @@ class PaymentController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
-        $oldBillId = $payment->bill_id;
-        $payment->update($validated);
-
-        $this->refreshBillStatuses([$oldBillId, $payment->bill_id]);
-
-        $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
+        $payment = $this->paymentService->update($payment, $validated);
 
         return new PaymentResource($payment);
     }
 
     public function destroy(Payment $payment)
     {
-        $billId = $payment->bill_id;
-
-        DB::transaction(function () use ($payment, $billId) {
-            $payment->delete();
-            $this->refreshBillStatuses([$billId]);
-        });
+        $this->paymentService->delete($payment);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
@@ -156,7 +128,7 @@ class PaymentController extends Controller
     public function restore(Payment $payment)
     {
         $this->restoreModel($payment, function (Payment $restoredPayment): void {
-            $this->refreshBillStatuses([$restoredPayment->bill_id]);
+            $this->paymentService->afterRestore($restoredPayment);
         });
         $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
@@ -168,28 +140,5 @@ class PaymentController extends Controller
         $this->forceDeleteModel($payment);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
-    }
-
-    /**
-     * @param  array<int, int|null>  $billIds
-     */
-    private function refreshBillStatuses(array $billIds): void
-    {
-        $filteredBillIds = collect($billIds)
-            ->filter()
-            ->unique()
-            ->values();
-
-        if ($filteredBillIds->isEmpty()) {
-            return;
-        }
-
-        Bill::whereIn('id', $filteredBillIds)->each(function (Bill $bill): void {
-            $totalPaid = $bill->payments()->sum('amount_paid');
-
-            $bill->update([
-                'status' => $totalPaid >= $bill->amount_due ? 'lunas' : 'belum_lunas',
-            ]);
-        });
     }
 }
