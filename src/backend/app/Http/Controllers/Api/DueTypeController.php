@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DueTypeResource;
 use App\Models\DueType;
+use App\Services\DueTypeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DueTypeController extends Controller
 {
+    public function __construct(private DueTypeService $dueTypeService) {}
+
     public function index(Request $request)
     {
         $query = DueType::query();
@@ -47,7 +50,7 @@ class DueTypeController extends Controller
             'billing_cycle' => 'sometimes|in:bulanan,fleksibel',
         ]);
 
-        $dueType = DueType::create($validated);
+        $dueType = $this->dueTypeService->create($validated);
 
         return new DueTypeResource($dueType);
     }
@@ -65,14 +68,14 @@ class DueTypeController extends Controller
             'billing_cycle' => 'sometimes|in:bulanan,fleksibel',
         ]);
 
-        $dueType->update($validated);
+        $dueType = $this->dueTypeService->update($dueType, $validated);
 
         return new DueTypeResource($dueType);
     }
 
     public function destroy(DueType $dueType)
     {
-        $dueType->delete();
+        $this->dueTypeService->delete($dueType);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
