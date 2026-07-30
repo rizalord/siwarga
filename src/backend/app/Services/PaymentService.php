@@ -62,6 +62,9 @@ class PaymentService
         });
     }
 
+    /**
+     * @param  EloquentCollection<int, Payment>  $payments
+     */
     public function afterBulkRestore(EloquentCollection $payments): void
     {
         $this->refreshBillStatuses($payments->pluck('bill_id')->all());
