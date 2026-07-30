@@ -11,6 +11,7 @@ class ActivityLogService
     /**
      * @return Builder<ActivityLog>
      */
+    // Sole exception to Services not touching Request: decomposing these 6 optional filter params into scalars would be worse than accepting the Request here.
     public function filter(Request $request): Builder
     {
         $query = ActivityLog::query()->with('user:id,name,email');
