@@ -313,8 +313,12 @@ sudo chown $USER:$USER /var/www/siwarga
 git clone https://github.com/rizalord/siwarga.git /var/www/siwarga
 cd /var/www/siwarga/src/backend
 
-composer install --no-dev --optimize-autoloader
+composer install --optimize-autoloader
+```
 
+> `fakerphp/faker` ada di `require-dev`, tapi seeder demo data (mis. `ResidentSeeder`) memakai helper `fake()` yang butuh package ini. Jangan pakai `--no-dev` di sini kalau kamu berencana menjalankan `migrate --seed`.
+
+```bash
 cp .env.example .env
 php artisan key:generate
 ```
