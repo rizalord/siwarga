@@ -110,6 +110,26 @@ class ReportTest extends TestCase
         ]]);
     }
 
+    public function test_monthly_report_includes_transactions_on_the_first_day_of_the_month()
+    {
+        $bill = Bill::factory()->create(['amount_due' => 100000]);
+        Payment::factory()->create([
+            'bill_id' => $bill->id,
+            'amount_paid' => 100000,
+            'payment_date' => '2026-01-01',
+        ]);
+        Expense::factory()->create([
+            'amount' => 30000,
+            'expense_date' => '2026-01-31',
+        ]);
+
+        $response = $this->getJson('/api/reports/monthly/2026/1');
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.total_income', 100000);
+        $response->assertJsonPath('data.total_expense', 30000);
+    }
+
     public function test_monthly_report_includes_category_for_expense_without_description()
     {
         $category = ExpenseCategory::factory()->create(['name' => 'Keamanan']);

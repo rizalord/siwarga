@@ -29,7 +29,9 @@ class BillGenerationService
             $houses = House::where('status', 'dihuni')->get();
             foreach ($houses as $house) {
                 $activeResident = HouseResident::where('house_id', $house->id)
-                    ->whereNull('end_date')->first();
+                    ->whereNull('end_date')
+                    ->whereDate('start_date', '<=', $periodEnd)
+                    ->first();
                 if (! $activeResident) {
                     continue;
                 }

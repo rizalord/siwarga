@@ -57,7 +57,25 @@ class BillController extends Controller
 
     public function bulkDestroy(Request $request)
     {
-        return $this->bulkDelete($request, Bill::class);
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $deletableIds = Bill::whereIn('id', $validated['ids'])
+            ->whereDoesntHave('payments')
+            ->pluck('id');
+
+        $deleted = Bill::destroy($deletableIds);
+
+        if ($deleted < count($validated['ids'])) {
+            return response()->json([
+                'data' => null,
+                'message' => "{$deleted} tagihan berhasil dihapus. Sisanya tidak bisa dihapus karena sudah memiliki pembayaran.",
+            ], 207);
+        }
+
+        return response()->json(['data' => null, 'message' => "{$deleted} tagihan berhasil dihapus"]);
     }
 
     public function bulkRestore(Request $request, string $modelClass = Bill::class): JsonResponse
@@ -104,6 +122,12 @@ class BillController extends Controller
 
     public function destroy(Bill $bill)
     {
+        if ($bill->payments()->exists()) {
+            return response()->json([
+                'message' => 'Tagihan tidak bisa dihapus karena sudah memiliki pembayaran.',
+            ], 422);
+        }
+
         $bill->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);

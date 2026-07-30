@@ -42,8 +42,8 @@ class ReportService
 
     public function monthlyDetail(int $year, int $month): array
     {
-        $startDate = Carbon::createFromDate($year, $month, 1);
-        $endDate = $startDate->copy()->endOfMonth();
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
+        $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
         $payments = Payment::whereBetween('payment_date', [$startDate, $endDate])
             ->with('bill.dueType')

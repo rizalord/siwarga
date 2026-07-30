@@ -155,6 +155,26 @@ class PaymentTest extends TestCase
         $response->assertStatus(200)->assertJsonPath('data.amount_paid', 75000);
     }
 
+    public function test_moving_payment_to_another_bill_refreshes_old_bill_status()
+    {
+        $oldBill = Bill::factory()->create(['amount_due' => 100000, 'status' => 'belum_lunas']);
+        $newBill = Bill::factory()->create(['amount_due' => 100000, 'status' => 'belum_lunas']);
+
+        $createResponse = $this->postJson('/api/payments', [
+            'bill_id' => $oldBill->id,
+            'amount_paid' => 100000,
+            'payment_date' => '2026-01-15',
+        ]);
+        $paymentId = $createResponse->json('data.id');
+        $this->assertDatabaseHas('bills', ['id' => $oldBill->id, 'status' => 'lunas']);
+
+        $response = $this->putJson("/api/payments/{$paymentId}", ['bill_id' => $newBill->id]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('bills', ['id' => $oldBill->id, 'status' => 'belum_lunas']);
+        $this->assertDatabaseHas('bills', ['id' => $newBill->id, 'status' => 'lunas']);
+    }
+
     public function test_can_soft_delete_payment()
     {
         $payment = Payment::factory()->create();

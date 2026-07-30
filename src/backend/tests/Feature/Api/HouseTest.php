@@ -135,6 +135,20 @@ class HouseTest extends TestCase
         $this->assertDatabaseHas('houses', ['id' => $house->id, 'deleted_at' => null]);
     }
 
+    public function test_cannot_delete_house_with_active_resident()
+    {
+        $house = House::factory()->create();
+        $house->houseResidents()->create([
+            'resident_id' => Resident::factory()->create()->id,
+            'start_date' => '2026-01-01',
+        ]);
+
+        $response = $this->deleteJson("/api/houses/{$house->id}");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('houses', ['id' => $house->id, 'deleted_at' => null]);
+    }
+
     public function test_can_assign_resident_to_house()
     {
         $house = House::factory()->create();

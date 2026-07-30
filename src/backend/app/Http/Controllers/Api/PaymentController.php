@@ -9,6 +9,7 @@ use App\Models\Payment;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -62,11 +63,11 @@ class PaymentController extends Controller
         $payments = Payment::whereIn('id', $validated['ids'])->get();
         $billIds = $payments->pluck('bill_id')->unique();
 
-        $deleted = Payment::destroy($payments->pluck('id'));
+        $deleted = DB::transaction(function () use ($payments, $billIds) {
+            $deleted = Payment::destroy($payments->pluck('id'));
+            $this->refreshBillStatuses($billIds->all());
 
-        Bill::whereIn('id', $billIds)->each(function (Bill $bill) {
-            $totalPaid = $bill->payments()->sum('amount_paid');
-            $bill->update(['status' => $totalPaid >= $bill->amount_due ? 'lunas' : 'belum_lunas']);
+            return $deleted;
         });
 
         return response()->json(['data' => null, 'message' => "{$deleted} pembayaran berhasil dihapus"]);
@@ -130,17 +131,10 @@ class PaymentController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
+        $oldBillId = $payment->bill_id;
         $payment->update($validated);
 
-        // Re-check bill status after update
-        if ($payment->bill) {
-            $totalPaid = $payment->bill->payments()->sum('amount_paid');
-            if ($totalPaid >= $payment->bill->amount_due) {
-                $payment->bill->update(['status' => 'lunas']);
-            } else {
-                $payment->bill->update(['status' => 'belum_lunas']);
-            }
-        }
+        $this->refreshBillStatuses([$oldBillId, $payment->bill_id]);
 
         $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
@@ -149,18 +143,12 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment)
     {
-        $bill = $payment->bill;
-        $payment->delete();
+        $billId = $payment->bill_id;
 
-        // Re-check bill status after deletion
-        if ($bill) {
-            $totalPaid = $bill->payments()->sum('amount_paid');
-            if ($totalPaid >= $bill->amount_due) {
-                $bill->update(['status' => 'lunas']);
-            } else {
-                $bill->update(['status' => 'belum_lunas']);
-            }
-        }
+        DB::transaction(function () use ($payment, $billId) {
+            $payment->delete();
+            $this->refreshBillStatuses([$billId]);
+        });
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }

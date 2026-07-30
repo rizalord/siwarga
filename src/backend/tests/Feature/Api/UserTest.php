@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
@@ -131,6 +132,53 @@ class UserTest extends TestCase
         $response->assertStatus(200);
         $this->assertSoftDeleted($users[0]);
         $this->assertSoftDeleted($users[1]);
+    }
+
+    public function test_can_create_warga_user_linked_to_a_resident()
+    {
+        $resident = Resident::factory()->create();
+
+        $response = $this->postJson('/api/users', [
+            'name' => 'Warga Baru',
+            'email' => 'warga-baru@test.com',
+            'password' => 'password123',
+            'resident_id' => $resident->id,
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('users', [
+            'email' => 'warga-baru@test.com',
+            'resident_id' => $resident->id,
+        ]);
+    }
+
+    public function test_cannot_link_two_users_to_the_same_resident()
+    {
+        $resident = Resident::factory()->create();
+        User::factory()->create(['resident_id' => $resident->id]);
+
+        $response = $this->postJson('/api/users', [
+            'name' => 'Warga Duplikat',
+            'email' => 'warga-duplikat@test.com',
+            'password' => 'password123',
+            'resident_id' => $resident->id,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseMissing('users', ['email' => 'warga-duplikat@test.com']);
+    }
+
+    public function test_can_update_user_resident_link()
+    {
+        $resident = Resident::factory()->create();
+        $user = User::factory()->create();
+
+        $response = $this->putJson("/api/users/{$user->id}", [
+            'resident_id' => $resident->id,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSame($resident->id, $user->fresh()->resident_id);
     }
 
     public function test_cannot_delete_admin_user()

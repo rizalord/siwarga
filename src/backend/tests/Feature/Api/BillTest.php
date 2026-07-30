@@ -189,6 +189,17 @@ class BillTest extends TestCase
         $this->assertSoftDeleted($bill);
     }
 
+    public function test_cannot_delete_bill_with_payments()
+    {
+        $bill = Bill::factory()->create();
+        Payment::factory()->create(['bill_id' => $bill->id]);
+
+        $response = $this->deleteJson("/api/bills/{$bill->id}");
+
+        $response->assertStatus(422);
+        $this->assertDatabaseHas('bills', ['id' => $bill->id, 'deleted_at' => null]);
+    }
+
     public function test_can_sort_bills_by_amount_due()
     {
         Bill::factory()->create(['amount_due' => 200000]);
@@ -213,6 +224,20 @@ class BillTest extends TestCase
         $this->assertSoftDeleted($bills[0]);
         $this->assertSoftDeleted($bills[1]);
         $this->assertDatabaseHas('bills', ['id' => $bills[2]->id, 'deleted_at' => null]);
+    }
+
+    public function test_bulk_delete_skips_bills_with_payments()
+    {
+        $bills = Bill::factory()->count(2)->create();
+        Payment::factory()->create(['bill_id' => $bills[0]->id]);
+
+        $response = $this->postJson('/api/bills/bulk-delete', [
+            'ids' => $bills->pluck('id')->toArray(),
+        ]);
+
+        $response->assertStatus(207);
+        $this->assertDatabaseHas('bills', ['id' => $bills[0]->id, 'deleted_at' => null]);
+        $this->assertSoftDeleted($bills[1]);
     }
 
     public function test_can_restore_a_soft_deleted_bill()

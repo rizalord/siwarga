@@ -71,6 +71,7 @@ class UserController extends Controller
             'name' => 'required|string|max:150',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'resident_id' => 'sometimes|nullable|exists:residents,id|unique:users,resident_id',
             'role_ids' => 'sometimes|array',
             'role_ids.*' => 'exists:roles,id',
         ]);
@@ -103,6 +104,7 @@ class UserController extends Controller
             'email' => 'sometimes|email|unique:users,email,'.$user->id,
             'password' => 'sometimes|string|min:8',
             'is_active' => 'sometimes|boolean',
+            'resident_id' => 'sometimes|nullable|exists:residents,id|unique:users,resident_id,'.$user->id,
             'role_ids' => 'sometimes|array',
             'role_ids.*' => 'exists:roles,id',
         ]);

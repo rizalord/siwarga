@@ -53,6 +53,22 @@ class BillGenerationServiceTest extends TestCase
         $this->assertCount(0, $bills);
     }
 
+    public function test_skips_residents_whose_occupancy_starts_after_the_billed_period()
+    {
+        DueType::factory()->create(['amount' => 100000, 'billing_cycle' => 'bulanan']);
+        $house = House::factory()->create(['status' => 'dihuni']);
+        $resident = Resident::factory()->create();
+        $house->houseResidents()->create([
+            'resident_id' => $resident->id,
+            'start_date' => '2026-09-01',
+        ]);
+
+        $service = new BillGenerationService;
+        $bills = $service->generate(7, 2026);
+
+        $this->assertCount(0, $bills);
+    }
+
     public function test_annual_due_type_covers_full_year_and_multiplies_amount()
     {
         $dueType = DueType::factory()->create(['amount' => 15000, 'billing_cycle' => 'fleksibel']);

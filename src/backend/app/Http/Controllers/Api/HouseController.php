@@ -44,6 +44,9 @@ class HouseController extends Controller
 
         $deletableIds = House::whereIn('id', $validated['ids'])
             ->whereDoesntHave('bills')
+            ->whereDoesntHave('houseResidents', function ($query) {
+                $query->whereNull('end_date');
+            })
             ->pluck('id');
 
         $deleted = House::destroy($deletableIds);
@@ -51,7 +54,7 @@ class HouseController extends Controller
         if ($deleted < count($validated['ids'])) {
             return response()->json([
                 'data' => null,
-                'message' => "{$deleted} rumah berhasil dihapus. Sisanya tidak bisa dihapus karena memiliki histori transaksi.",
+                'message' => "{$deleted} rumah berhasil dihapus. Sisanya tidak bisa dihapus karena masih berpenghuni aktif atau memiliki histori transaksi.",
             ], 207);
         }
 
@@ -103,6 +106,12 @@ class HouseController extends Controller
 
     public function destroy(House $house)
     {
+        if ($house->houseResidents()->whereNull('end_date')->exists()) {
+            return response()->json([
+                'message' => 'Rumah tidak bisa dihapus karena masih memiliki penghuni aktif.',
+            ], 422);
+        }
+
         if ($house->bills()->exists()) {
             return response()->json([
                 'message' => 'Rumah tidak bisa dihapus karena memiliki histori transaksi.',
