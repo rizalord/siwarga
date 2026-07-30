@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
+use App\Services\RoleService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class RoleController extends Controller
 {
+    public function __construct(private RoleService $roleService) {}
+
     public function index(Request $request)
     {
         $query = Role::with('permissions')->withCount('users');
@@ -30,10 +34,9 @@ class RoleController extends Controller
             'permission_ids.*' => 'integer|exists:permissions,id',
         ]);
 
-        $role = Role::create($validated);
-        $role->permissions()->sync($validated['permission_ids'] ?? []);
+        $role = $this->roleService->create($validated);
 
-        return response()->json(['data' => $role->load('permissions')->loadCount('users')], 201);
+        return response()->json(['data' => $role], 201);
     }
 
     public function show(Role $role)
@@ -50,36 +53,26 @@ class RoleController extends Controller
             'permission_ids.*' => 'integer|exists:permissions,id',
         ]);
 
-        if ($role->isAdmin() && array_key_exists('name', $validated) && $validated['name'] !== Role::ADMIN_ROLE_NAME) {
+        try {
+            $role = $this->roleService->update($role, $validated);
+        } catch (ValidationException $exception) {
             return response()->json([
-                'message' => 'Role admin tidak bisa diganti namanya karena merupakan role khusus sistem.',
+                'message' => $exception->errors()['name'][0],
             ], 422);
         }
 
-        $role->update($validated);
-
-        if (array_key_exists('permission_ids', $validated)) {
-            $role->permissions()->sync($validated['permission_ids']);
-        }
-
-        return response()->json(['data' => $role->load('permissions')->loadCount('users')]);
+        return response()->json(['data' => $role]);
     }
 
     public function destroy(Role $role)
     {
-        if ($role->isAdmin()) {
+        try {
+            $this->roleService->delete($role);
+        } catch (ValidationException $exception) {
             return response()->json([
-                'message' => 'Role admin tidak bisa dihapus karena merupakan role khusus sistem.',
+                'message' => $exception->errors()['role'][0],
             ], 422);
         }
-
-        if ($role->users()->exists()) {
-            return response()->json([
-                'message' => 'Role tidak bisa dihapus karena masih digunakan oleh pengguna.',
-            ], 422);
-        }
-
-        $role->delete();
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
