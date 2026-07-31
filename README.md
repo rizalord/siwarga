@@ -17,8 +17,8 @@ Aplikasi web untuk mengelola administrasi RT: penghuni, rumah, iuran bulanan, pe
 - [Tech Stack](#tech-stack)
 - [Struktur Repository](#struktur-repository)
 - [Instalasi](#instalasi)
-  - [Opsi 1 — Docker (Direkomendasikan)](#opsi-1--docker-direkomendasikan)
-  - [Opsi 2 — Native Tanpa Docker (Development Lokal)](#opsi-2--native-tanpa-docker-development-lokal)
+  - [Opsi 1 — Native Tanpa Docker (Development Lokal)](#opsi-1--native-tanpa-docker-development-lokal)
+  - [Opsi 2 — Docker (Opsional)](#opsi-2--docker-opsional)
   - [Opsi 3 — Native / Manual (untuk VPS Production)](#opsi-3--native--manual-untuk-vps-production)
 - [Akun Demo](#akun-demo)
 - [API Endpoints](#api-endpoints)
@@ -98,76 +98,9 @@ siwarga/
 
 ## Instalasi
 
-Ada beberapa cara menjalankan SIWarga. **Docker direkomendasikan** untuk kebanyakan kasus karena tidak perlu install PHP/MySQL/Node langsung di mesin. Kalau tidak mau pakai Docker sama sekali, ikuti Opsi 2 untuk development lokal di laptop sendiri. Opsi 3 (native, lebih panjang) khusus untuk deploy ke VPS production tanpa Docker.
+SIWarga dirancang untuk berjalan **native, tanpa Docker sebagai basisnya** — Opsi 1 (development lokal) dan Opsi 3 (VPS production) sama-sama menjalankan PHP/Node/MySQL langsung di mesin. Docker (Opsi 2) disediakan hanya sebagai kemudahan opsional bagi yang sudah familiar dengan Docker dan tidak mau install dependency manual; keduanya menghasilkan aplikasi yang identik.
 
-### Opsi 1 — Docker (Direkomendasikan)
-
-**Prasyarat:** [Docker Engine](https://docs.docker.com/engine/install/) & Docker Compose v2.
-
-#### Development
-
-Source code di-mount ke dalam container, jadi perubahan kode langsung ter-reload (Vite HMR di frontend, PHP re-interpret setiap request di backend) tanpa rebuild image.
-
-```bash
-git clone https://github.com/rizalord/siwarga.git
-cd siwarga
-
-cp .env.example .env
-# generate APP_KEY dulu (opsional untuk dev, tapi disarankan):
-docker compose run --rm backend php artisan key:generate --show
-# tempel hasilnya ke APP_KEY= di .env
-
-docker compose up --build
-```
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8000 |
-| MySQL | localhost:3306 |
-
-Migration jalan otomatis saat container backend start. Jalankan seed data demo sekali secara manual:
-
-```bash
-docker compose exec backend php artisan db:seed
-```
-
-#### Production
-
-Image production membangun backend jadi satu image php-fpm + nginx yang teroptimasi, dan frontend jadi static asset yang di-serve nginx — tidak ada bind mount, semuanya sudah di-bake ke image saat build.
-
-```bash
-cp .env.example .env
-# APP_KEY WAJIB di-set untuk production:
-docker compose run --rm backend php artisan key:generate --show
-# tempel hasilnya ke APP_KEY= di .env, lalu sesuaikan kredensial DB & domain
-
-docker compose -f docker-compose.prd.yml up --build -d
-```
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:8080 |
-| Backend API | http://localhost:8000 |
-
-> `VITE_API_URL` dan `VITE_USE_MOCK` di-bake ke bundle frontend saat **build image** (build arg), bukan saat runtime. Kalau nilainya berubah (misal ganti domain API), rebuild ulang: `docker compose -f docker-compose.prd.yml build frontend`.
-
-Perintah operasional yang umum dipakai:
-
-```bash
-# Lihat log
-docker compose -f docker-compose.prd.yml logs -f backend
-
-# Jalankan artisan command
-docker compose -f docker-compose.prd.yml exec backend php artisan migrate --force
-
-# Seed data awal (sekali saja)
-docker compose -f docker-compose.prd.yml exec backend php artisan db:seed --force
-```
-
----
-
-### Opsi 2 — Native Tanpa Docker (Development Lokal)
+### Opsi 1 — Native Tanpa Docker (Development Lokal)
 
 Panduan ini untuk menjalankan SIWarga langsung di laptop/komputer sendiri untuk keperluan development, tanpa Docker dan tanpa Nginx/systemd.
 
@@ -240,11 +173,80 @@ Frontend berjalan di `http://localhost:5173` dengan hot reload. Buka di browser 
 
 ---
 
+### Opsi 2 — Docker (Opsional)
+
+Opsi ini murni kemudahan bagi yang sudah terbiasa dengan Docker — bukan cara resmi/wajib menjalankan SIWarga. Kalau ragu, pakai [Opsi 1](#opsi-1--native-tanpa-docker-development-lokal) di atas.
+
+**Prasyarat:** [Docker Engine](https://docs.docker.com/engine/install/) & Docker Compose v2.
+
+#### Development
+
+Source code di-mount ke dalam container, jadi perubahan kode langsung ter-reload (Vite HMR di frontend, PHP re-interpret setiap request di backend) tanpa rebuild image.
+
+```bash
+git clone https://github.com/rizalord/siwarga.git
+cd siwarga
+
+cp .env.example .env
+# generate APP_KEY dulu (opsional untuk dev, tapi disarankan):
+docker compose run --rm backend php artisan key:generate --show
+# tempel hasilnya ke APP_KEY= di .env
+
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| MySQL | localhost:3306 |
+
+Migration jalan otomatis saat container backend start. Jalankan seed data demo sekali secara manual:
+
+```bash
+docker compose exec backend php artisan db:seed
+```
+
+#### Production
+
+Image production membangun backend jadi satu image php-fpm + nginx yang teroptimasi, dan frontend jadi static asset yang di-serve nginx — tidak ada bind mount, semuanya sudah di-bake ke image saat build.
+
+```bash
+cp .env.example .env
+# APP_KEY WAJIB di-set untuk production:
+docker compose run --rm backend php artisan key:generate --show
+# tempel hasilnya ke APP_KEY= di .env, lalu sesuaikan kredensial DB & domain
+
+docker compose -f docker-compose.prd.yml up --build -d
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| Backend API | http://localhost:8000 |
+
+> `VITE_API_URL` dan `VITE_USE_MOCK` di-bake ke bundle frontend saat **build image** (build arg), bukan saat runtime. Kalau nilainya berubah (misal ganti domain API), rebuild ulang: `docker compose -f docker-compose.prd.yml build frontend`.
+
+Perintah operasional yang umum dipakai:
+
+```bash
+# Lihat log
+docker compose -f docker-compose.prd.yml logs -f backend
+
+# Jalankan artisan command
+docker compose -f docker-compose.prd.yml exec backend php artisan migrate --force
+
+# Seed data awal (sekali saja)
+docker compose -f docker-compose.prd.yml exec backend php artisan db:seed --force
+```
+
+---
+
 ### Opsi 3 — Native / Manual (untuk VPS Production)
 
 Panduan ini untuk deploy langsung di server (VPS) tanpa Docker: PHP-FPM + Nginx + MySQL native. Setiap langkah runtut dari server kosong sampai aplikasi bisa diakses. Contoh di bawah pakai Ubuntu 22.04/24.04; sesuaikan nama package kalau pakai distro lain.
 
-> Untuk development di laptop sendiri, gunakan [Opsi 2](#opsi-2--native-tanpa-docker-development-lokal) — lebih ringkas.
+> Untuk development di laptop sendiri, gunakan [Opsi 1](#opsi-1--native-tanpa-docker-development-lokal) — lebih ringkas.
 
 #### 1. Update sistem & install dependency dasar
 

@@ -17,8 +17,8 @@ A web application for managing RT (Indonesian neighborhood association) administ
 - [Tech Stack](#tech-stack)
 - [Repository Structure](#repository-structure)
 - [Installation](#installation)
-  - [Option 1 — Docker (Recommended)](#option-1--docker-recommended)
-  - [Option 2 — Native Without Docker (Local Development)](#option-2--native-without-docker-local-development)
+  - [Option 1 — Native Without Docker (Local Development)](#option-1--native-without-docker-local-development)
+  - [Option 2 — Docker (Optional)](#option-2--docker-optional)
   - [Option 3 — Native / Manual (for VPS Production)](#option-3--native--manual-for-vps-production)
 - [Demo Accounts](#demo-accounts)
 - [API Endpoints](#api-endpoints)
@@ -98,76 +98,9 @@ siwarga/
 
 ## Installation
 
-There are a few ways to run SIWarga. **Docker is recommended** for most cases since it doesn't require installing PHP/MySQL/Node directly on your machine. If you'd rather not use Docker at all, follow Option 2 for local development on your own machine. Option 3 (native, longer) is specifically for deploying to a VPS in production without Docker.
+SIWarga is designed to run **natively, without Docker as its base** — Option 1 (local development) and Option 3 (VPS production) both run PHP/Node/MySQL directly on the machine. Docker (Option 2) is provided purely as an optional convenience for those already comfortable with Docker who'd rather skip installing dependencies manually; both paths produce an identical application.
 
-### Option 1 — Docker (Recommended)
-
-**Prerequisites:** [Docker Engine](https://docs.docker.com/engine/install/) & Docker Compose v2.
-
-#### Development
-
-Source code is bind-mounted into the containers, so code changes are reflected live (Vite HMR on the frontend, PHP re-interprets every request on the backend) without rebuilding the image.
-
-```bash
-git clone https://github.com/rizalord/siwarga.git
-cd siwarga
-
-cp .env.example .env
-# generate an APP_KEY first (optional for dev, but recommended):
-docker compose run --rm backend php artisan key:generate --show
-# paste the result into APP_KEY= in .env
-
-docker compose up --build
-```
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8000 |
-| MySQL | localhost:3306 |
-
-Migrations run automatically when the backend container starts. Seed demo data once, manually:
-
-```bash
-docker compose exec backend php artisan db:seed
-```
-
-#### Production
-
-The production images build the backend into a single optimized php-fpm + nginx image, and the frontend into a static bundle served by nginx — no bind mounts, everything is baked into the image at build time.
-
-```bash
-cp .env.example .env
-# APP_KEY MUST be set for production:
-docker compose run --rm backend php artisan key:generate --show
-# paste the result into APP_KEY= in .env, then adjust DB credentials & domain
-
-docker compose -f docker-compose.prd.yml up --build -d
-```
-
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:8080 |
-| Backend API | http://localhost:8000 |
-
-> `VITE_API_URL` and `VITE_USE_MOCK` are baked into the frontend bundle at **image build time** (build arg), not at runtime. If the value changes (e.g. a different API domain), rebuild: `docker compose -f docker-compose.prd.yml build frontend`.
-
-Common operational commands:
-
-```bash
-# Tail logs
-docker compose -f docker-compose.prd.yml logs -f backend
-
-# Run an artisan command
-docker compose -f docker-compose.prd.yml exec backend php artisan migrate --force
-
-# Seed initial data (once)
-docker compose -f docker-compose.prd.yml exec backend php artisan db:seed --force
-```
-
----
-
-### Option 2 — Native Without Docker (Local Development)
+### Option 1 — Native Without Docker (Local Development)
 
 This guide runs SIWarga directly on your own laptop/computer for development purposes, without Docker and without Nginx/systemd.
 
@@ -240,11 +173,80 @@ The frontend runs at `http://localhost:5173` with hot reload. Open it in your br
 
 ---
 
+### Option 2 — Docker (Optional)
+
+This option is purely a convenience for those already comfortable with Docker — it is not the official or required way to run SIWarga. If in doubt, use [Option 1](#option-1--native-without-docker-local-development) above.
+
+**Prerequisites:** [Docker Engine](https://docs.docker.com/engine/install/) & Docker Compose v2.
+
+#### Development
+
+Source code is bind-mounted into the containers, so code changes are reflected live (Vite HMR on the frontend, PHP re-interprets every request on the backend) without rebuilding the image.
+
+```bash
+git clone https://github.com/rizalord/siwarga.git
+cd siwarga
+
+cp .env.example .env
+# generate an APP_KEY first (optional for dev, but recommended):
+docker compose run --rm backend php artisan key:generate --show
+# paste the result into APP_KEY= in .env
+
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| MySQL | localhost:3306 |
+
+Migrations run automatically when the backend container starts. Seed demo data once, manually:
+
+```bash
+docker compose exec backend php artisan db:seed
+```
+
+#### Production
+
+The production images build the backend into a single optimized php-fpm + nginx image, and the frontend into a static bundle served by nginx — no bind mounts, everything is baked into the image at build time.
+
+```bash
+cp .env.example .env
+# APP_KEY MUST be set for production:
+docker compose run --rm backend php artisan key:generate --show
+# paste the result into APP_KEY= in .env, then adjust DB credentials & domain
+
+docker compose -f docker-compose.prd.yml up --build -d
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| Backend API | http://localhost:8000 |
+
+> `VITE_API_URL` and `VITE_USE_MOCK` are baked into the frontend bundle at **image build time** (build arg), not at runtime. If the value changes (e.g. a different API domain), rebuild: `docker compose -f docker-compose.prd.yml build frontend`.
+
+Common operational commands:
+
+```bash
+# Tail logs
+docker compose -f docker-compose.prd.yml logs -f backend
+
+# Run an artisan command
+docker compose -f docker-compose.prd.yml exec backend php artisan migrate --force
+
+# Seed initial data (once)
+docker compose -f docker-compose.prd.yml exec backend php artisan db:seed --force
+```
+
+---
+
 ### Option 3 — Native / Manual (for VPS Production)
 
 This guide deploys directly on a server (VPS) without Docker: native PHP-FPM + Nginx + MySQL. Every step is sequential, from a clean server to a reachable application. Examples below use Ubuntu 22.04/24.04; adjust package names for other distros.
 
-> For local development on your own machine, use [Option 2](#option-2--native-without-docker-local-development) instead — it's much shorter.
+> For local development on your own machine, use [Option 1](#option-1--native-without-docker-local-development) instead — it's much shorter.
 
 #### 1. Update the system & install base dependencies
 
