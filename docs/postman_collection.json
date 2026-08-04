@@ -7296,6 +7296,48 @@
               "protocolProfileBehavior": {
                 "disableBodyPruning": true
               }
+            },
+            {
+              "id": "8c8b1d4a-1f2b-4b1e-9f12-6c1f8b2d4a77",
+              "name": "Generate flexible bills with custom period and amount (idempotent)",
+              "request": {
+                "name": "Generate flexible bills with custom period and amount (idempotent)",
+                "description": "Only accepts a due type with billing_cycle fleksibel.",
+                "url": {
+                  "path": [
+                    "bills",
+                    "generate-flexible"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"due_type_id\": \"<integer>\",\n  \"period_start\": \"<date>\",\n  \"period_end\": \"<date>\",\n  \"amount_due\": \"<float>\"\n}",
+                  "options": {
+                    "raw": {
+                      "headerFamily": "json",
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": null
+              },
+              "response": []
             }
           ]
         },
@@ -11509,7 +11551,7 @@
             "method": "POST",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"<string>\",\n  \"email\": \"<email>\",\n  \"password\": \"<string>\",\n  \"role_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ]\n}",
+              "raw": "{\n  \"name\": \"<string>\",\n  \"email\": \"<email>\",\n  \"password\": \"<string>\",\n  \"resident_id\": \"<integer>\",\n  \"role_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ]\n}",
               "options": {
                 "raw": {
                   "headerFamily": "json",
@@ -12554,7 +12596,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"email\": \"<email>\",\n  \"password\": \"<string>\",\n  \"is_active\": \"<boolean>\",\n  \"role_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ]\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"email\": \"<email>\",\n  \"password\": \"<string>\",\n  \"is_active\": \"<boolean>\",\n  \"resident_id\": \"<integer>\",\n  \"role_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ]\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",

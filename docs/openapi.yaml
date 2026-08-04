@@ -892,7 +892,7 @@ paths:
   /bills:
     get:
       tags: [Bills]
-      summary: List bills (Warga users only see their own)
+      summary: List bills (users with bills.view.all see all; own scope is resident-scoped)
       parameters:
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/PerPage"
@@ -1098,7 +1098,7 @@ paths:
   /payments:
     get:
       tags: [Payments]
-      summary: List payments (Warga users only see payments on their own bills)
+      summary: List payments (users with payments.view.all see all; own scope is resident-scoped)
       parameters:
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/PerPage"
@@ -1585,6 +1585,10 @@ paths:
                   type: string
                   format: password
                   minLength: 8
+                resident_id:
+                  type: integer
+                  nullable: true
+                  description: Optional resident linked to this user (one user per resident).
                 role_ids:
                   type: array
                   items:
@@ -1698,6 +1702,10 @@ paths:
                   minLength: 8
                 is_active:
                   type: boolean
+                resident_id:
+                  type: integer
+                  nullable: true
+                  description: Optional resident linked to this user (one user per resident).
                 role_ids:
                   type: array
                   items:
@@ -2539,6 +2547,10 @@ components:
           format: email
         resident_id:
           type: integer
+          nullable: true
+        resident:
+          allOf:
+            - $ref: "#/components/schemas/Resident"
           nullable: true
         is_active:
           type: boolean
