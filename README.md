@@ -207,6 +207,8 @@ Migration jalan otomatis saat container backend start. Jalankan seed data demo s
 docker compose exec backend php artisan db:seed
 ```
 
+> **Foto KTP / storage:** symlink `public/storage` dibuat otomatis oleh container backend saat start dengan target **relatif** (`../storage/app/public`), sehingga valid dipakai bergantian dengan Opsi 1 (native). Kalau sebelumnya pernah menjalankan Opsi 1 dulu, hapus symlink lamanya sekali lalu biarkan container membuatnya ulang — lihat [Troubleshooting](#troubleshooting).
+
 #### Production
 
 Image production membangun backend jadi satu image php-fpm + nginx yang teroptimasi, dan frontend jadi static asset yang di-serve nginx — tidak ada bind mount, semuanya sudah di-bake ke image saat build.
@@ -471,6 +473,29 @@ curl -I https://api.domain-anda.com/api/auth/login
 ```
 
 Buka `https://app.domain-anda.com` di browser dan login dengan [akun demo](#akun-demo) (segera ganti password setelah login pertama untuk penggunaan production).
+
+## Troubleshooting
+
+### `403 Forbidden` (atau `404`) saat mengakses `/storage/*` — mis. foto KTP tidak tampil
+
+Penyebab paling umum: symlink `public/storage` menunjuk ke path absolut host (dibuat oleh `php artisan storage:link` saat menjalankan Opsi 1 native), sedangkan path tersebut tidak ada di dalam container Docker — jadi symlink patah.
+
+Cek dan perbaiki (buat dengan path **relatif** supaya valid di native maupun Docker):
+
+```bash
+cd src/backend
+ls -la public/storage                  # lihat target symlink saat ini
+rm -f public/storage
+ln -s ../storage/app/public public/storage
+```
+
+Setelah itu refresh halaman dan pastikan storage sudah bisa diakses:
+
+```bash
+curl -I http://localhost:8000/storage/ktp-photos/<nama-file>.jpg   # harus 200
+```
+
+Pada workflow Docker, symlink ini juga dibuat ulang otomatis setiap container backend start, jadi cukup diperbaiki sekali saja.
 
 ## Akun Demo
 

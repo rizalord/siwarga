@@ -23,8 +23,13 @@ echo ">> Database siap."
 
 php artisan migrate --force
 
-if [ ! -L public/storage ]; then
-    php artisan storage:link
+# Storage symlink dengan target RELATIF agar valid di dalam container maupun
+# di host (workflow native). Dibuat ulang kalau symlink hilang, patah, atau
+# masih menunjuk path absolut sisa `storage:link` dari host.
+mkdir -p storage/app/public
+if [ ! -L public/storage ] || [ ! -e public/storage ]; then
+    rm -f public/storage
+    ln -s ../storage/app/public public/storage
 fi
 
 exec "$@"

@@ -207,6 +207,8 @@ Migrations run automatically when the backend container starts. Seed demo data o
 docker compose exec backend php artisan db:seed
 ```
 
+> **Storage / ID photos:** the `public/storage` symlink is created automatically by the backend container on start with a **relative** target (`../storage/app/public`), so it stays valid when switching between Option 1 (native) and Docker. If you previously ran Option 1 first, remove the old symlink once and let the container recreate it — see [Troubleshooting](#troubleshooting).
+
 #### Production
 
 The production images build the backend into a single optimized php-fpm + nginx image, and the frontend into a static bundle served by nginx — no bind mounts, everything is baked into the image at build time.
@@ -471,6 +473,29 @@ curl -I https://api.your-domain.com/api/auth/login
 ```
 
 Open `https://app.your-domain.com` in a browser and log in with a [demo account](#demo-accounts) (change the password right after first login for production use).
+
+## Troubleshooting
+
+### `403 Forbidden` (or `404`) when accessing `/storage/*` — e.g. resident ID photos don't load
+
+The most common cause: the `public/storage` symlink points to an absolute host path (created by `php artisan storage:link` while running Option 1 native), but that path doesn't exist inside the Docker container — so the symlink is broken.
+
+Check and fix (create it with a **relative** path so it works both natively and in Docker):
+
+```bash
+cd src/backend
+ls -la public/storage                  # inspect the current symlink target
+rm -f public/storage
+ln -s ../storage/app/public public/storage
+```
+
+Then refresh the page and confirm storage is reachable:
+
+```bash
+curl -I http://localhost:8000/storage/ktp-photos/<file-name>.jpg   # expect 200
+```
+
+On the Docker workflow this symlink is also recreated automatically each time the backend container starts, so you only need to fix it once.
 
 ## Demo Accounts
 

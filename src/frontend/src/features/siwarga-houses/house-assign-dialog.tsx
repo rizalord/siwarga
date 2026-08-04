@@ -51,7 +51,6 @@ export function HouseAssignDialog({
 
   // Fetch residents for search
   const { data: residentsData } = useResidents({
-    status: 'tetap',
     per_page: 50,
   })
   const residents = residentsData?.data ?? []
