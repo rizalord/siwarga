@@ -11,14 +11,16 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PermissionSeeder::class,
             RoleSeeder::class,
-            DueTypeSeeder::class,
-            HouseSeeder::class,
-            ResidentSeeder::class,
             UserSeeder::class,
-            BillSeeder::class,
-            PaymentSeeder::class,
-            ExpenseCategorySeeder::class,
-            ExpenseSeeder::class,
+
+            // Data demo dinonaktifkan agar database awal tetap kosong.
+            // DueTypeSeeder::class,
+            // HouseSeeder::class,
+            // ResidentSeeder::class,
+            // BillSeeder::class,
+            // PaymentSeeder::class,
+            // ExpenseCategorySeeder::class,
+            // ExpenseSeeder::class,
         ]);
     }
 }
