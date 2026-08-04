@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             // ResidentSeeder::class,
             // BillSeeder::class,
             // PaymentSeeder::class,
-            // ExpenseCategorySeeder::class,
+            ExpenseCategorySeeder::class,
             // ExpenseSeeder::class,
         ]);
     }
