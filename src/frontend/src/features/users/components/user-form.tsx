@@ -23,6 +23,7 @@ import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
 import { useCreateUser, useUpdateUser } from '@/hooks/use-users'
 import { useRoles } from '@/hooks/use-roles'
+import { useResidents } from '@/hooks/use-residents'
 import type { User } from '@/types/api'
 
 type UserFormDialogProps = {
@@ -41,6 +42,7 @@ const formSchema = z.object({
   role_id: z.coerce
     .number({ error: 'Role wajib dipilih.' })
     .min(1, 'Role wajib dipilih.'),
+  resident_id: z.number().nullable().optional(),
 })
 
 type UserForm = z.infer<typeof formSchema>
@@ -55,6 +57,10 @@ export function UserFormDialog({
   const createUser = useCreateUser()
   const updateUser = useUpdateUser(currentRow?.id ?? 0)
   const { data: roles } = useRoles({ per_page: 100 })
+  const { data: residentsData, isLoading: residentsLoading } = useResidents({
+    per_page: 100,
+    trashed: 'with',
+  })
   const otherAdminExists = (roles?.data ?? []).some(
     (role) => role.is_admin && (role.users_count ?? 0) > 0 && !isCurrentlyAdmin
   )
@@ -63,6 +69,14 @@ export function UserFormDialog({
     value: String(role.id),
     disable: role.is_admin && otherAdminExists,
   }))
+  const residentOptions = [
+    { label: 'Tidak dihubungkan', value: 'none' },
+    ...(residentsData?.data ?? []).map((resident) => ({
+      label: `${resident.full_name}${resident.deleted_at ? ' (terhapus)' : ''}`,
+      value: String(resident.id),
+      disable: !!resident.deleted_at,
+    })),
+  ]
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -72,14 +86,24 @@ export function UserFormDialog({
           email: currentRow.email,
           password: '',
           role_id: currentRow.roles[0]?.id ?? 0,
+          resident_id: currentRow.resident_id,
         }
       : {
           name: '',
           email: '',
           password: '',
           role_id: undefined as unknown as number,
+          resident_id: null,
         },
   })
+
+  const selectedRoleId = form.watch('role_id')
+  const selectedRole = roles?.data.find(
+    (role) => Number(role.id) === Number(selectedRoleId)
+  )
+  const isWargaRole =
+    selectedRole?.name.toLowerCase() === 'warga' ||
+    selectedRole?.description?.toLowerCase() === 'warga'
 
   const onSubmit = (data: UserForm) => {
     if (isUpdate && currentRow) {
@@ -88,6 +112,7 @@ export function UserFormDialog({
           name: data.name,
           email: data.email,
           role_ids: [data.role_id],
+          resident_id: isWargaRole ? (data.resident_id ?? null) : null,
         },
         {
           onSuccess: () => {
@@ -107,6 +132,7 @@ export function UserFormDialog({
           email: data.email,
           password: data.password,
           role_ids: [data.role_id],
+          resident_id: isWargaRole ? (data.resident_id ?? null) : null,
         },
         {
           onSuccess: () => {
@@ -221,7 +247,17 @@ export function UserFormDialog({
                       defaultValue={
                         field.value ? String(field.value) : 'placeholder'
                       }
-                      onValueChange={(value) => field.onChange(Number(value))}
+                      onValueChange={(value) => {
+                        const nextRoleId = Number(value)
+                        field.onChange(nextRoleId)
+                        if (
+                          roles?.data
+                            .find((role) => Number(role.id) === nextRoleId)
+                            ?.name.toLowerCase() !== 'warga'
+                        ) {
+                          form.setValue('resident_id', null)
+                        }
+                      }}
                       placeholder='Pilih role'
                       className='col-span-4'
                       items={roleOptions}
@@ -240,6 +276,39 @@ export function UserFormDialog({
                       role admin.
                     </p>
                   )}
+                  <FormMessage className='col-span-4 col-start-3' />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='resident_id'
+              render={({ field }) => (
+                <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                  <FormLabel className='col-span-2 text-end'>
+                    Penghuni
+                  </FormLabel>
+                  <FormControl>
+                    <SelectDropdown
+                      defaultValue={
+                        field.value ? String(field.value) : 'none'
+                      }
+                      onValueChange={(value) =>
+                        field.onChange(value === 'none' ? null : Number(value))
+                      }
+                      placeholder='Pilih penghuni'
+                      className='col-span-4'
+                      items={residentOptions}
+                      disabled={!isWargaRole}
+                      isPending={residentsLoading}
+                      isControlled
+                    />
+                  </FormControl>
+                  <p className='col-span-4 col-start-3 text-sm text-muted-foreground'>
+                    {isWargaRole
+                      ? 'Hubungkan akun Warga dengan penghuni yang sesuai.'
+                      : 'Relasi penghuni hanya digunakan untuk role Warga.'}
+                  </p>
                   <FormMessage className='col-span-4 col-start-3' />
                 </FormItem>
               )}

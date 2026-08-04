@@ -154,6 +154,18 @@ export function usersColumns({
       ),
     },
     {
+      id: 'resident',
+      header: 'Penghuni',
+      accessorKey: 'resident.full_name',
+      enableSorting: false,
+      cell: ({ row }) =>
+        row.original.resident ? (
+          <span className='text-sm'>{row.original.resident.full_name}</span>
+        ) : (
+          <span className='text-sm text-muted-foreground'>-</span>
+        ),
+    },
+    {
       id: 'is_active',
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title='Status' />

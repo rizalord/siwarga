@@ -15,7 +15,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::with('roles');
+        $query = User::with(['roles', 'resident']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -91,7 +91,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        return response()->json(['data' => $user->load('roles')]);
+        return response()->json(['data' => $user->load(['roles', 'resident'])]);
     }
 
     public function update(Request $request, User $user)
@@ -134,7 +134,7 @@ class UserController extends Controller
     {
         $this->restoreModel($user);
 
-        return response()->json(['data' => $user->load('roles')]);
+        return response()->json(['data' => $user->load(['roles', 'resident'])]);
     }
 
     public function forceDestroy(User $user)

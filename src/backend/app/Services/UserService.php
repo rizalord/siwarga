@@ -30,7 +30,7 @@ class UserService
             $user->roles()->attach($roleIds);
         }
 
-        return $user->load('roles');
+        return $user->load(['roles', 'resident']);
     }
 
     /**
@@ -68,7 +68,7 @@ class UserService
             $user->roles()->sync($roleIds);
         }
 
-        return $user->load('roles');
+        return $user->load(['roles', 'resident']);
     }
 
     public function delete(User $user): void

@@ -30,6 +30,7 @@ export interface User {
   email: string
   is_active: boolean
   resident_id: number | null
+  resident?: Resident | null
   roles: Role[]
   created_at: string
   updated_at: string

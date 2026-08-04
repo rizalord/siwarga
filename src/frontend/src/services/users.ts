@@ -16,6 +16,7 @@ export const usersService = {
     password: string
     is_active?: boolean
     role_ids?: number[]
+    resident_id?: number | null
   }) => api.post<ApiResponse<User>>('/api/users', data),
   update: (
     id: number,
@@ -24,6 +25,7 @@ export const usersService = {
       email?: string
       is_active?: boolean
       role_ids?: number[]
+      resident_id?: number | null
     }
   ) => api.put<ApiResponse<User>>(`/api/users/${id}`, data),
   delete: (id: number) => api.delete<ApiResponse<null>>(`/api/users/${id}`),

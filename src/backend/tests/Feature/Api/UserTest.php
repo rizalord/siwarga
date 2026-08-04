@@ -145,7 +145,8 @@ class UserTest extends TestCase
             'resident_id' => $resident->id,
         ]);
 
-        $response->assertStatus(201);
+        $response->assertStatus(201)
+            ->assertJsonPath('data.resident.id', $resident->id);
         $this->assertDatabaseHas('users', [
             'email' => 'warga-baru@test.com',
             'resident_id' => $resident->id,

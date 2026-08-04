@@ -30,6 +30,7 @@ export function useCreateUser() {
       password: string
       is_active?: boolean
       role_ids?: number[]
+      resident_id?: number | null
     }) => usersService.create(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users'] })
@@ -46,6 +47,7 @@ export function useUpdateUser(id: number) {
       email?: string
       is_active?: boolean
       role_ids?: number[]
+      resident_id?: number | null
     }) => usersService.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users'] })
