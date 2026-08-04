@@ -23,11 +23,11 @@ class Payment extends Model
 
     public function bill(): BelongsTo
     {
-        return $this->belongsTo(Bill::class);
+        return $this->belongsTo(Bill::class)->withTrashed();
     }
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by')->withTrashed();
     }
 }

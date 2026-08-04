@@ -42,7 +42,7 @@ class User extends Authenticatable implements PasskeyUser
 
     public function resident(): BelongsTo
     {
-        return $this->belongsTo(Resident::class);
+        return $this->belongsTo(Resident::class)->withTrashed();
     }
 
     public function roles(): BelongsToMany

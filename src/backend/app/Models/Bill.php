@@ -31,12 +31,12 @@ class Bill extends Model
 
     public function house(): BelongsTo
     {
-        return $this->belongsTo(House::class);
+        return $this->belongsTo(House::class)->withTrashed();
     }
 
     public function resident(): BelongsTo
     {
-        return $this->belongsTo(Resident::class);
+        return $this->belongsTo(Resident::class)->withTrashed();
     }
 
     public function dueType(): BelongsTo
@@ -51,6 +51,6 @@ class Bill extends Model
 
     public function generator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'generated_by');
+        return $this->belongsTo(User::class, 'generated_by')->withTrashed();
     }
 }

@@ -59,6 +59,18 @@ class BillTest extends TestCase
             ->assertJsonPath('data.0.due_type.name', 'Iuran Terhapus');
     }
 
+    public function test_bill_list_keeps_soft_deleted_resident_in_response()
+    {
+        $bill = Bill::factory()->create();
+        $resident = Resident::findOrFail($bill->resident_id);
+        $resident->delete();
+
+        $this->getJson('/api/bills')
+            ->assertStatus(200)
+            ->assertJsonPath('data.0.resident.id', $resident->id)
+            ->assertJsonPath('data.0.resident.deleted_at', $resident->deleted_at->toISOString());
+    }
+
     public function test_bill_list_includes_total_paid()
     {
         $bill = Bill::factory()->create(['amount_due' => 15000, 'status' => 'belum_lunas']);
