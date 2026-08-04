@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class PaymentServiceTest extends TestCase
@@ -64,5 +65,57 @@ class PaymentServiceTest extends TestCase
         ], $user->id);
 
         $this->assertEquals('belum_lunas', $bill->fresh()->status);
+    }
+
+    public function test_create_rejects_payment_that_exceeds_bill_remaining()
+    {
+        $bill = Bill::factory()->create(['amount_due' => 15000, 'status' => 'belum_lunas']);
+        $user = User::factory()->create();
+
+        (new PaymentService)->create([
+            'bill_id' => $bill->id,
+            'amount_paid' => 10000,
+            'payment_date' => now()->toDateString(),
+        ], $user->id);
+
+        $this->expectException(ValidationException::class);
+
+        (new PaymentService)->create([
+            'bill_id' => $bill->id,
+            'amount_paid' => 15000,
+            'payment_date' => now()->toDateString(),
+        ], $user->id);
+    }
+
+    public function test_create_allows_payment_upto_exact_remaining()
+    {
+        $bill = Bill::factory()->create(['amount_due' => 15000, 'status' => 'belum_lunas']);
+        $user = User::factory()->create();
+
+        (new PaymentService)->create([
+            'bill_id' => $bill->id,
+            'amount_paid' => 10000,
+            'payment_date' => now()->toDateString(),
+        ], $user->id);
+
+        $payment = (new PaymentService)->create([
+            'bill_id' => $bill->id,
+            'amount_paid' => 5000,
+            'payment_date' => now()->toDateString(),
+        ], $user->id);
+
+        $this->assertEquals(5000, $payment->amount_paid);
+        $this->assertEquals('lunas', $bill->fresh()->status);
+    }
+
+    public function test_update_rejects_payment_that_exceeds_bill_remaining()
+    {
+        $bill = Bill::factory()->create(['amount_due' => 15000, 'status' => 'belum_lunas']);
+        Payment::factory()->create(['bill_id' => $bill->id, 'amount_paid' => 10000]);
+        $payment = Payment::factory()->create(['bill_id' => $bill->id, 'amount_paid' => 4000]);
+
+        $this->expectException(ValidationException::class);
+
+        (new PaymentService)->update($payment, ['amount_paid' => 15000]);
     }
 }

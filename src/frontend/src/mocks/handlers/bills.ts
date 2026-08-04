@@ -45,6 +45,7 @@ export const billHandlers = [
       period_start: `${body.year}-${String(body.month).padStart(2, '0')}-01`,
       period_end: `${body.year}-${String(body.month).padStart(2, '0')}-28`,
       amount_due: 100000,
+      total_paid: 0,
       status: 'belum_lunas' as const,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

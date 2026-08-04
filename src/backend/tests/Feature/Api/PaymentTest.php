@@ -124,6 +124,23 @@ class PaymentTest extends TestCase
         $response->assertStatus(201);
     }
 
+    public function test_cannot_create_payment_exceeding_bill_remaining()
+    {
+        $bill = Bill::factory()->create(['amount_due' => 15000, 'status' => 'belum_lunas']);
+
+        $this->postJson('/api/payments', [
+            'bill_id' => $bill->id,
+            'amount_paid' => 10000,
+            'payment_date' => '2026-01-15',
+        ])->assertStatus(201);
+
+        $this->postJson('/api/payments', [
+            'bill_id' => $bill->id,
+            'amount_paid' => 15000,
+            'payment_date' => '2026-01-16',
+        ])->assertStatus(422)->assertJsonValidationErrors('amount_paid');
+    }
+
     public function test_updates_bill_status_to_lunas_when_fully_paid()
     {
         $bill = Bill::factory()->create(['amount_due' => 100000, 'status' => 'belum_lunas']);
@@ -148,7 +165,8 @@ class PaymentTest extends TestCase
 
     public function test_can_update_payment()
     {
-        $payment = Payment::factory()->create(['amount_paid' => 50000]);
+        $bill = Bill::factory()->create(['amount_due' => 100000]);
+        $payment = Payment::factory()->create(['bill_id' => $bill->id, 'amount_paid' => 50000]);
 
         $response = $this->putJson("/api/payments/{$payment->id}", ['amount_paid' => 75000]);
 

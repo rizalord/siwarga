@@ -47,6 +47,28 @@ class BillTest extends TestCase
         $response->assertStatus(200)->assertJsonCount(3, 'data');
     }
 
+    public function test_bill_list_keeps_soft_deleted_due_type_in_response()
+    {
+        $dueType = DueType::factory()->create(['name' => 'Iuran Terhapus']);
+        Bill::factory()->create(['due_type_id' => $dueType->id]);
+        $dueType->delete();
+
+        $this->getJson('/api/bills')
+            ->assertStatus(200)
+            ->assertJsonPath('data.0.due_type.id', $dueType->id)
+            ->assertJsonPath('data.0.due_type.name', 'Iuran Terhapus');
+    }
+
+    public function test_bill_list_includes_total_paid()
+    {
+        $bill = Bill::factory()->create(['amount_due' => 15000, 'status' => 'belum_lunas']);
+        Payment::factory()->create(['bill_id' => $bill->id, 'amount_paid' => 10000]);
+
+        $this->getJson('/api/bills')
+            ->assertStatus(200)
+            ->assertJsonPath('data.0.total_paid', 10000);
+    }
+
     public function test_can_filter_bills_by_month_and_year()
     {
         Bill::factory()->create([

@@ -173,6 +173,7 @@ export interface Bill {
   period_start: string
   period_end: string
   amount_due: number
+  total_paid: number
   status: 'lunas' | 'belum_lunas'
   created_at: string
   updated_at: string

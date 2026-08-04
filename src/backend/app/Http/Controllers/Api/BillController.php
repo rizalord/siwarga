@@ -20,7 +20,8 @@ class BillController extends Controller
 
     public function index(Request $request)
     {
-        $query = Bill::with(['house', 'resident', 'dueType']);
+        $query = Bill::with(['house', 'resident', 'dueType'])
+            ->withSum('payments as total_paid', 'amount_paid');
 
         if ($request->user()->resident_id) {
             $query->where('resident_id', $request->user()->resident_id);
@@ -99,7 +100,8 @@ class BillController extends Controller
             403
         );
 
-        $bill->load(['house', 'resident', 'dueType', 'payments']);
+        $bill->load(['house', 'resident', 'dueType', 'payments'])
+            ->loadSum('payments as total_paid', 'amount_paid');
 
         return new BillResource($bill);
     }
@@ -139,7 +141,8 @@ class BillController extends Controller
     public function restore(Bill $bill)
     {
         $this->restoreModel($bill);
-        $bill->load(['house', 'resident', 'dueType', 'payments']);
+        $bill->load(['house', 'resident', 'dueType', 'payments'])
+            ->loadSum('payments as total_paid', 'amount_paid');
 
         return new BillResource($bill);
     }

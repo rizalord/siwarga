@@ -41,7 +41,7 @@ class Bill extends Model
 
     public function dueType(): BelongsTo
     {
-        return $this->belongsTo(DueType::class);
+        return $this->belongsTo(DueType::class)->withTrashed();
     }
 
     public function payments(): HasMany

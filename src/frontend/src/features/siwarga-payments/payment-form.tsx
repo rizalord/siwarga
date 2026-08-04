@@ -92,13 +92,28 @@ export function PaymentFormDialog({
 
   const selectedBill = bills.find((b) => b.id === form.watch('bill_id'))
 
+  const remaining = selectedBill
+    ? Math.max(0, selectedBill.amount_due - (selectedBill.total_paid ?? 0))
+    : null
+
   const handleBillSelect = (bill: Bill) => {
     form.setValue('bill_id', bill.id)
-    form.setValue('amount_paid', bill.amount_due)
+    const remainingAmount = Math.max(0, bill.amount_due - (bill.total_paid ?? 0))
+    form.setValue('amount_paid', remainingAmount)
     setBillSearchOpen(false)
   }
 
   const onSubmit = (data: PaymentForm) => {
+    if (
+      selectedBill &&
+      data.amount_paid > selectedBill.amount_due - (selectedBill.total_paid ?? 0)
+    ) {
+      form.setError('amount_paid', {
+        message: 'Nominal melebihi sisa tagihan.',
+      })
+      return
+    }
+
     createPayment.mutate(data, {
       onSuccess: () => {
         onOpenChange(false)
@@ -211,6 +226,11 @@ export function PaymentFormDialog({
                       value={(field.value as number | string | undefined) ?? ''}
                     />
                   </FormControl>
+                  {remaining !== null && (
+                    <p className='col-span-4 col-start-3 text-xs text-muted-foreground'>
+                      Sisa tagihan: Rp {remaining.toLocaleString('id-ID')}
+                    </p>
+                  )}
                   <FormMessage className='col-span-4 col-start-3' />
                 </FormItem>
               )}
