@@ -17,6 +17,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useHasPermission } from '@/hooks/use-permission'
 import { DueTypeFormDialog } from './due-type-form'
 import { DueTypesTable } from './due-types-table'
 
@@ -190,6 +191,7 @@ function DueTypesDialogs({
 }
 
 function DueTypesPageInner() {
+  const canManage = useHasPermission('due-types.manage')
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const { data, isLoading, isFetching } = useDueTypes({
@@ -221,9 +223,11 @@ function DueTypesPageInner() {
             <h2 className='text-2xl font-bold tracking-tight'>Jenis Iuran</h2>
             <p className='text-muted-foreground'>Kelola jenis iuran di sini.</p>
           </div>
-          <Button className='space-x-1' onClick={() => setOpen('create')}>
-            <span>Tambah Jenis Iuran</span> <Plus size={18} />
-          </Button>
+          {canManage && (
+            <Button className='space-x-1' onClick={() => setOpen('create')}>
+              <span>Tambah Jenis Iuran</span> <Plus size={18} />
+            </Button>
+          )}
         </div>
         {isLoading ? (
           <div className='flex flex-1 items-center justify-center'>

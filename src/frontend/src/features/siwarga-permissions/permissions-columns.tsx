@@ -13,6 +13,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DataTableColumnHeader } from '@/components/data-table'
+import { useAuthStore } from '@/stores/auth-store'
+
+const EMPTY_PERMISSIONS: string[] = []
 
 type PermissionsColumnsProps = {
   setOpen: (open: 'create' | 'update' | 'delete' | null) => void
@@ -24,6 +27,12 @@ export function permissionsColumns({
   setCurrentRow,
 }: PermissionsColumnsProps): ColumnDef<Permission>[] {
   function DataTableRowActions({ row }: { row: Row<Permission> }) {
+    const permissions = useAuthStore(
+      (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
+    )
+
+    if (!permissions.includes('users.manage')) return null
+
     return (
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>

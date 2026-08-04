@@ -72,6 +72,7 @@ export function UsersTable({
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
   const canManageTrash = permissions.includes('users.trash')
+  const canManage = permissions.includes('users.manage')
   const trashedFilter = search.trashed
   const isOnlyTrashed = trashedFilter === 'only'
 
@@ -141,7 +142,7 @@ export function UsersTable({
     table.resetRowSelection()
   }
 
-  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+  const shouldShowBulkActions = isOnlyTrashed ? canManageTrash : canManage
 
   return (
     <div

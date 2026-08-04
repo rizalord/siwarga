@@ -25,6 +25,9 @@ function DataTableRowActions({ row }: { row: Row<House> }) {
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
   const canManageTrash = permissions.includes('houses.trash')
+  const canEdit = permissions.includes('houses.edit')
+  const canDelete = permissions.includes('houses.delete')
+  const canAssign = permissions.includes('houses.assign')
   const isTrashed = row.original.deleted_at !== null
 
   if (isTrashed && !canManageTrash) {
@@ -72,30 +75,34 @@ function DataTableRowActions({ row }: { row: Row<House> }) {
           </>
         ) : (
           <>
-            <DropdownMenuItem
-              onClick={() => {
-                setCurrentRow(row.original)
-                setOpen('update')
-              }}
-            >
-              Ubah
-              <DropdownMenuShortcut>
-                <UserPen size={16} />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                setCurrentRow(row.original)
-                setOpen('assign')
-              }}
-            >
-              Tugaskan
-              <DropdownMenuShortcut>
-                <UserPlus size={16} />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
-            {row.original.current_resident && (
+            {canEdit && (
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('update')
+                }}
+              >
+                Ubah
+                <DropdownMenuShortcut>
+                  <UserPen size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            )}
+            {(canEdit || canAssign) && <DropdownMenuSeparator />}
+            {canAssign && (
+              <DropdownMenuItem
+                onClick={() => {
+                  setCurrentRow(row.original)
+                  setOpen('assign')
+                }}
+              >
+                Tugaskan
+                <DropdownMenuShortcut>
+                  <UserPlus size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            )}
+            {canAssign && row.original.current_resident && (
               <DropdownMenuItem
                 onClick={() => {
                   setCurrentRow(row.original)
@@ -108,19 +115,23 @@ function DataTableRowActions({ row }: { row: Row<House> }) {
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
             )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                setCurrentRow(row.original)
-                setOpen('delete')
-              }}
-              className='text-red-500!'
-            >
-              Hapus
-              <DropdownMenuShortcut>
-                <Trash2 size={16} />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
+            {canDelete && (
+              <>
+                {(canEdit || canAssign) && <DropdownMenuSeparator />}
+                <DropdownMenuItem
+                  onClick={() => {
+                    setCurrentRow(row.original)
+                    setOpen('delete')
+                  }}
+                  className='text-red-500!'
+                >
+                  Hapus
+                  <DropdownMenuShortcut>
+                    <Trash2 size={16} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              </>
+            )}
           </>
         )}
       </DropdownMenuContent>

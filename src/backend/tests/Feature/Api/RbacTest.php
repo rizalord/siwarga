@@ -117,6 +117,27 @@ class RbacTest extends TestCase
         $response->assertStatus(403);
     }
 
+    public function test_bendahara_can_view_but_cannot_manage_houses(): void
+    {
+        $house = House::factory()->create();
+
+        $this->actingAs($this->bendahara)
+            ->getJson('/api/houses')
+            ->assertStatus(200);
+
+        $this->actingAs($this->bendahara)
+            ->postJson('/api/houses', ['house_number' => 'B-99'])
+            ->assertStatus(403);
+
+        $this->actingAs($this->bendahara)
+            ->putJson("/api/houses/{$house->id}", ['house_number' => 'B-98'])
+            ->assertStatus(403);
+
+        $this->actingAs($this->bendahara)
+            ->deleteJson("/api/houses/{$house->id}")
+            ->assertStatus(403);
+    }
+
     public function test_warga_cannot_generate_bills(): void
     {
         $response = $this->actingAs($this->warga)

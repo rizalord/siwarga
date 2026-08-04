@@ -88,6 +88,7 @@ export function ExpensesTable({
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
   const canManageTrash = permissions.includes('expenses.trash')
+  const canDelete = permissions.includes('expenses.delete')
   const trashedFilter = search.trashed
   const isOnlyTrashed = trashedFilter === 'only'
 
@@ -194,7 +195,7 @@ export function ExpensesTable({
     table.resetRowSelection()
   }
 
-  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+  const shouldShowBulkActions = isOnlyTrashed ? canManageTrash : canDelete
 
   return (
     <div

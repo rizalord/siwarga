@@ -13,6 +13,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useHasPermission } from '@/hooks/use-permission'
 import { HouseAssignDialog } from './house-assign-dialog'
 import { HouseDeleteDialog } from './house-delete-dialog'
 import { HouseFormDialog } from './house-form'
@@ -24,6 +25,12 @@ const route = getRouteApi('/_authenticated/houses/')
 
 function HousesPrimaryButtons() {
   const { setOpen } = useHousesContext()
+  const canCreate = useHasPermission('houses.create')
+
+  if (!canCreate) {
+    return null
+  }
+
   return (
     <Button className='space-x-1' onClick={() => setOpen('create')}>
       <span>Tambah Rumah</span> <Plus size={18} />

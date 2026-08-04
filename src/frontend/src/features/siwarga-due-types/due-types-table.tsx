@@ -72,6 +72,7 @@ export function DueTypesTable({
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
   const canManageTrash = permissions.includes('due-types.trash')
+  const canManage = permissions.includes('due-types.manage')
   const trashedFilter = search.trashed
   const isOnlyTrashed = trashedFilter === 'only'
 
@@ -141,7 +142,7 @@ export function DueTypesTable({
     table.resetRowSelection()
   }
 
-  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+  const shouldShowBulkActions = isOnlyTrashed ? canManageTrash : canManage
 
   return (
     <div

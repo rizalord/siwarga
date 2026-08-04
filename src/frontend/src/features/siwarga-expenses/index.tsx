@@ -17,6 +17,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useHasPermission } from '@/hooks/use-permission'
 import { ExpenseFormDialog } from './expense-form'
 import { ExpensesTable } from './expenses-table'
 
@@ -190,6 +191,7 @@ function ExpensesDialogs({
 }
 
 function ExpensesPageInner() {
+  const canCreate = useHasPermission('expenses.create')
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const { data, isLoading, isFetching } = useExpenses({
@@ -226,9 +228,11 @@ function ExpensesPageInner() {
               Kelola pengeluaran kas RT di sini.
             </p>
           </div>
-          <Button className='space-x-1' onClick={() => setOpen('create')}>
-            <span>Catat Pengeluaran</span> <Plus size={18} />
-          </Button>
+          {canCreate && (
+            <Button className='space-x-1' onClick={() => setOpen('create')}>
+              <span>Catat Pengeluaran</span> <Plus size={18} />
+            </Button>
+          )}
         </div>
         {isLoading ? (
           <div className='flex flex-1 items-center justify-center'>

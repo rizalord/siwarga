@@ -5,6 +5,7 @@ import {
   useGenerateFlexibleBills,
 } from '@/hooks/use-bills'
 import { useDueTypes } from '@/hooks/use-due-types'
+import { useHasPermission } from '@/hooks/use-permission'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,6 +26,7 @@ import {
 } from '@/components/ui/select'
 
 export function BillsGenerateButton() {
+  const canGenerate = useHasPermission('bills.generate')
   const [open, setOpen] = useState(false)
   const [month, setMonth] = useState(new Date().getMonth() + 1)
   const [year, setYear] = useState(new Date().getFullYear())
@@ -60,6 +62,8 @@ export function BillsGenerateButton() {
       { onSuccess: () => setOpen(false) }
     )
   }
+
+  if (!canGenerate) return null
 
   return (
     <>

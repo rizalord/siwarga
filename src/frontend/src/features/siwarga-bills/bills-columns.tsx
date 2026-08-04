@@ -40,9 +40,14 @@ function DataTableRowActions({ row }: { row: Row<Bill> }) {
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
   const canManageTrash = permissions.includes('bills.trash')
+  const canDelete = permissions.includes('bills.generate')
   const isTrashed = row.original.deleted_at !== null
 
   if (isTrashed && !canManageTrash) {
+    return null
+  }
+
+  if (!isTrashed && !canDelete) {
     return null
   }
 

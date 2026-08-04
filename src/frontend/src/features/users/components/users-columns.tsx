@@ -33,10 +33,15 @@ export function usersColumns({
       (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
     )
     const canManageTrash = permissions.includes('users.trash')
+    const canManage = permissions.includes('users.manage')
     const isTrashed = row.original.deleted_at !== null
     const isAdmin = row.original.roles.some((r) => r.is_admin)
 
     if (isTrashed && !canManageTrash) {
+      return null
+    }
+
+    if (!isTrashed && !canManage) {
       return null
     }
 
@@ -81,18 +86,20 @@ export function usersColumns({
             </>
           ) : (
             <>
-              <DropdownMenuItem
-                onClick={() => {
-                  setCurrentRow(row.original)
-                  setOpen('update')
-                }}
-              >
-                Ubah
-                <DropdownMenuShortcut>
-                  <UserPen size={16} />
-                </DropdownMenuShortcut>
-              </DropdownMenuItem>
-              {!isAdmin && (
+              {canManage && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setCurrentRow(row.original)
+                    setOpen('update')
+                  }}
+                >
+                  Ubah
+                  <DropdownMenuShortcut>
+                    <UserPen size={16} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              )}
+              {!isAdmin && canManage && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

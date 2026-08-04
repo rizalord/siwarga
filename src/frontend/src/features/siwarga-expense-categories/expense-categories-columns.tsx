@@ -32,9 +32,14 @@ export function expenseCategoriesColumns({
       (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
     )
     const canManageTrash = permissions.includes('expense-categories.trash')
+    const canManage = permissions.includes('expense-categories.manage')
     const isTrashed = row.original.deleted_at !== null
 
     if (isTrashed && !canManageTrash) {
+      return null
+    }
+
+    if (!isTrashed && !canManage) {
       return null
     }
 
@@ -79,30 +84,34 @@ export function expenseCategoriesColumns({
             </>
           ) : (
             <>
-              <DropdownMenuItem
-                onClick={() => {
-                  setCurrentRow(row.original)
-                  setOpen('update')
-                }}
-              >
-                Ubah
-                <DropdownMenuShortcut>
-                  <UserPen size={16} />
-                </DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant='destructive'
-                onClick={() => {
-                  setCurrentRow(row.original)
-                  setOpen('delete')
-                }}
-              >
-                Hapus
-                <DropdownMenuShortcut>
-                  <Trash2 size={16} />
-                </DropdownMenuShortcut>
-              </DropdownMenuItem>
+              {canManage && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setCurrentRow(row.original)
+                    setOpen('update')
+                  }}
+                >
+                  Ubah
+                  <DropdownMenuShortcut>
+                    <UserPen size={16} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              )}
+              {canManage && <DropdownMenuSeparator />}
+              {canManage && (
+                <DropdownMenuItem
+                  variant='destructive'
+                  onClick={() => {
+                    setCurrentRow(row.original)
+                    setOpen('delete')
+                  }}
+                >
+                  Hapus
+                  <DropdownMenuShortcut>
+                    <Trash2 size={16} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              )}
             </>
           )}
         </DropdownMenuContent>

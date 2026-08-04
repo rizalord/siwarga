@@ -83,6 +83,7 @@ export function BillsTable({
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
   const canManageTrash = permissions.includes('bills.trash')
+  const canDelete = permissions.includes('bills.generate')
   const trashedFilter = search.trashed
   const isOnlyTrashed = trashedFilter === 'only'
 
@@ -164,7 +165,7 @@ export function BillsTable({
     table.resetRowSelection()
   }
 
-  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+  const shouldShowBulkActions = isOnlyTrashed ? canManageTrash : canDelete
 
   return (
     <div

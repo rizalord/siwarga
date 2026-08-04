@@ -72,6 +72,7 @@ export function ExpenseCategoriesTable({
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
   const canManageTrash = permissions.includes('expense-categories.trash')
+  const canManage = permissions.includes('expense-categories.manage')
   const trashedFilter = search.trashed
   const isOnlyTrashed = trashedFilter === 'only'
 
@@ -141,7 +142,7 @@ export function ExpenseCategoriesTable({
     table.resetRowSelection()
   }
 
-  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+  const shouldShowBulkActions = isOnlyTrashed ? canManageTrash : canManage
 
   return (
     <div

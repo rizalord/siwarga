@@ -13,6 +13,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useHasPermission } from '@/hooks/use-permission'
 import { ResidentDeleteDialog } from './resident-delete-dialog'
 import { ResidentFormDialog } from './resident-form'
 import { ResidentsProvider, useResidentsContext } from './residents-provider'
@@ -22,6 +23,10 @@ const route = getRouteApi('/_authenticated/residents/')
 
 function ResidentsPrimaryButtons() {
   const { setOpen } = useResidentsContext()
+  const canCreate = useHasPermission('residents.create')
+
+  if (!canCreate) return null
+
   return (
     <Button className='space-x-1' onClick={() => setOpen('create')}>
       <span>Tambah Penghuni</span> <Plus size={18} />

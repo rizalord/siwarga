@@ -81,6 +81,7 @@ export function PaymentsTable({
     (state) => state.auth.user?.permissions ?? EMPTY_PERMISSIONS
   )
   const canManageTrash = permissions.includes('payments.trash')
+  const canDelete = permissions.includes('payments.create')
   const trashedFilter = search.trashed
   const isOnlyTrashed = trashedFilter === 'only'
 
@@ -173,7 +174,7 @@ export function PaymentsTable({
     table.resetRowSelection()
   }
 
-  const shouldShowBulkActions = !isOnlyTrashed || canManageTrash
+  const shouldShowBulkActions = isOnlyTrashed ? canManageTrash : canDelete
 
   return (
     <div

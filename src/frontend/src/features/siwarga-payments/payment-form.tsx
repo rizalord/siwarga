@@ -164,11 +164,13 @@ export function PaymentFormDialog({
                             variant='outline'
                             role='combobox'
                             aria-expanded={billSearchOpen}
-                            className='w-full justify-between font-normal'
+                            className='w-full min-w-0 justify-between font-normal'
                           >
-                            {selectedBill
-                              ? formatBillLabel(selectedBill)
-                              : 'Pilih tagihan...'}
+                            <span className='min-w-0 flex-1 truncate text-start'>
+                              {selectedBill
+                                ? formatBillLabel(selectedBill)
+                                : 'Pilih tagihan...'}
+                            </span>
                             <ChevronsUpDownIcon className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                           </Button>
                         </PopoverTrigger>
@@ -194,7 +196,9 @@ export function PaymentFormDialog({
                                           : 'opacity-0'
                                       )}
                                     />
-                                    {formatBillLabel(bill)}
+                                    <span className='min-w-0 truncate'>
+                                      {formatBillLabel(bill)}
+                                    </span>
                                   </CommandItem>
                                 ))}
                               </CommandGroup>

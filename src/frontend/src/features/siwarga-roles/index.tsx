@@ -12,6 +12,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useHasPermission } from '@/hooks/use-permission'
 import { RoleFormDialog } from './role-form'
 import { RolesTable } from './roles-table'
 
@@ -103,6 +104,7 @@ function RolesDialogs({
 }
 
 function RolesPageInner() {
+  const canManage = useHasPermission('users.manage')
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const { data, isLoading, isFetching } = useRoles({
@@ -133,9 +135,11 @@ function RolesPageInner() {
               Kelola role dan hak akses pengguna di sini.
             </p>
           </div>
-          <Button className='space-x-1' onClick={() => setOpen('create')}>
-            <span>Tambah Role</span> <Plus size={18} />
-          </Button>
+          {canManage && (
+            <Button className='space-x-1' onClick={() => setOpen('create')}>
+              <span>Tambah Role</span> <Plus size={18} />
+            </Button>
+          )}
         </div>
         {isLoading ? (
           <div className='flex flex-1 items-center justify-center'>

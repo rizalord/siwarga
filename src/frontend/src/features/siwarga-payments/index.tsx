@@ -8,6 +8,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useHasPermission } from '@/hooks/use-permission'
 import { PaymentDeleteDialog } from './payment-delete-dialog'
 import { PaymentFormDialog } from './payment-form'
 import { PaymentsProvider, usePaymentsContext } from './payments-provider'
@@ -32,6 +33,7 @@ function PaymentsDialogs() {
 }
 
 function PaymentsPageInner() {
+  const canCreate = useHasPermission('payments.create')
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const { data, isLoading, isFetching } = usePayments({
@@ -64,9 +66,11 @@ function PaymentsPageInner() {
               Kelola pembayaran iuran di sini.
             </p>
           </div>
-          <Button className='space-x-1' onClick={() => setOpen('create')}>
-            <span>Catat Pembayaran</span> <Plus size={18} />
-          </Button>
+          {canCreate && (
+            <Button className='space-x-1' onClick={() => setOpen('create')}>
+              <span>Catat Pembayaran</span> <Plus size={18} />
+            </Button>
+          )}
         </div>
         {isLoading ? (
           <div className='flex flex-1 items-center justify-center'>

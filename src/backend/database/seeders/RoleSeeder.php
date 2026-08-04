@@ -13,22 +13,34 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = Role::create(['name' => 'admin', 'description' => 'Administrator']);
-        $bendahara = Role::create(['name' => 'bendahara', 'description' => 'Bendahara']);
-        $warga = Role::create(['name' => 'warga', 'description' => 'Warga']);
+        $admin = Role::updateOrCreate(
+            ['name' => 'admin'],
+            ['description' => 'Administrator']
+        );
+        $bendahara = Role::updateOrCreate(
+            ['name' => 'bendahara'],
+            ['description' => 'Bendahara']
+        );
+        $warga = Role::updateOrCreate(
+            ['name' => 'warga'],
+            ['description' => 'Warga']
+        );
 
         // Admin gets all permissions
-        $admin->permissions()->attach(Permission::all()->pluck('id'));
+        $admin->permissions()->sync(Permission::all()->pluck('id'));
 
-        // Bendahara gets financial permissions
-        $bendahara->permissions()->attach(Permission::whereIn('name', [
-            'houses.view', 'bills.view', 'bills.view.all', 'bills.generate', 'bills.trash', 'payments.view', 'payments.view.all', 'payments.create', 'payments.trash',
+        // Bendahara manages finance, but cannot change master data rumah/penghuni.
+        $bendahara->permissions()->sync(Permission::whereIn('name', [
+            'houses.view',
+            'bills.view', 'bills.view.all', 'bills.generate', 'bills.trash',
+            'payments.view', 'payments.view.all', 'payments.create', 'payments.trash',
             'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'expenses.trash',
-            'expense-categories.view', 'expense-categories.manage', 'expense-categories.trash', 'reports.view',
+            'expense-categories.view', 'expense-categories.manage', 'expense-categories.trash',
+            'reports.view',
         ])->pluck('id'));
 
-        // Warga gets view-only
-        $warga->permissions()->attach(Permission::whereIn('name', [
+        // Warga can only view bills/payments within their own resident scope.
+        $warga->permissions()->sync(Permission::whereIn('name', [
             'bills.view', 'bills.view.own', 'payments.view', 'payments.view.own',
         ])->pluck('id'));
     }
