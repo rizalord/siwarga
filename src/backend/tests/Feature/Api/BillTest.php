@@ -182,7 +182,7 @@ class BillTest extends TestCase
         $this->assertDatabaseCount('bills', 1);
     }
 
-    public function test_annual_due_type_generates_one_bill_covering_full_year()
+    public function test_flexible_due_type_generates_custom_period_and_amount()
     {
         $dueType = DueType::factory()->create(['amount' => 15000, 'billing_cycle' => 'fleksibel']);
         $house = House::factory()->create(['status' => 'dihuni']);
@@ -192,17 +192,22 @@ class BillTest extends TestCase
             'start_date' => '2026-01-01',
         ]);
 
-        $this->postJson('/api/bills/generate', ['month' => 1, 'year' => 2026]);
-        // Generating again for a different month in the same year must not duplicate the annual bill.
-        $this->postJson('/api/bills/generate', ['month' => 6, 'year' => 2026]);
+        $payload = [
+            'due_type_id' => $dueType->id,
+            'period_start' => '2026-08-01',
+            'period_end' => '2026-08-31',
+            'amount_due' => 100000,
+        ];
+        $this->postJson('/api/bills/generate-flexible', $payload);
+        $this->postJson('/api/bills/generate-flexible', $payload);
 
         $this->assertDatabaseCount('bills', 1);
         $bill = Bill::first();
         $this->assertEquals($house->id, $bill->house_id);
         $this->assertEquals($dueType->id, $bill->due_type_id);
-        $this->assertEquals(180000, $bill->amount_due);
-        $this->assertEquals('2026-01-01', $bill->period_start->toDateString());
-        $this->assertEquals('2026-12-31', $bill->period_end->toDateString());
+        $this->assertEquals(100000, $bill->amount_due);
+        $this->assertEquals('2026-08-01', $bill->period_start->toDateString());
+        $this->assertEquals('2026-08-31', $bill->period_end->toDateString());
     }
 
     public function test_can_show_bill()

@@ -16,7 +16,7 @@
 RT di sebuah perumahan elite (20 rumah — 15 dihuni tetap, 5 kontrak/kosong berkala) saat ini mengelola iuran bulanan (satpam & kebersihan) dan pengeluaran operasional secara manual. Dibutuhkan aplikasi web untuk:
 
 1. Mendigitalisasi pencatatan penghuni, rumah, dan histori huniannya.
-2. Mengotomasi penagihan iuran bulanan/tahunan sesuai status rumah dan penghuni.
+2. Mengotomasi penagihan iuran bulanan dan pembuatan iuran fleksibel sesuai status rumah dan penghuni.
 3. Mencatat pengeluaran operasional RT.
 4. Menyediakan laporan keuangan (saldo, grafik pemasukan-pengeluaran) untuk transparansi ke warga.
 5. Membatasi akses fitur berdasarkan peran (RBAC) — RT/Admin, Bendahara, Warga.
@@ -124,10 +124,11 @@ Detail lengkap ada di file `siwarga-erd.dbml` (dapat di-import ke dbdiagram.io).
 
 ### 5.4 Modul Kelola Iuran & Tagihan
 - Master jenis iuran (nama, nominal, siklus bulanan/fleksibel) dikelola Admin.
-- **Generate tagihan bulanan** (aksi manual oleh Admin/Bendahara, dipicu dari UI):
+- **Generate tagihan** (aksi manual oleh Admin/Bendahara, dipicu dari UI):
+  - Iuran bulanan dibuat untuk satu bulan berdasarkan nominal jenis iuran.
+  - Iuran fleksibel dibuat manual dengan jenis iuran, nominal, dan periode mulai/selesai yang ditentukan Admin.
   - 15 rumah tetap → selalu ditagih tiap bulan.
   - 5 rumah kontrak/kosong → hanya ditagih jika ada `house_residents` aktif pada bulan tersebut.
-  - Iuran kebersihan mendukung periode tahunan (1 tagihan mencakup 12 bulan) jika dipilih; iuran satpam default bulanan.
 - List tagihan dengan filter: bulan, status (lunas/belum lunas), rumah.
 - **Acceptance Criteria:** generate tagihan tidak boleh duplikat untuk kombinasi rumah + jenis iuran + periode yang sama (idempotent).
 

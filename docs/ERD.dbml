@@ -46,7 +46,7 @@ Table due_types {
   id            bigint          [pk, increment]
   name          varchar(50)     [not null, note: 'contoh: Satpam, Kebersihan']
   amount        decimal(12,2)   [not null, note: 'nominal per bulan, contoh 100000 / 15000']
-  billing_cycle enum('bulanan', 'fleksibel') [not null, default: 'bulanan', note: 'satpam biasanya bulanan, kebersihan (fleksibel) bisa ditagih tahunan sekaligus (12x nominal)']
+  billing_cycle enum('bulanan', 'fleksibel') [not null, default: 'bulanan', note: 'bulanan dibuat rutin; fleksibel dibuat manual dengan periode dan nominal yang dapat ditentukan']
   created_at    timestamp
   updated_at    timestamp
   deleted_at    timestamp       [note: 'soft delete']
@@ -60,7 +60,7 @@ Table bills {
   resident_id       bigint        [not null, note: 'penghuni yang wajib bayar pada periode ini']
   due_type_id       bigint        [not null]
   period_start      date          [not null]
-  period_end        date          [not null, note: 'untuk bulanan = akhir bulan period_start, untuk tahunan (fleksibel) = 31 Des tahun period_start']
+  period_end        date          [not null, note: 'untuk bulanan = akhir bulan; untuk fleksibel = tanggal selesai yang ditentukan saat generate']
   amount_due        decimal(12,2) [not null]
   status            enum('lunas', 'belum_lunas') [not null, default: 'belum_lunas']
   generated_at      timestamp     [note: 'kapan tagihan ini dibuat oleh sistem/RT']

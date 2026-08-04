@@ -32,7 +32,7 @@ Aplikasi web untuk mengelola administrasi RT: penghuni, rumah, iuran bulanan, pe
 |---|---|
 | 👤 **Manajemen Penghuni** | CRUD penghuni dengan foto KTP, status kontrak/tetap, status pernikahan |
 | 🏠 **Manajemen Rumah** | CRUD rumah, histori penghuni (timeline), assign/pindah penghuni |
-| 💵 **Iuran & Tagihan** | Master jenis iuran, generate tagihan bulanan (idempotent), dukungan iuran tahunan |
+| 💵 **Iuran & Tagihan** | Master jenis iuran, generate tagihan bulanan (idempotent), dan iuran fleksibel dengan periode serta nominal manual |
 | 💳 **Pembayaran** | Catat pembayaran, status tagihan otomatis jadi lunas |
 | 🧾 **Pengeluaran** | Catat pengeluaran operasional RT dengan kategori bebas |
 | 📊 **Dashboard & Laporan** | Grafik pemasukan vs pengeluaran per tahun, laporan detail per bulan |
@@ -521,7 +521,10 @@ Seeder (`php artisan migrate --seed` atau `db:seed`) otomatis membuat 3 akun (sa
 | POST | `/api/houses/{id}/assign-resident` | Assign penghuni ke rumah |
 | POST | `/api/houses/{id}/vacate-resident` | Kosongkan rumah (tutup histori hunian) |
 | `GET/POST/PUT/DELETE` | `/api/due-types` | CRUD jenis iuran |
-| `GET/POST/DELETE` | `/api/bills` | List, generate, hapus tagihan |
+| GET | `/api/bills` | List tagihan |
+| POST | `/api/bills/generate` | Generate tagihan bulanan |
+| POST | `/api/bills/generate-flexible` | Generate tagihan fleksibel dengan jenis, nominal, dan periode manual |
+| `DELETE` | `/api/bills` | Hapus tagihan |
 | `GET/POST/PUT/DELETE` | `/api/payments` | List, catat, hapus pembayaran |
 | `GET/POST/PUT/DELETE` | `/api/expenses` | CRUD pengeluaran |
 | GET | `/api/reports/summary/{year}` | Ringkasan grafik tahunan + saldo |

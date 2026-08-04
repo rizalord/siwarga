@@ -17,14 +17,13 @@ class BillGenerationService
         $dueTypes = DueType::all();
 
         foreach ($dueTypes as $dueType) {
-            $isAnnual = $dueType->billing_cycle === 'fleksibel';
-            $periodStart = $isAnnual
-                ? Carbon::createFromDate($year, 1, 1)
-                : Carbon::createFromDate($year, $month, 1);
-            $periodEnd = $isAnnual
-                ? Carbon::createFromDate($year, 12, 31)
-                : $periodStart->copy()->endOfMonth();
-            $amountDue = $isAnnual ? $dueType->amount * 12 : $dueType->amount;
+            if ($dueType->billing_cycle !== 'bulanan') {
+                continue;
+            }
+
+            $periodStart = Carbon::createFromDate($year, $month, 1);
+            $periodEnd = $periodStart->copy()->endOfMonth();
+            $amountDue = $dueType->amount;
 
             $houses = House::where('status', 'dihuni')->get();
             foreach ($houses as $house) {
@@ -36,15 +35,12 @@ class BillGenerationService
                     continue;
                 }
 
-                $exists = $isAnnual
-                    ? Bill::where('house_id', $house->id)
-                        ->where('due_type_id', $dueType->id)
-                        ->whereYear('period_start', $year)
-                        ->exists()
-                    : Bill::where('house_id', $house->id)
-                        ->where('due_type_id', $dueType->id)
-                        ->whereYear('period_start', $year)->whereMonth('period_start', $month)
-                        ->exists();
+                $exists = Bill::withTrashed()
+                    ->where('house_id', $house->id)
+                    ->where('due_type_id', $dueType->id)
+                    ->whereDate('period_start', $periodStart)
+                    ->whereDate('period_end', $periodEnd)
+                    ->exists();
                 if ($exists) {
                     continue;
                 }
@@ -61,6 +57,61 @@ class BillGenerationService
                 ]);
                 $generated->push($bill);
             }
+        }
+
+        return $generated;
+    }
+
+    public function generateFlexible(
+        int $dueTypeId,
+        Carbon $periodStart,
+        Carbon $periodEnd,
+        float $amountDue,
+        ?int $generatedBy = null,
+    ): Collection {
+        $dueType = DueType::findOrFail($dueTypeId);
+
+        if ($dueType->billing_cycle !== 'fleksibel') {
+            abort(422, 'Jenis iuran ini hanya dapat dibuat melalui generate bulanan.');
+        }
+
+        $generated = collect();
+        $houses = House::where('status', 'dihuni')->get();
+
+        foreach ($houses as $house) {
+            $activeResident = HouseResident::where('house_id', $house->id)
+                ->whereDate('start_date', '<=', $periodEnd)
+                ->where(function ($query) use ($periodStart) {
+                    $query->whereNull('end_date')
+                        ->orWhereDate('end_date', '>=', $periodStart);
+                })
+                ->first();
+
+            if (! $activeResident) {
+                continue;
+            }
+
+            $exists = Bill::withTrashed()
+                ->where('house_id', $house->id)
+                ->where('due_type_id', $dueType->id)
+                ->whereDate('period_start', $periodStart)
+                ->whereDate('period_end', $periodEnd)
+                ->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            $generated->push(Bill::create([
+                'house_id' => $house->id,
+                'resident_id' => $activeResident->resident_id,
+                'due_type_id' => $dueType->id,
+                'period_start' => $periodStart,
+                'period_end' => $periodEnd,
+                'amount_due' => $amountDue,
+                'generated_by' => $generatedBy,
+                'generated_at' => now(),
+            ]));
         }
 
         return $generated;

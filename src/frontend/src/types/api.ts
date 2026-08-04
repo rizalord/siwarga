@@ -185,6 +185,13 @@ export interface GenerateBillsRequest {
   year: number
 }
 
+export interface GenerateFlexibleBillsRequest {
+  due_type_id: number
+  period_start: string
+  period_end: string
+  amount_due: number
+}
+
 // Payments
 export interface Payment {
   id: number

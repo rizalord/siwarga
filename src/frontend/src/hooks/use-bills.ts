@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { billsService } from '@/services/bills'
-import type { BillFilter, GenerateBillsRequest } from '@/types/api'
+import type {
+  BillFilter,
+  GenerateBillsRequest,
+  GenerateFlexibleBillsRequest,
+} from '@/types/api'
 import { toast } from 'sonner'
 
 export function useBills(params?: BillFilter) {
@@ -28,6 +32,18 @@ export function useGenerateBills() {
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['bills'] })
       toast.success(res.data.message ?? 'Tagihan berhasil dibuat')
+    },
+  })
+}
+
+export function useGenerateFlexibleBills() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: GenerateFlexibleBillsRequest) =>
+      billsService.generateFlexible(data),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['bills'] })
+      toast.success(res.data.message ?? 'Tagihan fleksibel berhasil dibuat')
     },
   })
 }

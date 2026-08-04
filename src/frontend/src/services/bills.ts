@@ -3,6 +3,7 @@ import type {
   PaginatedResponse,
   Bill,
   GenerateBillsRequest,
+  GenerateFlexibleBillsRequest,
   BillFilter,
 } from '@/types/api'
 import api from './api'
@@ -13,6 +14,8 @@ export const billsService = {
   getById: (id: number) => api.get<ApiResponse<Bill>>(`/api/bills/${id}`),
   generate: (data: GenerateBillsRequest) =>
     api.post<ApiResponse<Bill[]>>('/api/bills/generate', data),
+  generateFlexible: (data: GenerateFlexibleBillsRequest) =>
+    api.post<ApiResponse<Bill[]>>('/api/bills/generate-flexible', data),
   delete: (id: number) => api.delete<ApiResponse<null>>(`/api/bills/${id}`),
   restore: (id: number) =>
     api.post<ApiResponse<Bill>>(`/api/bills/${id}/restore`),

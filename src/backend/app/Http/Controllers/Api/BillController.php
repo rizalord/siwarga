@@ -9,6 +9,7 @@ use App\Services\BillGenerationService;
 use App\Services\BillService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class BillController extends Controller
@@ -117,6 +118,33 @@ class BillController extends Controller
             $validated['month'],
             $validated['year'],
             $request->user()->id
+        );
+
+        return response()->json([
+            'data' => BillResource::collection($bills),
+            'message' => $bills->count().' bills generated',
+        ], 201);
+    }
+
+    public function generateFlexible(Request $request)
+    {
+        $validated = $request->validate([
+            'due_type_id' => [
+                'required',
+                'integer',
+                Rule::exists('due_types', 'id')->whereNull('deleted_at'),
+            ],
+            'period_start' => 'required|date',
+            'period_end' => 'required|date|after_or_equal:period_start',
+            'amount_due' => 'required|numeric|min:0.01',
+        ]);
+
+        $bills = $this->billGenerationService->generateFlexible(
+            $validated['due_type_id'],
+            \Carbon\Carbon::parse($validated['period_start']),
+            \Carbon\Carbon::parse($validated['period_end']),
+            (float) $validated['amount_due'],
+            $request->user()->id,
         );
 
         return response()->json([

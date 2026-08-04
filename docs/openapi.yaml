@@ -972,6 +972,48 @@ paths:
         "422":
           $ref: "#/components/responses/ValidationError"
 
+  /bills/generate-flexible:
+    post:
+      tags: [Bills]
+      summary: Generate flexible bills with a custom period and amount (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [due_type_id, period_start, period_end, amount_due]
+              properties:
+                due_type_id:
+                  type: integer
+                  description: Must reference a due type with billing_cycle fleksibel.
+                period_start:
+                  type: string
+                  format: date
+                period_end:
+                  type: string
+                  format: date
+                amount_due:
+                  type: number
+                  format: double
+                  minimum: 0.01
+      responses:
+        "201":
+          description: Flexible bills generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Bill"
+                  message:
+                    type: string
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
   /bills/bulk-delete:
     post:
       tags: [Bills]

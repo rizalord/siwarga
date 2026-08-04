@@ -76,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Bills
     Route::get('bills', [BillController::class, 'index'])->middleware('can:bills.view');
     Route::post('bills/generate', [BillController::class, 'generate'])->middleware('can:bills.generate');
+    Route::post('bills/generate-flexible', [BillController::class, 'generateFlexible'])->middleware('can:bills.generate');
     Route::post('bills/bulk-delete', [BillController::class, 'bulkDestroy'])->middleware('can:bills.generate');
     Route::post('bills/bulk-restore', [BillController::class, 'bulkRestore'])->middleware('can:bills.trash');
     Route::post('bills/bulk-force-delete', [BillController::class, 'bulkForceDestroy'])->middleware('can:bills.trash');

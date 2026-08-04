@@ -166,7 +166,7 @@ export function DueTypeFormDialog({
                         <FormControl>
                           <RadioGroupItem value='fleksibel' />
                         </FormControl>
-                        <FormLabel className='font-normal'>Fleksibel</FormLabel>
+                        <FormLabel className='font-normal'>Fleksibel (manual)</FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>

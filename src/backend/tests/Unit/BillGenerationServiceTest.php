@@ -69,7 +69,7 @@ class BillGenerationServiceTest extends TestCase
         $this->assertCount(0, $bills);
     }
 
-    public function test_annual_due_type_covers_full_year_and_multiplies_amount()
+    public function test_flexible_due_type_uses_custom_period_and_amount()
     {
         $dueType = DueType::factory()->create(['amount' => 15000, 'billing_cycle' => 'fleksibel']);
         $house = House::factory()->create(['status' => 'dihuni']);
@@ -80,12 +80,17 @@ class BillGenerationServiceTest extends TestCase
         ]);
 
         $service = new BillGenerationService;
-        $bills = $service->generate(3, 2026);
+        $bills = $service->generateFlexible(
+            $dueType->id,
+            \Carbon\Carbon::parse('2026-08-01'),
+            \Carbon\Carbon::parse('2026-08-31'),
+            100000,
+        );
 
         $this->assertCount(1, $bills);
-        $this->assertEquals(180000, $bills->first()->amount_due);
-        $this->assertEquals('2026-01-01', $bills->first()->period_start->toDateString());
-        $this->assertEquals('2026-12-31', $bills->first()->period_end->toDateString());
+        $this->assertEquals(100000, $bills->first()->amount_due);
+        $this->assertEquals('2026-08-01', $bills->first()->period_start->toDateString());
+        $this->assertEquals('2026-08-31', $bills->first()->period_end->toDateString());
         $this->assertEquals($dueType->id, $bills->first()->due_type_id);
     }
 
