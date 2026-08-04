@@ -44,14 +44,14 @@ export function SiwargaSignInForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
       <div>
-        <Label htmlFor='email'>Email</Label>
+        <Label htmlFor='email'>Email *</Label>
         <Input id='email' type='email' {...register('email')} />
         {errors.email && (
           <p className='text-sm text-red-500'>{errors.email.message}</p>
         )}
       </div>
       <div>
-        <Label htmlFor='password'>Password</Label>
+        <Label htmlFor='password'>Password *</Label>
         <Input id='password' type='password' {...register('password')} />
         {errors.password && (
           <p className='text-sm text-red-500'>{errors.password.message}</p>

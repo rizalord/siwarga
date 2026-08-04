@@ -102,7 +102,7 @@ export function HouseFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 text-end'>
-                    Nomor Rumah
+                    Nomor Rumah *
                   </FormLabel>
                   <FormControl>
                     <Input

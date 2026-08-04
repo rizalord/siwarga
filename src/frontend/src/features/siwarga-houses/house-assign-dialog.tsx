@@ -101,7 +101,7 @@ export function HouseAssignDialog({
 
         <div className='space-y-4 px-0.5'>
           <div className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-            <Label className='col-span-2 text-end'>Penghuni</Label>
+            <Label className='col-span-2 text-end'>Penghuni *</Label>
             <div className='col-span-4'>
               <Popover
                 open={searchPopoverOpen}
@@ -155,7 +155,7 @@ export function HouseAssignDialog({
 
           {selectedResident && (
             <div className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-              <Label className='col-span-2 text-end'>Tanggal Mulai</Label>
+            <Label className='col-span-2 text-end'>Tanggal Mulai *</Label>
               <div className='col-span-4 flex items-center gap-2'>
                 <Input
                   type='date'

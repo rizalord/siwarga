@@ -144,7 +144,7 @@ export function ExpenseFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 text-end'>
-                    Kategori
+                    Kategori *
                   </FormLabel>
                   <FormControl>
                     <Select
@@ -194,7 +194,7 @@ export function ExpenseFormDialog({
               name='amount'
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                  <FormLabel className='col-span-2 text-end'>Jumlah</FormLabel>
+                  <FormLabel className='col-span-2 text-end'>Jumlah *</FormLabel>
                   <FormControl>
                     <Input
                       type='number'
@@ -215,7 +215,7 @@ export function ExpenseFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 pt-2 text-end'>
-                    Tanggal
+                    Tanggal *
                   </FormLabel>
                   <FormControl>
                     <div className='col-span-4'>

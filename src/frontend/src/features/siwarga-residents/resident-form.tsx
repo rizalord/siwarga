@@ -126,7 +126,7 @@ export function ResidentFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 text-end'>
-                    Nama Lengkap
+                    Nama Lengkap *
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -145,7 +145,7 @@ export function ResidentFormDialog({
               name='status'
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                  <FormLabel className='col-span-2 text-end'>Status</FormLabel>
+                  <FormLabel className='col-span-2 text-end'>Status *</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -176,7 +176,7 @@ export function ResidentFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 text-end'>
-                    No. Telepon
+                    No. Telepon *
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -196,7 +196,7 @@ export function ResidentFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 text-end'>
-                    Status Nikah
+                    Status Nikah *
                   </FormLabel>
                   <FormControl>
                     <RadioGroup

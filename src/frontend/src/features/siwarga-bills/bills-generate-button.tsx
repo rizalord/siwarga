@@ -81,7 +81,7 @@ export function BillsGenerateButton() {
           </DialogHeader>
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
-              <Label>Jenis periode</Label>
+              <Label>Jenis periode *</Label>
               <Select
                 value={mode}
                 onValueChange={(value: 'bulanan' | 'fleksibel') =>
@@ -101,7 +101,7 @@ export function BillsGenerateButton() {
             {mode === 'bulanan' ? (
               <div className='grid grid-cols-2 gap-4'>
                 <div className='space-y-2'>
-                  <Label htmlFor='month'>Bulan</Label>
+                  <Label htmlFor='month'>Bulan *</Label>
                   <Input
                     id='month'
                     type='number'
@@ -112,7 +112,7 @@ export function BillsGenerateButton() {
                   />
                 </div>
                 <div className='space-y-2'>
-                  <Label htmlFor='year'>Tahun</Label>
+                  <Label htmlFor='year'>Tahun *</Label>
                   <Input
                     id='year'
                     type='number'
@@ -126,7 +126,7 @@ export function BillsGenerateButton() {
             ) : (
               <div className='space-y-4'>
                 <div className='space-y-2'>
-                  <Label>Jenis iuran fleksibel</Label>
+                  <Label>Jenis iuran fleksibel *</Label>
                   <Select
                     value={dueTypeId}
                     onValueChange={(value) => {
@@ -151,7 +151,7 @@ export function BillsGenerateButton() {
                 </div>
                 <div className='grid grid-cols-2 gap-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='period-start'>Tanggal mulai</Label>
+                    <Label htmlFor='period-start'>Tanggal mulai *</Label>
                     <Input
                       id='period-start'
                       type='date'
@@ -160,7 +160,7 @@ export function BillsGenerateButton() {
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='period-end'>Tanggal selesai</Label>
+                    <Label htmlFor='period-end'>Tanggal selesai *</Label>
                     <Input
                       id='period-end'
                       type='date'
@@ -170,7 +170,7 @@ export function BillsGenerateButton() {
                   </div>
                 </div>
                 <div className='space-y-2'>
-                  <Label htmlFor='amount'>Nominal tagihan</Label>
+                  <Label htmlFor='amount'>Nominal tagihan *</Label>
                   <Input
                     id='amount'
                     type='number'

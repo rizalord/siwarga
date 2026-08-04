@@ -110,7 +110,7 @@ export function DueTypeFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 text-end'>
-                    Nama Jenis Iuran
+                    Nama Jenis Iuran *
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -129,7 +129,7 @@ export function DueTypeFormDialog({
               name='amount'
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                  <FormLabel className='col-span-2 text-end'>Nominal</FormLabel>
+                  <FormLabel className='col-span-2 text-end'>Nominal *</FormLabel>
                   <FormControl>
                     <Input
                       type='number'
@@ -149,7 +149,7 @@ export function DueTypeFormDialog({
               name='billing_cycle'
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                  <FormLabel className='col-span-2 text-end'>Siklus</FormLabel>
+                  <FormLabel className='col-span-2 text-end'>Siklus *</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}

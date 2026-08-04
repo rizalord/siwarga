@@ -151,7 +151,7 @@ export function PaymentFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 pt-2 text-end'>
-                    Tagihan
+                    Tagihan *
                   </FormLabel>
                   <FormControl>
                     <div className='col-span-4'>
@@ -214,7 +214,7 @@ export function PaymentFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 text-end'>
-                    Jumlah Dibayar
+                    Jumlah Dibayar *
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -241,7 +241,7 @@ export function PaymentFormDialog({
               render={({ field }) => (
                 <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
                   <FormLabel className='col-span-2 pt-2 text-end'>
-                    Tanggal Bayar
+                    Tanggal Bayar *
                   </FormLabel>
                   <FormControl>
                     <div className='col-span-4'>

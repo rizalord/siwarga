@@ -31,16 +31,16 @@ export function AppSidebar() {
     : sidebarData.user
 
   return (
-    <Sidebar collapsible={collapsible} variant={variant}>
-      <SidebarHeader>
+    <Sidebar collapsible={collapsible} variant={variant} className='bg-sidebar'>
+      <SidebarHeader className='bg-sidebar'>
         <AppTitle />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className='bg-sidebar'>
         {visibleNavGroups.map((props) => (
           <NavGroup key={props.title} {...props} />
         ))}
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className='bg-sidebar'>
         <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
