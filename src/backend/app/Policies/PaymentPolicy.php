@@ -8,12 +8,12 @@ class PaymentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('payments.view');
+        return $user->hasPermission('payments.view') && $this->hasViewScope($user);
     }
 
     public function view(User $user): bool
     {
-        return $user->hasPermission('payments.view');
+        return $user->hasPermission('payments.view') && $this->hasViewScope($user);
     }
 
     public function create(User $user): bool
@@ -34,5 +34,11 @@ class PaymentPolicy
     public function restore(User $user): bool
     {
         return $user->hasPermission('payments.trash');
+    }
+
+    private function hasViewScope(User $user): bool
+    {
+        return $user->hasPermission('payments.view.all')
+            || ($user->hasPermission('payments.view.own') && $user->resident_id !== null);
     }
 }

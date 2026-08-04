@@ -77,6 +77,18 @@ export const mockPermissions: Permission[] = [
   },
   { id: 15, name: 'bills.view', description: 'Lihat tagihan', is_system: true },
   {
+    id: 22,
+    name: 'bills.view.all',
+    description: 'Lihat semua tagihan',
+    is_system: true,
+  },
+  {
+    id: 23,
+    name: 'bills.view.own',
+    description: 'Lihat tagihan sendiri',
+    is_system: true,
+  },
+  {
     id: 16,
     name: 'bills.generate',
     description: 'Generate tagihan',
@@ -92,6 +104,18 @@ export const mockPermissions: Permission[] = [
     id: 18,
     name: 'payments.view',
     description: 'Lihat pembayaran',
+    is_system: true,
+  },
+  {
+    id: 24,
+    name: 'payments.view.all',
+    description: 'Lihat semua pembayaran',
+    is_system: true,
+  },
+  {
+    id: 25,
+    name: 'payments.view.own',
+    description: 'Lihat pembayaran sendiri',
     is_system: true,
   },
   {

@@ -47,6 +47,20 @@ class BillTest extends TestCase
         $response->assertStatus(200)->assertJsonCount(3, 'data');
     }
 
+    public function test_warga_bill_scope_uses_view_own_permission()
+    {
+        $resident = Resident::factory()->create();
+        $this->warga->update(['resident_id' => $resident->id]);
+        Bill::factory()->create(['resident_id' => $resident->id]);
+        Bill::factory()->create();
+
+        $this->actingAs($this->warga)
+            ->getJson('/api/bills')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.resident.id', $resident->id);
+    }
+
     public function test_bill_list_keeps_soft_deleted_due_type_in_response()
     {
         $dueType = DueType::factory()->create(['name' => 'Iuran Terhapus']);

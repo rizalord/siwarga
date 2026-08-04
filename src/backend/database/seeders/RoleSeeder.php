@@ -22,14 +22,14 @@ class RoleSeeder extends Seeder
 
         // Bendahara gets financial permissions
         $bendahara->permissions()->attach(Permission::whereIn('name', [
-            'houses.view', 'bills.view', 'bills.generate', 'bills.trash', 'payments.view', 'payments.create', 'payments.trash',
+            'houses.view', 'bills.view', 'bills.view.all', 'bills.generate', 'bills.trash', 'payments.view', 'payments.view.all', 'payments.create', 'payments.trash',
             'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'expenses.trash',
             'expense-categories.view', 'expense-categories.manage', 'expense-categories.trash', 'reports.view',
         ])->pluck('id'));
 
         // Warga gets view-only
         $warga->permissions()->attach(Permission::whereIn('name', [
-            'bills.view', 'payments.view',
+            'bills.view', 'bills.view.own', 'payments.view', 'payments.view.own',
         ])->pluck('id'));
     }
 }

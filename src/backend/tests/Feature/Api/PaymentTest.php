@@ -45,6 +45,20 @@ class PaymentTest extends TestCase
         $response->assertStatus(200)->assertJsonCount(3, 'data');
     }
 
+    public function test_warga_payment_scope_uses_view_own_permission()
+    {
+        $resident = \App\Models\Resident::factory()->create();
+        $this->warga->update(['resident_id' => $resident->id]);
+        $ownBill = Bill::factory()->create(['resident_id' => $resident->id]);
+        Payment::factory()->create(['bill_id' => $ownBill->id]);
+        Payment::factory()->create();
+
+        $this->actingAs($this->warga)
+            ->getJson('/api/payments')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data');
+    }
+
     public function test_payment_list_includes_bill_house_and_resident()
     {
         Payment::factory()->create();

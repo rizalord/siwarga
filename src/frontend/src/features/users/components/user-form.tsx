@@ -97,14 +97,6 @@ export function UserFormDialog({
         },
   })
 
-  const selectedRoleId = form.watch('role_id')
-  const selectedRole = roles?.data.find(
-    (role) => Number(role.id) === Number(selectedRoleId)
-  )
-  const isWargaRole =
-    selectedRole?.name.toLowerCase() === 'warga' ||
-    selectedRole?.description?.toLowerCase() === 'warga'
-
   const onSubmit = (data: UserForm) => {
     if (isUpdate && currentRow) {
       updateUser.mutate(
@@ -112,7 +104,7 @@ export function UserFormDialog({
           name: data.name,
           email: data.email,
           role_ids: [data.role_id],
-          resident_id: isWargaRole ? (data.resident_id ?? null) : null,
+          resident_id: data.resident_id ?? null,
         },
         {
           onSuccess: () => {
@@ -132,7 +124,7 @@ export function UserFormDialog({
           email: data.email,
           password: data.password,
           role_ids: [data.role_id],
-          resident_id: isWargaRole ? (data.resident_id ?? null) : null,
+          resident_id: data.resident_id ?? null,
         },
         {
           onSuccess: () => {
@@ -247,17 +239,7 @@ export function UserFormDialog({
                       defaultValue={
                         field.value ? String(field.value) : 'placeholder'
                       }
-                      onValueChange={(value) => {
-                        const nextRoleId = Number(value)
-                        field.onChange(nextRoleId)
-                        if (
-                          roles?.data
-                            .find((role) => Number(role.id) === nextRoleId)
-                            ?.name.toLowerCase() !== 'warga'
-                        ) {
-                          form.setValue('resident_id', null)
-                        }
-                      }}
+                      onValueChange={(value) => field.onChange(Number(value))}
                       placeholder='Pilih role'
                       className='col-span-4'
                       items={roleOptions}
@@ -299,15 +281,13 @@ export function UserFormDialog({
                       placeholder='Pilih penghuni'
                       className='col-span-4'
                       items={residentOptions}
-                      disabled={!isWargaRole}
                       isPending={residentsLoading}
                       isControlled
                     />
                   </FormControl>
                   <p className='col-span-4 col-start-3 text-sm text-muted-foreground'>
-                    {isWargaRole
-                      ? 'Hubungkan akun Warga dengan penghuni yang sesuai.'
-                      : 'Relasi penghuni hanya digunakan untuk role Warga.'}
+                    Relasi penghuni bersifat opsional dan dapat digunakan oleh
+                    role apa pun. Scope akses tetap ditentukan oleh permission.
                   </p>
                   <FormMessage className='col-span-4 col-start-3' />
                 </FormItem>

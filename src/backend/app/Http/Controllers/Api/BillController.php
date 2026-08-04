@@ -24,9 +24,7 @@ class BillController extends Controller
         $query = Bill::with(['house', 'resident', 'dueType'])
             ->withSum('payments as total_paid', 'amount_paid');
 
-        if ($request->user()->resident_id) {
-            $query->where('resident_id', $request->user()->resident_id);
-        }
+        $this->applyBillViewScope($request, $query);
 
         if ($request->month) {
             $query->whereMonth('period_start', $request->month);
@@ -96,8 +94,11 @@ class BillController extends Controller
 
     public function show(Request $request, Bill $bill)
     {
-        abort_if(
-            $request->user()->resident_id && $bill->resident_id !== $request->user()->resident_id,
+        abort_unless(
+            $request->user()->hasPermission('bills.view.all')
+                || ($request->user()->hasPermission('bills.view.own')
+                    && $request->user()->resident_id !== null
+                    && $bill->resident_id === $request->user()->resident_id),
             403
         );
 
@@ -180,5 +181,17 @@ class BillController extends Controller
         $this->forceDeleteModel($bill);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
+    }
+
+    private function applyBillViewScope(Request $request, $query): void
+    {
+        $user = $request->user();
+
+        if ($user->hasPermission('bills.view.all')) {
+            return;
+        }
+
+        abort_unless($user->hasPermission('bills.view.own') && $user->resident_id !== null, 403);
+        $query->where('resident_id', $user->resident_id);
     }
 }

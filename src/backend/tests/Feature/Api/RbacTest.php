@@ -130,6 +130,9 @@ class RbacTest extends TestCase
 
     public function test_warga_can_view_bills(): void
     {
+        $resident = Resident::factory()->create();
+        $this->warga->update(['resident_id' => $resident->id]);
+
         $response = $this->actingAs($this->warga)
             ->getJson('/api/bills');
 

@@ -15,7 +15,7 @@ export const mockRoles: Role[] = [
     name: 'bendahara',
     description: 'Bendahara',
     permissions: mockPermissions.filter((p) =>
-      ['houses.view', 'bills.view', 'bills.generate', 'payments.view', 'payments.create', 'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'reports.view'].includes(p.name)
+      ['houses.view', 'bills.view', 'bills.view.all', 'bills.generate', 'payments.view', 'payments.view.all', 'payments.create', 'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'reports.view'].includes(p.name)
     ),
     users_count: 1,
   },
@@ -23,7 +23,7 @@ export const mockRoles: Role[] = [
     id: 3,
     name: 'warga',
     description: 'Warga',
-    permissions: mockPermissions.filter((p) => ['bills.view', 'payments.view'].includes(p.name)),
+    permissions: mockPermissions.filter((p) => ['bills.view', 'bills.view.own', 'payments.view', 'payments.view.own'].includes(p.name)),
     users_count: 1,
   },
 ]

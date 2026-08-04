@@ -18,7 +18,12 @@ class PaymentController extends Controller
     {
         $query = Payment::with(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
-        if ($request->user()->resident_id) {
+        if (! $request->user()->hasPermission('payments.view.all')) {
+            abort_unless(
+                $request->user()->hasPermission('payments.view.own')
+                    && $request->user()->resident_id !== null,
+                403
+            );
             $query->whereHas('bill', function ($q) use ($request) {
                 $q->where('resident_id', $request->user()->resident_id);
             });
@@ -96,8 +101,11 @@ class PaymentController extends Controller
     {
         $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
-        abort_if(
-            $request->user()->resident_id && $payment->bill?->resident_id !== $request->user()->resident_id,
+        abort_unless(
+            $request->user()->hasPermission('payments.view.all')
+                || ($request->user()->hasPermission('payments.view.own')
+                    && $request->user()->resident_id !== null
+                    && $payment->bill?->resident_id === $request->user()->resident_id),
             403
         );
 
