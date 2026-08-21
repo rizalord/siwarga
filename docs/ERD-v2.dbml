@@ -1,0 +1,501 @@
+// ============================================================
+// SIWarga v2 - Modul Tambahan (Smart Residential System)
+// Perluasan dari docs/ERD.dbml (v1) — TIDAK mengubah tabel v1.
+// File ini mendefinisikan tabel-tabel baru untuk modul 4.1–4.12
+// di PRD-SIWarga-v2.md. Referensi ke tabel v1 (users, houses,
+// residents, dst.) memakai Ref lintas file/skema yang sama.
+// ============================================================
+
+// ------------------------------------------------------------
+// 4.1 Pengumuman & Komunikasi
+// ------------------------------------------------------------
+
+Table announcements {
+  id              bigint        [pk, increment]
+  title           varchar(200)  [not null]
+  slug            varchar(220)  [unique, note: 'dipakai juga untuk halaman blog publik di landing page (4.12)']
+  content         text          [not null]
+  category        enum('darurat', 'umum', 'kegiatan', 'keuangan') [not null]
+  is_public       boolean       [not null, default: false, note: 'true = tampil di landing page publik (Astro)']
+  published_at    timestamp
+  created_by      bigint        [not null, note: 'FK ke users (v1)']
+  created_at      timestamp
+  updated_at      timestamp
+  deleted_at      timestamp     [note: 'soft delete']
+
+  Note: 'Pengumuman internal (warga login) sekaligus sumber blog publik kalau is_public = true.'
+}
+
+Table announcement_targets {
+  id                bigint  [pk, increment]
+  announcement_id   bigint  [not null]
+  house_id          bigint  [note: 'null = broadcast semua rumah; diisi = target rumah tertentu, FK ke houses (v1)']
+  created_at        timestamp
+
+  Note: 'Kosong/null berarti broadcast ke semua warga.'
+}
+
+Table announcement_reads {
+  id                bigint    [pk, increment]
+  announcement_id   bigint    [not null]
+  user_id           bigint    [not null, note: 'FK ke users (v1)']
+  read_at           timestamp [not null]
+
+  indexes {
+    (announcement_id, user_id) [unique]
+  }
+
+  Note: 'Read receipt, penting untuk pengumuman kategori darurat.'
+}
+
+// ------------------------------------------------------------
+// 4.2 Keamanan — Integrasi CCTV
+// ------------------------------------------------------------
+
+Table cameras {
+  id            bigint        [pk, increment]
+  name          varchar(100)  [not null, note: 'contoh: Gerbang Utama, Pos Satpam']
+  location      varchar(150)
+  stream_url    varchar(255)  [note: 'URL HLS/WebRTC hasil bridge MediaMTX/go2rtc, bukan RTSP langsung']
+  is_active     boolean       [not null, default: true]
+  created_at    timestamp
+  updated_at    timestamp
+  deleted_at    timestamp     [note: 'soft delete']
+}
+
+Table camera_snapshots {
+  id            bigint        [pk, increment]
+  camera_id     bigint        [not null]
+  file_path     varchar(255)  [not null, note: 'path di storage, pola sama dengan ktp_photo_path di v1']
+  triggered_by  enum('motion', 'manual', 'scheduled') [not null, default: 'manual']
+  captured_at   timestamp     [not null]
+  created_at    timestamp
+}
+
+Table camera_access_logs {
+  id            bigint    [pk, increment]
+  camera_id     bigint    [not null]
+  user_id       bigint    [not null, note: 'FK ke users (v1); siapa yang mengakses live view']
+  accessed_at   timestamp [not null]
+
+  Note: 'Audit siapa saja yang membuka live view CCTV — sensitif, wajib dicatat.'
+}
+
+// ------------------------------------------------------------
+// 4.3 Keamanan — Akses & Buku Tamu
+// ------------------------------------------------------------
+
+Table guest_logs {
+  id              bigint        [pk, increment]
+  guest_name      varchar(150)  [not null]
+  purpose         varchar(255)
+  vehicle_plate   varchar(20)
+  house_id        bigint        [note: 'rumah tujuan, FK ke houses (v1)']
+  checked_in_by   bigint        [not null, note: 'FK ke users (v1); satpam/warga yang input']
+  check_in_at     timestamp     [not null]
+  check_out_at    timestamp
+  qr_token        varchar(100)  [note: 'diisi jika tamu didaftarkan warga sebelumnya via QR check-in']
+  created_at      timestamp
+}
+
+Table panic_alerts {
+  id              bigint        [pk, increment]
+  triggered_by    bigint        [not null, note: 'FK ke users (v1); warga yang menekan tombol darurat']
+  house_id        bigint        [note: 'FK ke houses (v1)']
+  status          enum('open', 'acknowledged', 'resolved') [not null, default: 'open']
+  acknowledged_by bigint        [note: 'FK ke users (v1); satpam/admin yang merespon']
+  acknowledged_at timestamp
+  resolved_at     timestamp
+  created_at      timestamp
+
+  indexes {
+    status
+    created_at
+  }
+
+  Note: 'Trigger notifikasi realtime (WebSocket/WA) ke Satpam & Admin saat status = open.'
+}
+
+Table patrol_schedules {
+  id            bigint    [pk, increment]
+  user_id       bigint    [not null, note: 'FK ke users (v1); satpam yang bertugas']
+  shift_date    date      [not null]
+  shift_start   time      [not null]
+  shift_end     time      [not null]
+  created_by    bigint    [not null, note: 'FK ke users (v1); admin yang mengatur jadwal']
+  created_at    timestamp
+  updated_at    timestamp
+}
+
+// ------------------------------------------------------------
+// 4.4 Pengaduan / Ticketing
+// ------------------------------------------------------------
+
+Table tickets {
+  id              bigint        [pk, increment]
+  reported_by     bigint        [not null, note: 'FK ke users (v1)']
+  house_id        bigint        [note: 'FK ke houses (v1)']
+  title           varchar(200)  [not null]
+  description     text          [not null]
+  category        varchar(100) [note: 'contoh: kerusakan fasilitas, keluhan lingkungan']
+  status          enum('open', 'in_progress', 'resolved') [not null, default: 'open']
+  assigned_to     bigint        [note: 'FK ke users (v1); PIC internal RT']
+  created_at      timestamp
+  updated_at      timestamp
+  deleted_at      timestamp     [note: 'soft delete']
+
+  indexes {
+    status
+  }
+}
+
+Table ticket_comments {
+  id            bigint    [pk, increment]
+  ticket_id     bigint    [not null]
+  user_id       bigint    [not null, note: 'FK ke users (v1)']
+  comment       text      [not null]
+  created_at    timestamp
+}
+
+Table ticket_attachments {
+  id            bigint        [pk, increment]
+  ticket_id     bigint        [not null]
+  file_path     varchar(255)  [not null]
+  created_at    timestamp
+}
+
+// ------------------------------------------------------------
+// 4.5 Booking Fasilitas
+// ------------------------------------------------------------
+
+Table facilities {
+  id            bigint        [pk, increment]
+  name          varchar(100)  [not null, note: 'contoh: Aula, Lapangan Voli']
+  description   text
+  rental_fee    decimal(12,2) [note: 'opsional, null jika gratis; jika diisi bisa dihubungkan ke expenses/income v1']
+  is_active     boolean       [not null, default: true]
+  created_at    timestamp
+  updated_at    timestamp
+  deleted_at    timestamp     [note: 'soft delete']
+}
+
+Table facility_bookings {
+  id              bigint        [pk, increment]
+  facility_id     bigint        [not null]
+  booked_by       bigint        [not null, note: 'FK ke users (v1)']
+  event_id        bigint        [note: 'opsional, FK ke events (4.12) kalau booking terkait kegiatan RT']
+  start_at        timestamp     [not null]
+  end_at          timestamp     [not null]
+  status          enum('pending', 'approved', 'rejected', 'cancelled') [not null, default: 'pending']
+  approved_by     bigint        [note: 'FK ke users (v1)']
+  created_at      timestamp
+  updated_at      timestamp
+
+  indexes {
+    (facility_id, start_at, end_at) [name: 'facility_bookings_schedule']
+  }
+
+  Note: 'Cek bentrok jadwal dilakukan di level aplikasi terhadap kombinasi facility_id + rentang waktu yang overlap.'
+}
+
+// ------------------------------------------------------------
+// 4.6 Perluasan Keuangan (di atas tabel v1: bills, payments, expenses)
+// ------------------------------------------------------------
+
+Table payment_reminders {
+  id            bigint        [pk, increment]
+  bill_id       bigint        [not null, note: 'FK ke bills (v1)']
+  channel       enum('wa') [not null, default: 'wa']
+  sent_at       timestamp
+  status        enum('pending', 'sent', 'failed') [not null, default: 'pending']
+  created_at    timestamp
+
+  Note: 'Reminder H-3 jatuh tempo via WAHA. Dipisah dari bills v1 supaya tidak mengubah skema existing.'
+}
+
+// ------------------------------------------------------------
+// 4.7 IoT & Smart Home
+// ------------------------------------------------------------
+
+Table access_devices {
+  id            bigint        [pk, increment]
+  name          varchar(100)  [not null, note: 'contoh: Palang Gerbang Utama']
+  device_type   enum('anpr_gate', 'rfid_gate') [not null]
+  mqtt_topic    varchar(150)  [note: 'topic MQTT untuk kirim perintah buka/tutup']
+  is_active     boolean       [not null, default: true]
+  created_at    timestamp
+  updated_at    timestamp
+}
+
+Table sensor_readings {
+  id            bigint        [pk, increment]
+  sensor_type   enum('banjir', 'kualitas_udara', 'kebakaran') [not null]
+  location      varchar(150)
+  value         decimal(10,2) [not null]
+  unit          varchar(20)
+  recorded_at   timestamp     [not null]
+
+  indexes {
+    (sensor_type, recorded_at)
+  }
+}
+
+Table sensor_alerts {
+  id                bigint    [pk, increment]
+  sensor_reading_id  bigint    [not null]
+  severity          enum('info', 'warning', 'critical') [not null]
+  notified_at       timestamp
+  acknowledged_by   bigint    [note: 'FK ke users (v1)']
+  created_at        timestamp
+}
+
+// ------------------------------------------------------------
+// 4.8 Marketplace & UMKM Warga
+// ------------------------------------------------------------
+
+Table marketplace_listings {
+  id            bigint        [pk, increment]
+  posted_by     bigint        [not null, note: 'FK ke users (v1)']
+  type          enum('umkm', 'jual_beli', 'barter') [not null]
+  title         varchar(200)  [not null]
+  description   text
+  price         decimal(12,2) [note: 'null jika barter/jasa tanpa harga tetap']
+  status        enum('active', 'closed') [not null, default: 'active']
+  created_at    timestamp
+  updated_at    timestamp
+  deleted_at    timestamp     [note: 'soft delete']
+}
+
+Table marketplace_reviews {
+  id            bigint    [pk, increment]
+  listing_id    bigint    [not null]
+  reviewed_by   bigint    [not null, note: 'FK ke users (v1)']
+  rating        int       [not null, note: '1-5']
+  comment       varchar(255)
+  created_at    timestamp
+}
+
+// ------------------------------------------------------------
+// 4.9 Integrasi Eksternal
+// ------------------------------------------------------------
+
+Table payment_transactions {
+  id                bigint        [pk, increment]
+  bill_id           bigint        [not null, note: 'FK ke bills (v1)']
+  provider          varchar(50)   [not null, note: 'contoh: midtrans, xendit']
+  provider_ref      varchar(150)  [note: 'reference ID dari payment gateway']
+  method            enum('qris', 'va') [not null]
+  amount            decimal(12,2) [not null]
+  status            enum('pending', 'success', 'failed', 'expired') [not null, default: 'pending']
+  paid_at           timestamp
+  created_at        timestamp
+  updated_at        timestamp
+
+  Note: 'Saat status = success, sistem otomatis membuat baris baru di payments (v1) agar status bill ikut lunas.'
+}
+
+Table poi_locations {
+  id            bigint        [pk, increment]
+  name          varchar(150)  [not null]
+  type          enum('rumah', 'fasilitas', 'cctv', 'lainnya') [not null]
+  latitude      decimal(10,7)
+  longitude     decimal(10,7)
+  reference_id  bigint        [note: 'FK dinamis ke houses/facilities/cameras tergantung type']
+  created_at    timestamp
+}
+
+// ------------------------------------------------------------
+// 4.10 Modul Warga Lanjutan
+// ------------------------------------------------------------
+
+Table family_members {
+  id              bigint        [pk, increment]
+  resident_id     bigint        [not null, note: 'FK ke residents (v1); kepala keluarga/penghuni utama']
+  full_name       varchar(150)  [not null]
+  relation        varchar(50)   [note: 'contoh: istri, anak']
+  birth_date      date
+  created_at      timestamp
+  updated_at      timestamp
+  deleted_at      timestamp     [note: 'soft delete']
+}
+
+Table digital_id_cards {
+  id            bigint        [pk, increment]
+  resident_id   bigint        [not null, note: 'FK ke residents (v1)']
+  qr_code       varchar(150)  [not null, unique]
+  issued_at     timestamp     [not null]
+  expires_at    timestamp
+  created_at    timestamp
+}
+
+Table polls {
+  id              bigint        [pk, increment]
+  title           varchar(200)  [not null]
+  description     text
+  created_by      bigint        [not null, note: 'FK ke users (v1)']
+  starts_at       timestamp     [not null]
+  ends_at         timestamp     [not null]
+  created_at      timestamp
+}
+
+Table poll_options {
+  id            bigint        [pk, increment]
+  poll_id       bigint        [not null]
+  label         varchar(150)  [not null]
+}
+
+Table poll_votes {
+  id            bigint    [pk, increment]
+  poll_id       bigint    [not null]
+  option_id     bigint    [not null]
+  user_id       bigint    [not null, note: 'FK ke users (v1)']
+  voted_at      timestamp [not null]
+
+  indexes {
+    (poll_id, user_id) [unique, note: 'satu user hanya bisa vote sekali per poll']
+  }
+}
+
+Table forum_threads {
+  id            bigint        [pk, increment]
+  title         varchar(200)  [not null]
+  created_by    bigint        [not null, note: 'FK ke users (v1)']
+  created_at    timestamp
+  updated_at    timestamp
+  deleted_at    timestamp     [note: 'soft delete']
+}
+
+Table forum_posts {
+  id            bigint    [pk, increment]
+  thread_id     bigint    [not null]
+  user_id       bigint    [not null, note: 'FK ke users (v1)']
+  content       text      [not null]
+  created_at    timestamp
+  deleted_at    timestamp [note: 'soft delete']
+}
+
+Table anonymous_suggestions {
+  id            bigint    [pk, increment]
+  content       text      [not null]
+  status        enum('new', 'reviewed') [not null, default: 'new']
+  created_at    timestamp
+
+  Note: 'Sengaja tanpa kolom user_id — anonim by design.'
+}
+
+// ------------------------------------------------------------
+// 4.11 Admin & Operasional Lanjutan
+// ------------------------------------------------------------
+
+Table assets {
+  id            bigint        [pk, increment]
+  name          varchar(150)  [not null, note: 'contoh: Kursi Lipat, Sound System']
+  quantity      int           [not null, default: 1]
+  condition     enum('baik', 'rusak_ringan', 'rusak_berat') [not null, default: 'baik']
+  created_at    timestamp
+  updated_at    timestamp
+  deleted_at    timestamp     [note: 'soft delete']
+}
+
+Table asset_loans {
+  id            bigint    [pk, increment]
+  asset_id      bigint    [not null]
+  borrowed_by   bigint    [not null, note: 'FK ke users (v1)']
+  quantity      int       [not null, default: 1]
+  borrowed_at   timestamp [not null]
+  returned_at   timestamp
+  created_at    timestamp
+}
+
+// ------------------------------------------------------------
+// 4.12 Landing Page / Frontpage Publik (Astro)
+// ------------------------------------------------------------
+
+Table pages {
+  id            bigint        [pk, increment]
+  slug          varchar(100)  [not null, unique, note: 'contoh: home, profil-komplek, kontak']
+  title         varchar(200)  [not null]
+  content       text          [note: 'konten semi-custom, misal teks hero/profil komplek']
+  hero_image    varchar(255)  [note: 'path gambar hero/banner di storage, diganti Admin lewat dashboard']
+  updated_by    bigint        [note: 'FK ke users (v1)']
+  created_at    timestamp
+  updated_at    timestamp
+
+  Note: 'Konten statis-semi-custom untuk landing page Astro (Hero, Profil Komplek, Kontak). Astro fetch dari endpoint publik read-only.'
+}
+
+Table events {
+  id              bigint        [pk, increment]
+  title           varchar(200)  [not null]
+  slug            varchar(220)  [unique]
+  description     text
+  starts_at       timestamp     [not null]
+  ends_at         timestamp
+  status          enum('upcoming', 'ongoing', 'completed') [not null, default: 'upcoming']
+  facility_booking_id bigint    [note: 'opsional, FK ke facility_bookings (4.5) jika kegiatan pakai fasilitas RT']
+  is_public       boolean       [not null, default: true, note: 'true = tampil di landing page publik']
+  created_by      bigint        [not null, note: 'FK ke users (v1)']
+  created_at      timestamp
+  updated_at      timestamp
+  deleted_at      timestamp     [note: 'soft delete']
+}
+
+Table event_documentation {
+  id            bigint        [pk, increment]
+  event_id      bigint        [not null]
+  media_type    enum('foto', 'video') [not null]
+  file_path     varchar(255)  [not null]
+  caption       varchar(255)
+  created_at    timestamp
+}
+
+Table media_assets {
+  id            bigint        [pk, increment]
+  file_path     varchar(255)  [not null]
+  alt_text      varchar(255)
+  uploaded_by   bigint        [not null, note: 'FK ke users (v1)']
+  usage_context varchar(100)  [note: 'contoh: hero, galeri, pengumuman — untuk memudahkan filter aset reusable']
+  created_at    timestamp
+
+  Note: 'Aset gambar/video terpusat, reusable across modul (pengumuman, galeri kegiatan, landing page).'
+}
+
+// ============================================================
+// Relationships — Modul v2
+// (FK ke tabel v1 seperti users/houses/residents/bills mengacu
+//  ke definisi di docs/ERD.dbml v1, tidak diulang di sini)
+// ============================================================
+
+Ref: announcement_targets.announcement_id > announcements.id
+Ref: announcement_reads.announcement_id > announcements.id
+
+Ref: camera_snapshots.camera_id > cameras.id
+Ref: camera_access_logs.camera_id > cameras.id
+
+Ref: ticket_comments.ticket_id > tickets.id
+Ref: ticket_attachments.ticket_id > tickets.id
+
+Ref: facility_bookings.facility_id > facilities.id
+Ref: facility_bookings.event_id > events.id
+
+Ref: payment_reminders.bill_id > bills.id
+
+Ref: sensor_alerts.sensor_reading_id > sensor_readings.id
+
+Ref: marketplace_reviews.listing_id > marketplace_listings.id
+
+Ref: payment_transactions.bill_id > bills.id
+
+Ref: family_members.resident_id > residents.id
+Ref: digital_id_cards.resident_id > residents.id
+
+Ref: poll_options.poll_id > polls.id
+Ref: poll_votes.poll_id > polls.id
+Ref: poll_votes.option_id > poll_options.id
+
+Ref: forum_posts.thread_id > forum_threads.id
+
+Ref: asset_loans.asset_id > assets.id
+
+Ref: events.facility_booking_id > facility_bookings.id
+Ref: event_documentation.event_id > events.id
