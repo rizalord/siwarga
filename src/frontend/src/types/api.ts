@@ -381,3 +381,20 @@ export interface TrackPageViewRequest {
   path: string
   title?: string
 }
+
+// Pages
+export interface Page {
+  id: number
+  slug: string
+  title: string
+  content: string | null
+  hero_image_url: string | null
+  updated_by: number | null
+  updated_at: string
+}
+
+export interface UpdatePageRequest {
+  title?: string
+  content?: string
+  hero_image?: File
+}
