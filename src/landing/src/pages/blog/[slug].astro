@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { publicApi } from '../../lib/api';
+
+const { slug } = Astro.params;
+const announcement = slug ? await publicApi.getAnnouncement(slug) : null;
+
+if (!announcement) {
+  return Astro.redirect('/blog');
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+---
+
+<BaseLayout title={announcement.title} active="blog">
+  <article class="post section-white">
+    <header class="post__header wrap">
+      <a class="back-link" href="/blog">← Semua pengumuman</a>
+      <span class="post__tag text-soft">{announcement.category}</span>
+      <h1>{announcement.title}</h1>
+      <time class="post__date text-soft tnum">{formatDate(announcement.published_at)}</time>
+    </header>
+
+    <div class="post__body wrap" set:html={announcement.content} />
+  </article>
+</BaseLayout>
+
+<style>
+  .post__header {
+    padding-block: clamp(2.4rem, 6vw, 3.2rem) 2rem;
+    border-bottom: 1px solid var(--gray-300);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .back-link {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--ink);
+    text-decoration: none;
+    margin-bottom: 0.4rem;
+  }
+  .post__tag {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .post__header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    max-width: 30ch;
+    letter-spacing: -0.03em;
+  }
+  .post__date {
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
+
+  .post__body {
+    max-width: 68ch;
+    padding-block: 2.6rem 4.5rem;
+    font-size: 1.05rem;
+    color: var(--ink);
+  }
+  .post__body :global(p) {
+    margin-bottom: 1.2rem;
+    max-width: none;
+  }
+  .post__body :global(a) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+</style>

@@ -1,55 +1,22 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import InfoCard from '../../components/InfoCard.astro';
+import { publicApi } from '../../lib/api';
 
-const pengumuman = [
-  {
-    href: '/blog/kerja-bakti-bulanan-minggu-pertama',
-    title: 'Jadwal Kerja Bakti Bulanan — Minggu Pertama',
-    excerpt:
-      'Kerja bakti rutin dimulai pukul 07.00 di titik kumpul Blok A. Warga dimohon membawa alat kebersihan masing-masing.',
-    date: '3 Agu 2026',
-    tag: 'Lingkungan',
-    isNew: true,
-  },
-  {
-    href: '/blog/perbaikan-saluran-air-blok-c',
-    title: 'Perbaikan Saluran Air di Blok C',
-    excerpt:
-      'Perbaikan saluran akan berlangsung 2 hari. Mohon maaf atas ketidaknyamanan selama pengerjaan berlangsung.',
-    date: '28 Jul 2026',
-    tag: 'Fasilitas',
-  },
-  {
-    href: '/blog/pengumuman-iuran-bulanan',
-    title: 'Iuran Bulanan & Batas Waktu Pembayaran',
-    excerpt:
-      'Pembayaran iuran bulan berjalan paling lambat tanggal 10. Pembayaran dapat dilakukan ke bendahara RT.',
-    date: '25 Jul 2026',
-    tag: 'Keuangan',
-  },
-  {
-    href: '/blog/jadwal-ronda-malam',
-    title: 'Jadwal Ronda Malam Bulan Agustus',
-    excerpt: 'Pembagian jadwal ronda malam per blok untuk menjaga keamanan lingkungan bersama.',
-    date: '20 Jul 2026',
-    tag: 'Keamanan',
-  },
-  {
-    href: '/blog/vaksinasi-lansia',
-    title: 'Layanan Vaksinasi Lansia di Pos Kesehatan',
-    excerpt: 'Kerja sama dengan puskesmas setempat untuk layanan vaksinasi lansia setiap bulan.',
-    date: '14 Jul 2026',
-    tag: 'Kesehatan',
-  },
-  {
-    href: '/blog/pemadaman-listrik-terjadwal',
-    title: 'Pemberitahuan Pemadaman Listrik Terjadwal',
-    excerpt: 'Pemadaman bergilir dari PLN akan berlangsung selama 2 jam di area sekitar kompleks.',
-    date: '9 Jul 2026',
-    tag: 'Fasilitas',
-  },
-];
+const announcements = await publicApi.getAnnouncements();
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+const pengumuman = announcements.map((item, i) => ({
+  href: `/blog/${item.slug}`,
+  title: item.title,
+  excerpt: item.content.replace(/<[^>]+>/g, '').slice(0, 140),
+  date: formatDate(item.published_at),
+  tag: item.category,
+  isNew: i === 0,
+}));
 ---
 
 <BaseLayout title="Pengumuman" active="blog">
