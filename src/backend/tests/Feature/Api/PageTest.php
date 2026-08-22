@@ -107,6 +107,19 @@ class PageTest extends TestCase
         );
     }
 
+    public function test_updating_page_with_null_content_does_not_error()
+    {
+        Page::factory()->create(['slug' => 'kontak', 'content' => '<p>Lama</p>']);
+
+        $response = $this->actingAs($this->admin)->putJson('/api/pages/kontak', [
+            'content' => null,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.content', null);
+        $this->assertDatabaseHas('pages', ['slug' => 'kontak', 'content' => null]);
+    }
+
     public function test_warga_cannot_update_a_page()
     {
         Page::factory()->create(['slug' => 'kontak']);

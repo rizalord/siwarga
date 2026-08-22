@@ -31,8 +31,16 @@ const pengumuman = announcements.map((item, i) => ({
   </section>
 
   <section class="section-paper band">
-    <div class="wrap card-grid">
-      {pengumuman.map((item) => <InfoCard {...item} />)}
+    <div class="wrap">
+      {
+        pengumuman.length > 0 ? (
+          <div class="card-grid">
+            {pengumuman.map((item) => <InfoCard {...item} />)}
+          </div>
+        ) : (
+          <p class="list-empty text-soft">Belum ada pengumuman saat ini.</p>
+        )
+      }
     </div>
   </section>
 </BaseLayout>
@@ -62,6 +70,9 @@ const pengumuman = announcements.map((item, i) => ({
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.4rem;
+  }
+  .list-empty {
+    padding-bottom: 0.5rem;
   }
   @media (max-width: 860px) {
     .card-grid {

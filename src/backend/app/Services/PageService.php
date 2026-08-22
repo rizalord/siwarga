@@ -15,7 +15,9 @@ class PageService
     public function update(Page $page, array $data, ?UploadedFile $heroImage, int $userId): Page
     {
         if (array_key_exists('content', $data)) {
-            $data['content'] = $this->htmlSanitizer->sanitize($data['content']);
+            $data['content'] = $data['content'] === null
+                ? null
+                : $this->htmlSanitizer->sanitize($data['content']);
         }
 
         if ($heroImage !== null) {

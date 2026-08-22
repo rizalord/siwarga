@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             RoleSeeder::class,
             UserSeeder::class,
+            PageSeeder::class,
 
             // Data demo dinonaktifkan agar database awal tetap kosong.
             // DueTypeSeeder::class,

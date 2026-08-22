@@ -13,6 +13,7 @@ class PublicEventController extends Controller
         $events = Event::query()
             ->where('is_public', true)
             ->orderBy('starts_at')
+            ->limit(50)
             ->get();
 
         return PublicEventResource::collection($events);

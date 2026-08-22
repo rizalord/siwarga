@@ -6,6 +6,16 @@ export const prerender = true;
 
 const page = await publicApi.getPage('profil-komplek');
 
+const profilFallback =
+  '<p>Rumah-rumah di Asabri Bumiayu Indah tersusun rapat dalam blok-blok yang saling ' +
+  'terhubung lewat jalan lingkungan yang mudah dilalui. Kepadatan ini justru menjadi ' +
+  'kekuatan sosial kami — antartetangga saling kenal, saling menjaga, dan terlibat ' +
+  'aktif dalam kegiatan RT, mulai dari kerja bakti bulanan hingga perayaan hari besar ' +
+  'nasional di lapangan RT.</p>' +
+  '<p>Pengelolaan lingkungan dijalankan oleh pengurus RT bersama warga secara gotong ' +
+  'royong: menjaga kebersihan saluran air, keamanan lingkungan, hingga fasilitas ' +
+  'umum yang dipakai bersama.</p>';
+
 const fasilitas = [
   { title: 'Pos Keamanan 24 Jam', desc: 'Penjagaan bergantian oleh petugas dan ronda warga di setiap blok.' },
   { title: 'Lapangan Serbaguna', desc: 'Titik kumpul kerja bakti, upacara, dan acara warga sepanjang tahun.' },
@@ -30,7 +40,7 @@ const fasilitas = [
   <section class="section-paper band">
     <div class="wrap prose-block hairline">
       <h2>Lingkungan yang padat, tertata, dan bersahabat</h2>
-      <div class="prose-block-body" set:html={page?.content ?? ''} />
+      <div class="prose-block-body" set:html={page?.content ?? profilFallback} />
     </div>
   </section>
 

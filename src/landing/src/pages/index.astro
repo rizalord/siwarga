@@ -79,9 +79,15 @@ const kegiatan = events.map((item, i) => ({
         <h2>Pengumuman Terbaru</h2>
         <a class="link-more" href="/blog">Semua pengumuman</a>
       </div>
-      <div class="card-grid">
-        {pengumuman.map((item) => <InfoCard {...item} />)}
-      </div>
+      {
+        pengumuman.length > 0 ? (
+          <div class="card-grid">
+            {pengumuman.map((item) => <InfoCard {...item} />)}
+          </div>
+        ) : (
+          <p class="list-empty text-soft">Belum ada pengumuman saat ini.</p>
+        )
+      }
     </div>
   </section>
 
@@ -91,9 +97,15 @@ const kegiatan = events.map((item, i) => ({
         <h2>Kegiatan Mendatang</h2>
         <a class="link-more" href="/kegiatan">Semua kegiatan</a>
       </div>
-      <div class="card-grid">
-        {kegiatan.map((item) => <InfoCard {...item} dark />)}
-      </div>
+      {
+        kegiatan.length > 0 ? (
+          <div class="card-grid">
+            {kegiatan.map((item) => <InfoCard {...item} dark />)}
+          </div>
+        ) : (
+          <p class="list-empty text-soft">Belum ada kegiatan terjadwal saat ini.</p>
+        )
+      }
     </div>
   </section>
 
@@ -207,6 +219,9 @@ const kegiatan = events.map((item, i) => ({
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.4rem;
+  }
+  .list-empty {
+    padding-bottom: 0.5rem;
   }
 
   .closing {

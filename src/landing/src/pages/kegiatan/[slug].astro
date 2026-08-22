@@ -13,6 +13,8 @@ function formatDateTime(iso: string) {
   return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
     + ' · ' + new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
 }
+
+const documentation = event.documentation ?? [];
 ---
 
 <BaseLayout title={event.title} active="kegiatan">
@@ -29,11 +31,11 @@ function formatDateTime(iso: string) {
     </div>
 
     {
-      event.documentation.length > 0 && (
+      documentation.length > 0 && (
         <div class="wrap">
           <h2 class="galeri-title">Galeri Dokumentasi</h2>
           <div class="galeri-grid">
-            {event.documentation.map((doc, i) => (
+            {documentation.map((doc, i) => (
               <a href={doc.file_url} target="_blank" rel="noopener noreferrer" class="galeri-item">
                 {doc.media_type === 'foto' ? (
                   <img src={doc.file_url} alt={doc.caption ?? event.title} loading="lazy" />
@@ -48,7 +50,7 @@ function formatDateTime(iso: string) {
       )
     }
     {
-      event.documentation.length === 0 && (
+      documentation.length === 0 && (
         <div class="wrap">
           <h2 class="galeri-title">Galeri Dokumentasi</h2>
           <p class="galeri-empty text-soft">Belum ada dokumentasi untuk kegiatan ini.</p>

@@ -14,6 +14,7 @@ class PublicAnnouncementController extends Controller
             ->where('is_public', true)
             ->where('published_at', '<=', now())
             ->orderByDesc('published_at')
+            ->limit(50)
             ->get();
 
         return PublicAnnouncementResource::collection($announcements);

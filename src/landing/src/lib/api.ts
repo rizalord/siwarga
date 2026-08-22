@@ -28,7 +28,7 @@ export interface PublicEvent {
   starts_at: string
   ends_at: string | null
   status: 'upcoming' | 'ongoing' | 'completed'
-  documentation: PublicEventDocumentation[]
+  documentation?: PublicEventDocumentation[]
 }
 
 async function fetchJson<T>(path: string): Promise<T | null> {
