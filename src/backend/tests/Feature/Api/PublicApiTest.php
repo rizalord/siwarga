@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Announcement;
 use App\Models\Page;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -36,5 +37,35 @@ class PublicApiTest extends TestCase
 
         $response->assertJsonMissingPath('data.updated_by')
             ->assertJsonMissingPath('data.id');
+    }
+
+    public function test_public_announcements_index_only_returns_published_public_announcements()
+    {
+        Announcement::factory()->create(['is_public' => true, 'published_at' => now()->subDay(), 'title' => 'Terlihat']);
+        Announcement::factory()->create(['is_public' => false, 'published_at' => now()->subDay(), 'title' => 'Privat']);
+        Announcement::factory()->create(['is_public' => true, 'published_at' => now()->addDay(), 'title' => 'Belum Terbit']);
+
+        $response = $this->getJson('/api/public/announcements');
+
+        $response->assertStatus(200)->assertJsonCount(1, 'data');
+        $response->assertJsonFragment(['title' => 'Terlihat']);
+    }
+
+    public function test_public_announcement_show_returns_404_for_private_announcement()
+    {
+        Announcement::factory()->create(['slug' => 'privat', 'is_public' => false]);
+
+        $response = $this->getJson('/api/public/announcements/privat');
+
+        $response->assertStatus(404);
+    }
+
+    public function test_public_announcement_show_returns_the_announcement()
+    {
+        Announcement::factory()->create(['slug' => 'kerja-bakti', 'is_public' => true, 'published_at' => now()->subHour(), 'title' => 'Kerja Bakti']);
+
+        $response = $this->getJson('/api/public/announcements/kerja-bakti');
+
+        $response->assertStatus(200)->assertJsonPath('data.title', 'Kerja Bakti');
     }
 }
