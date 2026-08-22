@@ -1,5 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { publicApi } from '../lib/api';
+
+export const prerender = true;
+
+const page = await publicApi.getPage('kontak');
 ---
 
 <BaseLayout title="Kontak" active="kontak">
@@ -7,10 +12,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="wrap">
       <p class="page-hero__kicker text-soft">Kontak</p>
       <h1 class="page-hero__title">Hubungi Pengurus RT</h1>
-      <p class="page-hero__lede text-soft">
-        Ada pertanyaan, keluhan, atau ingin berkunjung ke Perum Asabri Bumiayu Indah?
-        Kirim pesan lewat formulir di bawah, atau datang langsung ke pos keamanan kami.
-      </p>
+      <div class="page-hero__lede text-soft" set:html={page?.content ?? 'Ada pertanyaan, keluhan, atau ingin berkunjung ke Perum Asabri Bumiayu Indah? Kirim pesan lewat formulir di bawah, atau datang langsung ke pos keamanan kami.'} />
     </div>
   </section>
 
@@ -60,7 +62,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   const status = document.getElementById('form-status');
   const submit = document.getElementById('form-submit') as HTMLButtonElement | null;
 
-  form?.addEventListener('submit', (event) => {
+  const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000/api';
+
+  form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -73,15 +77,30 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     status.textContent = '';
     status.className = 'form-status';
 
-    // Demo-only state transition; POST /public/contact wiring lands in
-    // the implementation plan once the backend endpoint is consumed here.
-    window.setTimeout(() => {
-      submit.disabled = false;
-      submit.textContent = 'Kirim Pesan';
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch(`${API_URL}/public/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('request failed');
+      }
+
       status.textContent = 'Pesan terkirim. Pengurus RT akan segera menghubungi Anda.';
       status.className = 'form-status form-status--ok';
       form.reset();
-    }, 900);
+    } catch {
+      status.textContent = 'Gagal mengirim pesan. Silakan coba lagi beberapa saat lagi.';
+      status.className = 'form-status form-status--error';
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Kirim Pesan';
+    }
   });
 </script>
 

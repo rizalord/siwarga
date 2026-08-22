@@ -1,70 +1,43 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import InfoCard from '../components/InfoCard.astro';
+import { publicApi } from '../lib/api';
 
-const pengumuman = [
-  {
-    href: '/blog/kerja-bakti-bulanan-minggu-pertama',
-    title: 'Jadwal Kerja Bakti Bulanan — Minggu Pertama',
-    excerpt:
-      'Kerja bakti rutin dimulai pukul 07.00 di titik kumpul Blok A. Warga dimohon membawa alat kebersihan masing-masing.',
-    date: '3 Agu 2026',
-    tag: 'Lingkungan',
-    isNew: true,
-  },
-  {
-    href: '/blog/perbaikan-saluran-air-blok-c',
-    title: 'Perbaikan Saluran Air di Blok C',
-    excerpt:
-      'Perbaikan saluran akan berlangsung 2 hari. Mohon maaf atas ketidaknyamanan selama pengerjaan berlangsung.',
-    date: '28 Jul 2026',
-    tag: 'Fasilitas',
-  },
-  {
-    href: '/blog/pengumuman-iuran-bulanan',
-    title: 'Iuran Bulanan & Batas Waktu Pembayaran',
-    excerpt:
-      'Pembayaran iuran bulan berjalan paling lambat tanggal 10. Pembayaran dapat dilakukan ke bendahara RT.',
-    date: '25 Jul 2026',
-    tag: 'Keuangan',
-  },
-];
+export const prerender = true;
 
-const kegiatan = [
-  {
-    href: '/kegiatan/kerja-bakti-blok-a-d',
-    title: 'Kerja Bakti Bersama Warga Blok A–D',
-    excerpt: 'Gotong royong membersihkan saluran dan area fasilitas umum di sekitar Blok A hingga D.',
-    date: '10 Agu 2026',
-    tag: 'Kegiatan',
-    isNew: true,
-  },
-  {
-    href: '/kegiatan/hut-ri-81',
-    title: 'Peringatan HUT RI ke-81 di Lapangan RT',
-    excerpt: 'Upacara bendera, lomba warga, dan panggung hiburan untuk seluruh keluarga.',
-    date: '17 Agu 2026',
-    tag: 'Kegiatan',
-  },
-  {
-    href: '/kegiatan/posyandu-bulanan',
-    title: 'Posyandu Balita & Lansia Bulanan',
-    excerpt: 'Pemeriksaan kesehatan rutin untuk balita dan lansia, bertempat di pos kesehatan RT.',
-    date: '5 Agu 2026',
-    tag: 'Kegiatan',
-  },
-];
+const home = await publicApi.getPage('home');
+const announcements = (await publicApi.getAnnouncements()).slice(0, 3);
+const events = (await publicApi.getEvents()).slice(0, 3);
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+const pengumuman = announcements.map((item, i) => ({
+  href: `/blog/${item.slug}`,
+  title: item.title,
+  excerpt: item.content.replace(/<[^>]+>/g, '').slice(0, 140),
+  date: formatDate(item.published_at),
+  tag: item.category,
+  isNew: i === 0,
+}));
+
+const kegiatan = events.map((item, i) => ({
+  href: `/kegiatan/${item.slug}`,
+  title: item.title,
+  excerpt: (item.description ?? '').slice(0, 140),
+  date: formatDate(item.starts_at),
+  tag: 'Kegiatan',
+  isNew: i === 0,
+}));
 ---
 
 <BaseLayout title="Beranda" active="beranda">
   <section class="hero section-black">
     <div class="wrap hero__inner hero-rise">
       <p class="hero__eyebrow text-soft">Kel. Bumiayu · Kec. Kedungkandang · Kota Malang</p>
-      <h1 class="hero__title">Perum Asabri<br />Bumiayu Indah</h1>
-      <p class="hero__lede text-soft">
-        Portal warga — pengumuman, kegiatan, dan profil kompleks, terbuka untuk warga
-        maupun tamu yang ingin tahu lebih jauh soal lingkungan kami.
-      </p>
+      <h1 class="hero__title">{home?.title ?? 'Perum Asabri Bumiayu Indah'}</h1>
+      <div class="hero__lede text-soft" set:html={home?.content ?? 'Portal warga — pengumuman, kegiatan, dan profil kompleks, terbuka untuk warga maupun tamu yang ingin tahu lebih jauh soal lingkungan kami.'} />
       <div class="hero__actions">
         <a class="pill pill--light" href="/kontak">Hubungi RT</a>
         <a class="pill pill--outline" href="#pengumuman">Lihat Pengumuman ↓</a>
