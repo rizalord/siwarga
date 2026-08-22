@@ -4,8 +4,24 @@ set -e
 cd /var/www/html
 
 # composer.json/lock may have changed since the image was built (bind mount).
-if [ ! -d vendor ] || [ composer.lock -nt vendor ]; then
+if [ ! -f vendor/composer/installed.php ] || [ composer.lock -nt vendor/composer/installed.php ]; then
+    mkdir -p vendor
+    composer_lock_dir=vendor/.composer-install-lock
+
+    while ! mkdir "$composer_lock_dir" 2>/dev/null; do
+        sleep 1
+    done
+
+    cleanup_composer_lock() {
+        rmdir "$composer_lock_dir" 2>/dev/null || true
+    }
+
+    trap cleanup_composer_lock EXIT
+
     composer install --no-interaction --prefer-dist
+
+    rmdir "$composer_lock_dir"
+    trap - EXIT
 fi
 
 if [ -z "$APP_KEY" ]; then
