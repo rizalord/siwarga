@@ -1,38 +1,22 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import InfoCard from '../../components/InfoCard.astro';
+import { publicApi } from '../../lib/api';
 
-const kegiatan = [
-  {
-    href: '/kegiatan/kerja-bakti-blok-a-d',
-    title: 'Kerja Bakti Bersama Warga Blok A–D',
-    excerpt: 'Gotong royong membersihkan saluran dan area fasilitas umum di sekitar Blok A hingga D.',
-    date: '10 Agu 2026',
-    tag: 'Lingkungan',
-    isNew: true,
-  },
-  {
-    href: '/kegiatan/hut-ri-81',
-    title: 'Peringatan HUT RI ke-81 di Lapangan RT',
-    excerpt: 'Upacara bendera, lomba warga, dan panggung hiburan untuk seluruh keluarga.',
-    date: '17 Agu 2026',
-    tag: 'Perayaan',
-  },
-  {
-    href: '/kegiatan/posyandu-bulanan',
-    title: 'Posyandu Balita & Lansia Bulanan',
-    excerpt: 'Pemeriksaan kesehatan rutin untuk balita dan lansia, bertempat di pos kesehatan RT.',
-    date: '5 Agu 2026',
-    tag: 'Kesehatan',
-  },
-  {
-    href: '/kegiatan/arisan-ibu-ibu',
-    title: 'Arisan & Silaturahmi Ibu-Ibu RT',
-    excerpt: 'Pertemuan rutin bulanan ibu-ibu warga sekaligus ajang arisan dan silaturahmi.',
-    date: '2 Agu 2026',
-    tag: 'Sosial',
-  },
-];
+const events = await publicApi.getEvents();
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+const kegiatan = events.map((item, i) => ({
+  href: `/kegiatan/${item.slug}`,
+  title: item.title,
+  excerpt: (item.description ?? '').slice(0, 140),
+  date: formatDate(item.starts_at),
+  tag: item.status === 'completed' ? 'Selesai' : 'Kegiatan',
+  isNew: i === 0,
+}));
 ---
 
 <BaseLayout title="Kegiatan" active="kegiatan">

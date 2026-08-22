@@ -1,0 +1,142 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { publicApi } from '../../lib/api';
+
+const { slug } = Astro.params;
+const event = slug ? await publicApi.getEvent(slug) : null;
+
+if (!event) {
+  return Astro.redirect('/kegiatan');
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+    + ' · ' + new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+}
+---
+
+<BaseLayout title={event.title} active="kegiatan">
+  <article class="event section-white">
+    <header class="event__header wrap">
+      <a class="back-link" href="/kegiatan">← Semua kegiatan</a>
+      <span class="event__tag text-soft">{event.status === 'completed' ? 'Selesai' : 'Kegiatan'}</span>
+      <h1>{event.title}</h1>
+      <time class="event__date text-soft tnum">{formatDateTime(event.starts_at)}</time>
+    </header>
+
+    <div class="event__body wrap">
+      <p>{event.description}</p>
+    </div>
+
+    {
+      event.documentation.length > 0 && (
+        <div class="wrap">
+          <h2 class="galeri-title">Galeri Dokumentasi</h2>
+          <div class="galeri-grid">
+            {event.documentation.map((doc, i) => (
+              <a href={doc.file_url} target="_blank" rel="noopener noreferrer" class="galeri-item">
+                {doc.media_type === 'foto' ? (
+                  <img src={doc.file_url} alt={doc.caption ?? event.title} loading="lazy" />
+                ) : (
+                  <video src={doc.file_url} controls preload="metadata" />
+                )}
+                {doc.caption && <span class="galeri-item__caption text-soft">{doc.caption}</span>}
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+    }
+    {
+      event.documentation.length === 0 && (
+        <div class="wrap">
+          <h2 class="galeri-title">Galeri Dokumentasi</h2>
+          <p class="galeri-empty text-soft">Belum ada dokumentasi untuk kegiatan ini.</p>
+        </div>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style>
+  .event__header {
+    padding-block: clamp(2.4rem, 6vw, 3.2rem) 2rem;
+    border-bottom: 1px solid var(--gray-300);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .back-link {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--ink);
+    text-decoration: none;
+    margin-bottom: 0.4rem;
+  }
+  .event__tag {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .event__header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    max-width: 34ch;
+    letter-spacing: -0.03em;
+  }
+  .event__date {
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
+
+  .event__body {
+    max-width: 68ch;
+    padding-block: 2rem 1rem;
+    font-size: 1.05rem;
+  }
+
+  .galeri-title {
+    font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+    letter-spacing: -0.02em;
+    margin-block: 2rem 1.4rem;
+  }
+  .galeri-empty {
+    padding-bottom: 4.5rem;
+  }
+
+  .galeri-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    padding-bottom: 4.5rem;
+  }
+
+  .galeri-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-decoration: none;
+  }
+  .galeri-item img,
+  .galeri-item video {
+    aspect-ratio: 4 / 3;
+    width: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+  .galeri-item__caption {
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 780px) {
+    .galeri-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 460px) {
+    .galeri-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
