@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PublicAnnouncementController;
+use App\Http\Controllers\Api\PublicEventController;
 use App\Http\Controllers\Api\PublicPageController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ResidentController;
@@ -155,4 +156,6 @@ Route::prefix('public')->group(function () {
     Route::get('pages/{slug}', [PublicPageController::class, 'show']);
     Route::get('announcements', [PublicAnnouncementController::class, 'index']);
     Route::get('announcements/{slug}', [PublicAnnouncementController::class, 'show']);
+    Route::get('events', [PublicEventController::class, 'index']);
+    Route::get('events/{slug}', [PublicEventController::class, 'show']);
 });

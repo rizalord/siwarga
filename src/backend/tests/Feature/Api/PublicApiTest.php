@@ -3,6 +3,8 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Announcement;
+use App\Models\Event;
+use App\Models\EventDocumentation;
 use App\Models\Page;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -67,5 +69,37 @@ class PublicApiTest extends TestCase
         $response = $this->getJson('/api/public/announcements/kerja-bakti');
 
         $response->assertStatus(200)->assertJsonPath('data.title', 'Kerja Bakti');
+    }
+
+    public function test_public_events_index_only_returns_public_events()
+    {
+        Event::factory()->create(['is_public' => true, 'title' => 'Terlihat', 'starts_at' => now()->addDay()]);
+        Event::factory()->create(['is_public' => false, 'title' => 'Privat', 'starts_at' => now()->addDay()]);
+
+        $response = $this->getJson('/api/public/events');
+
+        $response->assertStatus(200)->assertJsonCount(1, 'data');
+        $response->assertJsonFragment(['title' => 'Terlihat']);
+    }
+
+    public function test_public_event_show_returns_404_for_private_event()
+    {
+        Event::factory()->create(['slug' => 'privat', 'is_public' => false]);
+
+        $response = $this->getJson('/api/public/events/privat');
+
+        $response->assertStatus(404);
+    }
+
+    public function test_public_event_show_includes_documentation()
+    {
+        $event = Event::factory()->create(['slug' => 'kerja-bakti', 'is_public' => true]);
+        EventDocumentation::factory()->create(['event_id' => $event->id, 'media_type' => 'foto', 'caption' => 'Dokumentasi']);
+
+        $response = $this->getJson('/api/public/events/kerja-bakti');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(1, 'data.documentation')
+            ->assertJsonPath('data.documentation.0.caption', 'Dokumentasi');
     }
 }
