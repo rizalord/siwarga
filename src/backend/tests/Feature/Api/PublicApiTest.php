@@ -102,4 +102,35 @@ class PublicApiTest extends TestCase
             ->assertJsonCount(1, 'data.documentation')
             ->assertJsonPath('data.documentation.0.caption', 'Dokumentasi');
     }
+
+    public function test_public_contact_form_creates_a_message()
+    {
+        $response = $this->postJson('/api/public/contact', [
+            'name' => 'Budi',
+            'email' => 'budi@example.com',
+            'phone' => '081234567890',
+            'message' => 'Halo, saya ingin bertanya soal jadwal kerja bakti.',
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('contact_messages', ['name' => 'Budi', 'status' => 'new']);
+    }
+
+    public function test_public_contact_form_validates_required_fields()
+    {
+        $response = $this->postJson('/api/public/contact', []);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['name', 'message']);
+    }
+
+    public function test_public_contact_form_is_rate_limited()
+    {
+        $payload = ['name' => 'Budi', 'message' => 'Halo'];
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->postJson('/api/public/contact', $payload)->assertStatus(201);
+        }
+
+        $this->postJson('/api/public/contact', $payload)->assertStatus(429);
+    }
 }

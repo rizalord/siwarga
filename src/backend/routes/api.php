@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
+use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DueTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
@@ -158,4 +159,5 @@ Route::prefix('public')->group(function () {
     Route::get('announcements/{slug}', [PublicAnnouncementController::class, 'show']);
     Route::get('events', [PublicEventController::class, 'index']);
     Route::get('events/{slug}', [PublicEventController::class, 'show']);
+    Route::post('contact', [ContactMessageController::class, 'store'])->middleware('throttle:contact');
 });
