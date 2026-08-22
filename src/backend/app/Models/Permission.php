@@ -32,6 +32,7 @@ class Permission extends Model
         'houses.delete' => 'Hapus rumah',
         'houses.trash' => 'Kelola data rumah terhapus',
         'houses.assign' => 'Assign penghuni ke rumah',
+        'pages.manage' => 'Kelola halaman landing (Beranda, Profil Komplek, Kontak)',
         'due-types.view' => 'Lihat jenis iuran',
         'due-types.manage' => 'Kelola jenis iuran',
         'due-types.trash' => 'Kelola data jenis iuran terhapus',

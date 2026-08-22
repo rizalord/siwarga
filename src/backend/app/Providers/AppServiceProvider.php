@@ -18,6 +18,7 @@ use App\Policies\DueTypePolicy;
 use App\Policies\ExpenseCategoryPolicy;
 use App\Policies\ExpensePolicy;
 use App\Policies\HousePolicy;
+use App\Policies\PagePolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\ResidentPolicy;
 use App\Policies\UserPolicy;
@@ -82,6 +83,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('houses.delete', [HousePolicy::class, 'delete']);
         Gate::define('houses.trash', [HousePolicy::class, 'restore']);
         Gate::define('houses.assign', [HousePolicy::class, 'assign']);
+
+        // Pages
+        Gate::define('pages.manage', [PagePolicy::class, 'update']);
 
         // Residents
         Gate::define('residents.view', [ResidentPolicy::class, 'viewAny']);
