@@ -44,7 +44,7 @@ Aplikasi web untuk mengelola administrasi RT: penghuni, rumah, iuran bulanan, pe
 
 | Layer | Teknologi |
 |---|---|
-| Backend | Laravel 13.x, PHP 8.3 |
+| Backend | Laravel 13.x, PHP 8.5 |
 | Auth | Laravel Sanctum (token-based) |
 | Database | MySQL 8.x |
 | Testing backend | PHPUnit (Unit + Feature) |
@@ -108,7 +108,7 @@ Panduan ini untuk menjalankan SIWarga langsung di laptop/komputer sendiri untuk 
 
 | Kebutuhan | Versi | Cek dengan |
 |---|---|---|
-| PHP | 8.3 (+ ekstensi `mbstring`, `xml`, `bcmath`, `curl`, `zip`, `gd`, `tokenizer`, `pdo_mysql`) | `php -v` |
+| PHP | 8.5 (+ ekstensi `mbstring`, `xml`, `bcmath`, `curl`, `zip`, `gd`, `tokenizer`, `pdo_mysql`) | `php -v` |
 | Composer | 2.x | `composer --version` |
 | Node.js | 20+ | `node -v` |
 | MySQL | 8.x (server jalan di `localhost:3306`) | `mysql --version` |
@@ -209,6 +209,14 @@ docker compose exec backend php artisan db:seed
 
 > **Foto KTP / storage:** symlink `public/storage` dibuat otomatis oleh container backend saat start dengan target **relatif** (`../storage/app/public`), sehingga valid dipakai bergantian dengan Opsi 1 (native). Kalau sebelumnya pernah menjalankan Opsi 1 dulu, hapus symlink lamanya sekali lalu biarkan container membuatnya ulang — lihat [Troubleshooting](#troubleshooting).
 
+#### WAHA (WhatsApp Gateway)
+
+The development stack includes WAHA for WhatsApp notifications. Open `http://localhost:3000`, sign in with the configured dashboard credentials (the defaults are `admin` / `secret`), start the `default` session, and scan the QR code with the WhatsApp number used by the RT.
+
+The `siwarga_waha_sessions` and `siwarga_waha_media` named volumes persist authentication data and media files. Repeat the QR scan whenever the session volume is reset, and keep the WhatsApp number active on a phone to prevent the session from being logged out.
+
+For production, set `WAHA_API_KEY`, `WAHA_DASHBOARD_USERNAME`, and `WAHA_DASHBOARD_PASSWORD` in `.env` before starting the stack.
+
 #### Production
 
 Image production membangun backend jadi satu image php-fpm + nginx yang teroptimasi, dan frontend jadi static asset yang di-serve nginx — tidak ada bind mount, semuanya sudah di-bake ke image saat build.
@@ -257,15 +265,15 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl git unzip software-properties-common
 ```
 
-#### 2. Install PHP 8.3 + ekstensi yang dibutuhkan
+#### 2. Install PHP 8.5 + ekstensi yang dibutuhkan
 
 ```bash
 sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
-sudo apt install -y php8.3 php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring \
-    php8.3-xml php8.3-bcmath php8.3-curl php8.3-zip php8.3-gd php8.3-tokenizer
+sudo apt install -y php8.5 php8.5-fpm php8.5-cli php8.5-mysql php8.5-mbstring \
+    php8.5-xml php8.5-bcmath php8.5-curl php8.5-zip php8.5-gd php8.5-tokenizer
 
-php -v   # pastikan PHP 8.3.x
+php -v   # pastikan PHP 8.5.x
 ```
 
 #### 3. Install Composer
@@ -360,10 +368,10 @@ sudo chmod -R 775 storage bootstrap/cache
 
 #### 8. Konfigurasi PHP-FPM pool (opsional, disesuaikan kapasitas server)
 
-Pool default `www` biasanya sudah cukup untuk skala RT (puluhan rumah). Kalau perlu isolasi user, buat pool baru di `/etc/php/8.3/fpm/pool.d/siwarga.conf` mengikuti contoh pool `www.conf`, lalu:
+Pool default `www` biasanya sudah cukup untuk skala RT (puluhan rumah). Kalau perlu isolasi user, buat pool baru di `/etc/php/8.5/fpm/pool.d/siwarga.conf` mengikuti contoh pool `www.conf`, lalu:
 
 ```bash
-sudo systemctl restart php8.3-fpm
+sudo systemctl restart php8.5-fpm
 ```
 
 #### 9. Konfigurasi Nginx untuk backend (API)
@@ -384,7 +392,7 @@ server {
     }
 
     location ~ \.php$ {
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.5-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;

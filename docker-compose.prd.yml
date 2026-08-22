@@ -34,7 +34,7 @@ services:
     environment:
       APP_NAME: ${APP_NAME:-SIWarga}
       APP_ENV: production
-      APP_KEY: ${APP_KEY:?APP_KEY wajib di-set di .env untuk production}
+      APP_KEY: ${APP_KEY:?APP_KEY must be set in .env for production}
       APP_DEBUG: 'false'
       APP_URL: ${APP_URL:-http://localhost:8000}
       DB_CONNECTION: mysql
@@ -48,6 +48,9 @@ services:
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: local
       LOG_CHANNEL: stack
+      WAHA_BASE_URL: ${WAHA_BASE_URL:-http://waha:3000}
+      WAHA_SESSION: ${WAHA_SESSION:-default}
+      WAHA_API_KEY: ${WAHA_API_KEY:?WAHA_API_KEY must be set in .env for production}
     volumes:
       - siwarga_backend_storage_prd:/var/www/html/storage/app
     depends_on:
@@ -68,6 +71,25 @@ services:
     depends_on:
       - backend
 
+  waha:
+    image: devlikeapro/waha:latest
+    restart: unless-stopped
+    ports:
+      - '${WAHA_PORT:-3000}:3000'
+    environment:
+      WHATSAPP_API_KEY: ${WAHA_API_KEY:?WAHA_API_KEY must be set in .env for production}
+      WAHA_DASHBOARD_ENABLED: 'true'
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME:?WAHA_DASHBOARD_USERNAME must be set}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD:?WAHA_DASHBOARD_PASSWORD must be set}
+      WAHA_PRINT_QR: 'false'
+      WHATSAPP_FILES_FOLDER: /app/.media
+      WHATSAPP_FILES_LIFETIME: '0'
+    volumes:
+      - siwarga_waha_sessions_prd:/app/.sessions
+      - siwarga_waha_media_prd:/app/.media
+
 volumes:
   siwarga_db_data_prd:
   siwarga_backend_storage_prd:
+  siwarga_waha_sessions_prd:
+  siwarga_waha_media_prd:

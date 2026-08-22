@@ -50,6 +50,9 @@ services:
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: local
       LOG_CHANNEL: stack
+      WAHA_BASE_URL: ${WAHA_BASE_URL:-http://waha:3000}
+      WAHA_SESSION: ${WAHA_SESSION:-default}
+      WAHA_API_KEY: ${WAHA_API_KEY:-}
     volumes:
       - ./src/backend:/var/www/html
       - siwarga_backend_vendor:/var/www/html/vendor
@@ -108,7 +111,27 @@ services:
     depends_on:
       - backend
 
+  waha:
+    image: devlikeapro/waha:latest
+    restart: unless-stopped
+    ports:
+      - '${WAHA_PORT:-3000}:3000'
+    environment:
+      WHATSAPP_API_KEY: ${WAHA_API_KEY:-}
+      WAHA_NO_API_KEY: ${WAHA_NO_API_KEY:-true}
+      WAHA_DASHBOARD_ENABLED: 'true'
+      WAHA_DASHBOARD_USERNAME: ${WAHA_DASHBOARD_USERNAME:-admin}
+      WAHA_DASHBOARD_PASSWORD: ${WAHA_DASHBOARD_PASSWORD:-secret}
+      WAHA_PRINT_QR: 'true'
+      WHATSAPP_FILES_FOLDER: /app/.media
+      WHATSAPP_FILES_LIFETIME: '0'
+    volumes:
+      - siwarga_waha_sessions:/app/.sessions
+      - siwarga_waha_media:/app/.media
+
 volumes:
   siwarga_db_data:
   siwarga_backend_vendor:
   siwarga_frontend_node_modules:
+  siwarga_waha_sessions:
+  siwarga_waha_media:

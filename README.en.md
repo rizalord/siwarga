@@ -44,7 +44,7 @@ A web application for managing RT (Indonesian neighborhood association) administ
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 13.x, PHP 8.3 |
+| Backend | Laravel 13.x, PHP 8.5 |
 | Auth | Laravel Sanctum (token-based) |
 | Database | MySQL 8.x |
 | Backend testing | PHPUnit (Unit + Feature) |
@@ -108,7 +108,7 @@ This guide runs SIWarga directly on your own laptop/computer for development pur
 
 | Requirement | Version | Check with |
 |---|---|---|
-| PHP | 8.3 (+ extensions `mbstring`, `xml`, `bcmath`, `curl`, `zip`, `gd`, `tokenizer`, `pdo_mysql`) | `php -v` |
+| PHP | 8.5 (+ extensions `mbstring`, `xml`, `bcmath`, `curl`, `zip`, `gd`, `tokenizer`, `pdo_mysql`) | `php -v` |
 | Composer | 2.x | `composer --version` |
 | Node.js | 20+ | `node -v` |
 | MySQL | 8.x (server running on `localhost:3306`) | `mysql --version` |
@@ -209,6 +209,14 @@ docker compose exec backend php artisan db:seed
 
 > **Storage / ID photos:** the `public/storage` symlink is created automatically by the backend container on start with a **relative** target (`../storage/app/public`), so it stays valid when switching between Option 1 (native) and Docker. If you previously ran Option 1 first, remove the old symlink once and let the container recreate it — see [Troubleshooting](#troubleshooting).
 
+#### WAHA (WhatsApp Gateway)
+
+The development stack includes WAHA for WhatsApp notifications. Open `http://localhost:3000`, sign in with the configured dashboard credentials (the defaults are `admin` / `secret`), start the `default` session, and scan the QR code with the WhatsApp number used by the RT.
+
+The `siwarga_waha_sessions` and `siwarga_waha_media` named volumes persist authentication data and media files. Repeat the QR scan whenever the session volume is reset, and keep the WhatsApp number active on a phone to prevent the session from being logged out.
+
+For production, set `WAHA_API_KEY`, `WAHA_DASHBOARD_USERNAME`, and `WAHA_DASHBOARD_PASSWORD` in `.env` before starting the stack.
+
 #### Production
 
 The production images build the backend into a single optimized php-fpm + nginx image, and the frontend into a static bundle served by nginx — no bind mounts, everything is baked into the image at build time.
@@ -257,15 +265,15 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl git unzip software-properties-common
 ```
 
-#### 2. Install PHP 8.3 + required extensions
+#### 2. Install PHP 8.5 + required extensions
 
 ```bash
 sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
-sudo apt install -y php8.3 php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring \
-    php8.3-xml php8.3-bcmath php8.3-curl php8.3-zip php8.3-gd php8.3-tokenizer
+sudo apt install -y php8.5 php8.5-fpm php8.5-cli php8.5-mysql php8.5-mbstring \
+    php8.5-xml php8.5-bcmath php8.5-curl php8.5-zip php8.5-gd php8.5-tokenizer
 
-php -v   # confirm PHP 8.3.x
+php -v   # confirm PHP 8.5.x
 ```
 
 #### 3. Install Composer
@@ -360,10 +368,10 @@ sudo chmod -R 775 storage bootstrap/cache
 
 #### 8. Configure the PHP-FPM pool (optional, adjust to server capacity)
 
-The default `www` pool is usually enough for RT-scale usage (a few dozen houses). If you need user isolation, create a new pool at `/etc/php/8.3/fpm/pool.d/siwarga.conf` following the `www.conf` example, then:
+The default `www` pool is usually enough for RT-scale usage (a few dozen houses). If you need user isolation, create a new pool at `/etc/php/8.5/fpm/pool.d/siwarga.conf` following the `www.conf` example, then:
 
 ```bash
-sudo systemctl restart php8.3-fpm
+sudo systemctl restart php8.5-fpm
 ```
 
 #### 9. Configure Nginx for the backend (API)
@@ -384,7 +392,7 @@ server {
     }
 
     location ~ \.php$ {
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.5-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;

@@ -8,16 +8,20 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --optimize-autoloader
 
-FROM php:8.3-fpm-alpine AS app
+FROM php:8.5-fpm-alpine AS app
 
 RUN apk add --no-cache \
         nginx \
         supervisor \
         mysql-client \
+        freetype-dev \
+        libjpeg-turbo-dev \
         libpng-dev \
         libzip-dev \
         libxml2-dev \
         oniguruma-dev \
+        libwebp-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
 WORKDIR /var/www/html

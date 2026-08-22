@@ -1,0 +1,3 @@
+# Local test fixtures can be root-owned after running file-upload tests.
+# They are not application code and must not be copied into images.
+storage/framework/testing/
