@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\HouseController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\PublicPageController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\RoleController;
@@ -147,4 +148,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Activity Logs
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->middleware('can:activity-logs.view');
     Route::post('activity-logs/track', [ActivityLogController::class, 'track']);
+});
+
+Route::prefix('public')->group(function () {
+    Route::get('pages/{slug}', [PublicPageController::class, 'show']);
 });
