@@ -25,6 +25,7 @@ import { Route as AuthenticatedExpenseCategoriesIndexRouteImport } from './route
 import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authenticated/expenses/index'
 import { Route as AuthenticatedHousesIndexRouteImport } from './routes/_authenticated/houses/index'
 import { Route as AuthenticatedHousesIdRouteImport } from './routes/_authenticated/houses/$id'
+import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authenticated/pages/index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
 import { Route as AuthenticatedPermissionsIndexRouteImport } from './routes/_authenticated/permissions/index'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports/index'
@@ -118,6 +119,11 @@ const AuthenticatedHousesIdRoute = AuthenticatedHousesIdRouteImport.update({
   path: '/houses/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPagesIndexRoute = AuthenticatedPagesIndexRouteImport.update({
+  id: '/pages/',
+  path: '/pages/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPaymentsIndexRoute =
   AuthenticatedPaymentsIndexRouteImport.update({
     id: '/payments/',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/houses/': typeof AuthenticatedHousesIndexRoute
+  '/pages/': typeof AuthenticatedPagesIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/permissions/': typeof AuthenticatedPermissionsIndexRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/expense-categories': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses': typeof AuthenticatedExpensesIndexRoute
   '/houses': typeof AuthenticatedHousesIndexRoute
+  '/pages': typeof AuthenticatedPagesIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/permissions': typeof AuthenticatedPermissionsIndexRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
@@ -226,6 +234,7 @@ export interface FileRoutesById {
   '/_authenticated/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
+  '/_authenticated/pages/': typeof AuthenticatedPagesIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/permissions/': typeof AuthenticatedPermissionsIndexRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/expense-categories/'
     | '/expenses/'
     | '/houses/'
+    | '/pages/'
     | '/payments/'
     | '/permissions/'
     | '/reports/'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/expense-categories'
     | '/expenses'
     | '/houses'
+    | '/pages'
     | '/payments'
     | '/permissions'
     | '/reports'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/_authenticated/expense-categories/'
     | '/_authenticated/expenses/'
     | '/_authenticated/houses/'
+    | '/_authenticated/pages/'
     | '/_authenticated/payments/'
     | '/_authenticated/permissions/'
     | '/_authenticated/reports/'
@@ -433,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHousesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pages/': {
+      id: '/_authenticated/pages/'
+      path: '/pages'
+      fullPath: '/pages/'
+      preLoaderRoute: typeof AuthenticatedPagesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/payments/': {
       id: '/_authenticated/payments/'
       path: '/payments'
@@ -496,6 +515,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedExpenseCategoriesIndexRoute: typeof AuthenticatedExpenseCategoriesIndexRoute
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
+  AuthenticatedPagesIndexRoute: typeof AuthenticatedPagesIndexRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
   AuthenticatedPermissionsIndexRoute: typeof AuthenticatedPermissionsIndexRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
@@ -516,6 +536,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedExpenseCategoriesIndexRoute,
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
+  AuthenticatedPagesIndexRoute: AuthenticatedPagesIndexRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
   AuthenticatedPermissionsIndexRoute: AuthenticatedPermissionsIndexRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,

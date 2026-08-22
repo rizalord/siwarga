@@ -47,6 +47,12 @@ export const sidebarData: SidebarData = {
           icon: Banknote,
           permission: 'due-types.view',
         },
+        {
+          title: 'Halaman Landing',
+          url: '/pages',
+          icon: FileText,
+          permission: 'pages.manage',
+        },
       ],
     },
     {
