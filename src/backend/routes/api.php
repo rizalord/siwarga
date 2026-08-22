@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DueTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\HouseController;
+use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ReportController;
@@ -48,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('houses/{house}/history', [HouseController::class, 'history'])->middleware('can:houses.view');
     Route::post('houses/{house}/assign-resident', [HouseController::class, 'assignResident'])->middleware('can:houses.assign');
     Route::post('houses/{house}/vacate-resident', [HouseController::class, 'vacateResident'])->middleware('can:houses.assign');
+
+    // Pages
+    Route::get('pages/{slug}', [PageController::class, 'show'])->middleware('can:pages.manage');
+    Route::put('pages/{slug}', [PageController::class, 'update'])->middleware('can:pages.manage');
 
     // Due Types
     Route::get('due-types', [DueTypeController::class, 'index'])->middleware('can:due-types.view');
