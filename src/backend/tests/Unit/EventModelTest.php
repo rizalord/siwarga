@@ -16,12 +16,12 @@ class EventModelTest extends TestCase
     {
         $creator = User::factory()->create();
         $event = Event::factory()->create([
-            'title' => 'Kerja Bakti',
+            'title' => 'Community Cleanup',
             'created_by' => $creator->id,
             'status' => 'upcoming',
         ]);
 
-        $this->assertDatabaseHas('events', ['title' => 'Kerja Bakti', 'status' => 'upcoming']);
+        $this->assertDatabaseHas('events', ['title' => 'Community Cleanup', 'status' => 'upcoming']);
         $this->assertTrue($event->createdBy->is($creator));
     }
 

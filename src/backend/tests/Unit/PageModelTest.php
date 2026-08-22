@@ -15,25 +15,25 @@ class PageModelTest extends TestCase
     public function test_page_can_be_created_with_slug_and_content()
     {
         $page = Page::factory()->create([
-            'slug' => 'profil-komplek',
-            'title' => 'Profil Komplek',
-            'content' => '<p>Sejarah singkat komplek.</p>',
+            'slug' => 'complex-profile',
+            'title' => 'Complex Profile',
+            'content' => '<p>A brief history of the community.</p>',
         ]);
 
         $this->assertDatabaseHas('pages', [
-            'slug' => 'profil-komplek',
-            'title' => 'Profil Komplek',
+            'slug' => 'complex-profile',
+            'title' => 'Complex Profile',
         ]);
-        $this->assertEquals('<p>Sejarah singkat komplek.</p>', $page->content);
+        $this->assertEquals('<p>A brief history of the community.</p>', $page->content);
     }
 
     public function test_slug_must_be_unique()
     {
-        Page::factory()->create(['slug' => 'kontak']);
+        Page::factory()->create(['slug' => 'contact']);
 
         $this->expectException(QueryException::class);
 
-        Page::factory()->create(['slug' => 'kontak']);
+        Page::factory()->create(['slug' => 'contact']);
     }
 
     public function test_page_belongs_to_updater()
