@@ -18,7 +18,10 @@ if [ ! -f vendor/composer/installed.php ] || [ composer.lock -nt vendor/composer
 
     trap cleanup_composer_lock EXIT
 
-    composer install --no-interaction --prefer-dist
+    # Re-check: another container may have finished the install while we waited for the lock.
+    if [ ! -f vendor/composer/installed.php ] || [ composer.lock -nt vendor/composer/installed.php ]; then
+        composer install --no-interaction --prefer-dist
+    fi
 
     rmdir "$composer_lock_dir"
     trap - EXIT
@@ -37,7 +40,7 @@ until php -r "new PDO('mysql:host=${DB_HOST:-db};port=${DB_PORT:-3306}', '${DB_U
 done
 echo ">> Database siap."
 
-php artisan migrate --force
+php artisan migrate --force --isolated
 
 # Storage symlink dengan target RELATIF agar valid di dalam container maupun
 # di host (workflow native). Dibuat ulang kalau symlink hilang, patah, atau
