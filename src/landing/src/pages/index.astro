@@ -1,0 +1,263 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import InfoCard from '../components/InfoCard.astro';
+
+const pengumuman = [
+  {
+    href: '/blog/kerja-bakti-bulanan-minggu-pertama',
+    title: 'Jadwal Kerja Bakti Bulanan — Minggu Pertama',
+    excerpt:
+      'Kerja bakti rutin dimulai pukul 07.00 di titik kumpul Blok A. Warga dimohon membawa alat kebersihan masing-masing.',
+    date: '3 Agu 2026',
+    tag: 'Lingkungan',
+    isNew: true,
+  },
+  {
+    href: '/blog/perbaikan-saluran-air-blok-c',
+    title: 'Perbaikan Saluran Air di Blok C',
+    excerpt:
+      'Perbaikan saluran akan berlangsung 2 hari. Mohon maaf atas ketidaknyamanan selama pengerjaan berlangsung.',
+    date: '28 Jul 2026',
+    tag: 'Fasilitas',
+  },
+  {
+    href: '/blog/pengumuman-iuran-bulanan',
+    title: 'Iuran Bulanan & Batas Waktu Pembayaran',
+    excerpt:
+      'Pembayaran iuran bulan berjalan paling lambat tanggal 10. Pembayaran dapat dilakukan ke bendahara RT.',
+    date: '25 Jul 2026',
+    tag: 'Keuangan',
+  },
+];
+
+const kegiatan = [
+  {
+    href: '/kegiatan/kerja-bakti-blok-a-d',
+    title: 'Kerja Bakti Bersama Warga Blok A–D',
+    excerpt: 'Gotong royong membersihkan saluran dan area fasilitas umum di sekitar Blok A hingga D.',
+    date: '10 Agu 2026',
+    tag: 'Kegiatan',
+    isNew: true,
+  },
+  {
+    href: '/kegiatan/hut-ri-81',
+    title: 'Peringatan HUT RI ke-81 di Lapangan RT',
+    excerpt: 'Upacara bendera, lomba warga, dan panggung hiburan untuk seluruh keluarga.',
+    date: '17 Agu 2026',
+    tag: 'Kegiatan',
+  },
+  {
+    href: '/kegiatan/posyandu-bulanan',
+    title: 'Posyandu Balita & Lansia Bulanan',
+    excerpt: 'Pemeriksaan kesehatan rutin untuk balita dan lansia, bertempat di pos kesehatan RT.',
+    date: '5 Agu 2026',
+    tag: 'Kegiatan',
+  },
+];
+---
+
+<BaseLayout title="Beranda" active="beranda">
+  <section class="hero section-black">
+    <div class="wrap hero__inner hero-rise">
+      <p class="hero__eyebrow text-soft">Kel. Bumiayu · Kec. Kedungkandang · Kota Malang</p>
+      <h1 class="hero__title">Perum Asabri<br />Bumiayu Indah</h1>
+      <p class="hero__lede text-soft">
+        Portal warga — pengumuman, kegiatan, dan profil kompleks, terbuka untuk warga
+        maupun tamu yang ingin tahu lebih jauh soal lingkungan kami.
+      </p>
+      <div class="hero__actions">
+        <a class="pill pill--light" href="/kontak">Hubungi RT</a>
+        <a class="pill pill--outline" href="#pengumuman">Lihat Pengumuman ↓</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-white band">
+    <div class="wrap band__inner">
+      <div class="band__head">
+        <h2>Lingkungan yang dihuni, bukan sekadar dibangun</h2>
+        <p class="band__intro text-soft">
+          Asabri Bumiayu Indah adalah kompleks perumahan yang sudah lama berdiri dan terus
+          dirawat bersama oleh warganya — dari kerja bakti rutin, keamanan lingkungan, hingga
+          kegiatan sosial yang menjaga kami tetap saling kenal sebagai tetangga.
+        </p>
+        <a class="link-more" href="/profil-komplek">Baca profil lengkap kompleks</a>
+      </div>
+      <dl class="band__facts">
+        <div class="band__fact">
+          <dt class="text-soft">Lokasi</dt>
+          <dd>Kedungkandang, Kota Malang</dd>
+        </div>
+        <div class="band__fact">
+          <dt class="text-soft">Dikelola oleh</dt>
+          <dd>Pengurus RT &amp; warga</dd>
+        </div>
+        <div class="band__fact">
+          <dt class="text-soft">Karakter</dt>
+          <dd>Padat, tertata, dan ramah tetangga</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section-paper band" id="pengumuman">
+    <div class="wrap">
+      <div class="band__head band__head--row">
+        <h2>Pengumuman Terbaru</h2>
+        <a class="link-more" href="/blog">Semua pengumuman</a>
+      </div>
+      <div class="card-grid">
+        {pengumuman.map((item) => <InfoCard {...item} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-white band">
+    <div class="wrap">
+      <div class="band__head band__head--row">
+        <h2>Kegiatan Mendatang</h2>
+        <a class="link-more" href="/kegiatan">Semua kegiatan</a>
+      </div>
+      <div class="card-grid">
+        {kegiatan.map((item) => <InfoCard {...item} dark />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-black band">
+    <div class="wrap closing">
+      <h2>Punya pertanyaan atau ingin berkunjung?</h2>
+      <p class="closing__lede text-soft">
+        Pengurus RT Perum Asabri Bumiayu Indah siap membantu warga maupun tamu yang butuh
+        informasi lebih lanjut.
+      </p>
+      <a class="pill pill--light" href="/kontak">Hubungi Kami</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-block: clamp(4rem, 12vw, 8rem) clamp(3.5rem, 9vw, 6rem);
+  }
+  .hero__inner {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+  }
+  .hero__eyebrow {
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .hero__title {
+    font-size: clamp(2.6rem, 8vw, 5.4rem);
+    letter-spacing: -0.04em;
+    color: var(--white);
+    max-width: 18ch;
+  }
+  .hero__lede {
+    max-width: 46ch;
+    font-size: 1.15rem;
+    line-height: 1.5;
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    justify-content: center;
+    margin-top: 0.6rem;
+  }
+
+  .band {
+    padding-block: clamp(3.5rem, 8vw, 6rem);
+  }
+
+  .band__inner {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .band__head {
+    max-width: 56ch;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .band__head h2 {
+    font-size: clamp(1.6rem, 3vw, 2.3rem);
+  }
+  .band__intro {
+    font-size: 1.02rem;
+  }
+  .band__head--row {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    max-width: none;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .band__facts {
+    display: grid;
+    gap: 1.3rem;
+    margin: 0;
+    align-content: start;
+  }
+  .band__fact {
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--gray-300);
+  }
+  .band__fact:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .band__fact dt {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .band__fact dd {
+    margin: 0.25rem 0 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.4rem;
+  }
+
+  .closing {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.1rem;
+  }
+  .closing h2 {
+    font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+    color: var(--white);
+  }
+  .closing__lede {
+    max-width: 44ch;
+    font-size: 1.05rem;
+  }
+
+  @media (max-width: 860px) {
+    .band__inner {
+      grid-template-columns: 1fr;
+    }
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

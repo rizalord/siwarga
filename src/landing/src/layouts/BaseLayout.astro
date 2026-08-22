@@ -1,0 +1,120 @@
+---
+import Nav from '../components/Nav.astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  active?: string;
+}
+const {
+  title,
+  description = 'Portal warga Perum Asabri Bumiayu Indah — pengumuman, kegiatan, dan informasi kompleks.',
+  active = '',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title} · Asabri Bumiayu Indah</title>
+  </head>
+  <body>
+    <!--
+      THESIS: The complex's own front door, told the way a product page is
+      told — one fact per screen, huge and certain, in black, white, and gray.
+      OWN-WORLD: Monokrom. Off-black #1d1d1f / off-white #f5f5f7 / white,
+      alternating full-bleed sections (Apple's own light/dark section
+      rhythm). Inter, tight (-0.03em) display weight, pill controls,
+      hairline dividers, no color anywhere.
+      STORY: A visitor lands on a huge, certain headline, is told in one
+      line what this place is, sees real pengumuman/kegiatan as clean
+      product-style tiles, and reaches Kontak through a pill button.
+      FIRST VIEWPORT: Full-bleed black section, huge white headline
+      (complex name), one-line subhead, two pill CTAs; signature
+      interaction: nav gains a hairline + blur only once scrolled past it,
+      and content sections fade/rise in once as they cross the viewport.
+      FORM: Monokrom — user-pinned direction (Apple/iBox black-and-white),
+      built directly per new-work.md's "a user- or brief-pinned direction
+      beats the roll, always" — no concept-seed roll ran for this redesign.
+      FINISH: unreviewed and undocumented is unfinished; this build ends
+      with the finish review, the verdict, and DESIGN.md.
+    -->
+    <Nav active={active} />
+    <main>
+      <slot />
+    </main>
+    <footer class="footer section-paper">
+      <div class="wrap footer__row hairline">
+        <div>
+          <p class="footer__title">Perum Asabri Bumiayu Indah</p>
+          <p class="footer__addr">
+            Jl. Kyai Parseh Jaya, Kel. Bumiayu, Kec. Kedungkandang, Kota Malang, Jawa Timur
+          </p>
+        </div>
+        <nav aria-label="Tautan footer" class="footer__links">
+          <a href="/profil-komplek">Profil Komplek</a>
+          <a href="/kegiatan">Kegiatan</a>
+          <a href="/blog">Pengumuman</a>
+          <a href="/kontak">Kontak</a>
+        </nav>
+      </div>
+      <div class="wrap footer__credit">
+        <span>© {new Date().getFullYear()} Perum Asabri Bumiayu Indah</span>
+        <span class="footer__powered">Didukung oleh SIWarga</span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  .footer__row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-block: 3rem 2rem;
+  }
+  .footer__title {
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+  .footer__addr {
+    color: var(--gray-500);
+    font-size: 0.9rem;
+    max-width: 32ch;
+  }
+  .footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.6rem;
+  }
+  .footer__links a {
+    color: var(--gray-700);
+    font-weight: 500;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  .footer__links a:hover {
+    color: var(--ink);
+  }
+  .footer__credit {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-block: 1.1rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+    color: var(--gray-500);
+  }
+  .footer__powered {
+    font-weight: 600;
+  }
+</style>

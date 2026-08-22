@@ -1,0 +1,223 @@
+---
+interface Props {
+  active?: string;
+}
+const { active = '' } = Astro.props;
+
+const links = [
+  { href: '/', label: 'Beranda', key: 'beranda' },
+  { href: '/profil-komplek', label: 'Profil', key: 'profil' },
+  { href: '/kegiatan', label: 'Kegiatan', key: 'kegiatan' },
+  { href: '/blog', label: 'Pengumuman', key: 'blog' },
+  { href: '/kontak', label: 'Kontak', key: 'kontak' },
+];
+---
+
+<header class="nav" id="site-nav">
+  <div class="wrap nav__row">
+    <a href="/" class="nav__mark">Asabri Bumiayu Indah</a>
+
+    <button
+      type="button"
+      class="nav__toggle"
+      id="nav-toggle"
+      aria-expanded="false"
+      aria-controls="nav-menu"
+      aria-label="Buka menu navigasi"
+    >
+      <span class="nav__toggle-bar" aria-hidden="true"></span>
+      <span class="nav__toggle-bar" aria-hidden="true"></span>
+    </button>
+
+    <nav aria-label="Navigasi utama" class="nav__nav" id="nav-menu">
+      <ul class="nav__links">
+        {
+          links.map((link) => (
+            <li>
+              <a href={link.href} class="nav__link" aria-current={active === link.key ? 'page' : undefined}>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const nav = document.getElementById('site-nav');
+  const onScroll = () => {
+    if (!nav) return;
+    nav.classList.toggle('nav--scrolled', window.scrollY > 8);
+  };
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  const toggle = document.getElementById('nav-toggle');
+  const menu = document.getElementById('nav-menu');
+
+  const closeMenu = () => {
+    toggle?.setAttribute('aria-expanded', 'false');
+    nav?.classList.remove('nav--open');
+  };
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!isOpen));
+    nav?.classList.toggle('nav--open', !isOpen);
+  });
+
+  menu?.addEventListener('click', (event) => {
+    if ((event.target as HTMLElement)?.tagName === 'A') closeMenu();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeMenu();
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 640) closeMenu();
+  });
+</script>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px) saturate(1.6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    border-bottom: 1px solid transparent;
+    transition: border-color 220ms var(--ease), background-color 220ms var(--ease);
+  }
+  .nav--scrolled {
+    border-bottom-color: var(--gray-300);
+  }
+  .nav--open {
+    background: var(--white);
+  }
+
+  .nav__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block: 0.95rem;
+  }
+
+  .nav__mark {
+    font-weight: 700;
+    font-size: 0.98rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* Hamburger toggle — two authored bars that pivot into an X, mobile only. */
+  .nav__toggle {
+    display: none;
+    position: relative;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .nav__toggle-bar {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1.15rem;
+    height: 1.5px;
+    background: var(--ink);
+    transform: translate(-50%, -50%) translateY(-3px);
+    transition: transform 220ms var(--ease), opacity 220ms var(--ease);
+  }
+  .nav__toggle-bar + .nav__toggle-bar {
+    transform: translate(-50%, -50%) translateY(3px);
+  }
+  .nav__toggle[aria-expanded='true'] .nav__toggle-bar {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .nav__toggle[aria-expanded='true'] .nav__toggle-bar + .nav__toggle-bar {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  .nav__links {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    min-width: 0;
+  }
+  .nav__links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav__link {
+    display: inline-block;
+    white-space: nowrap;
+    color: var(--gray-700);
+    font-weight: 500;
+    font-size: 0.92rem;
+    text-decoration: none;
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--radius-pill);
+    transition: background-color 160ms var(--ease), color 160ms var(--ease);
+  }
+  .nav__link:hover {
+    background: var(--gray-100);
+    color: var(--ink);
+  }
+  .nav__link[aria-current='page'] {
+    background: var(--ink);
+    color: var(--white);
+  }
+
+  @media (max-width: 640px) {
+    .nav__row {
+      flex-wrap: wrap;
+    }
+
+    .nav__toggle {
+      display: block;
+    }
+
+    .nav__nav {
+      flex-basis: 100%;
+      display: grid;
+      grid-template-rows: 0fr;
+      overflow: hidden;
+      transition: grid-template-rows 260ms var(--ease);
+    }
+    .nav--open .nav__nav {
+      grid-template-rows: 1fr;
+    }
+    .nav__nav > .nav__links {
+      min-height: 0;
+    }
+
+    .nav__links {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.15rem;
+      overflow: visible;
+      width: 100%;
+      padding-top: 0.75rem;
+    }
+
+    .nav__link {
+      border-radius: 12px;
+      padding: 0.85rem 0.9rem;
+      font-size: 1rem;
+    }
+  }
+</style>

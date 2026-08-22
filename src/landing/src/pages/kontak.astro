@@ -1,0 +1,210 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Kontak" active="kontak">
+  <section class="page-hero section-white">
+    <div class="wrap">
+      <p class="page-hero__kicker text-soft">Kontak</p>
+      <h1 class="page-hero__title">Hubungi Pengurus RT</h1>
+      <p class="page-hero__lede text-soft">
+        Ada pertanyaan, keluhan, atau ingin berkunjung ke Perum Asabri Bumiayu Indah?
+        Kirim pesan lewat formulir di bawah, atau datang langsung ke pos keamanan kami.
+      </p>
+    </div>
+  </section>
+
+  <section class="section-paper band">
+    <div class="wrap kontak-grid">
+      <div class="kontak-info">
+        <div class="info-card">
+          <span class="info-card__label text-soft">Alamat</span>
+          <p>Jl. Kyai Parseh Jaya, Kel. Bumiayu, Kec. Kedungkandang, Kota Malang, Jawa Timur 65135</p>
+        </div>
+        <div class="info-card">
+          <span class="info-card__label text-soft">Pos Keamanan</span>
+          <p>Aktif 24 jam di gerbang utama kompleks</p>
+        </div>
+        <div class="info-card">
+          <span class="info-card__label text-soft">Jam Layanan Pengurus RT</span>
+          <p>Senin–Sabtu, 08.00–16.00 WIB</p>
+        </div>
+      </div>
+
+      <form class="kontak-form" id="kontak-form" novalidate>
+        <div class="field">
+          <label for="name">Nama</label>
+          <input id="name" name="name" type="text" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="phone">No. Telepon <span class="field__optional text-soft">(opsional)</span></label>
+          <input id="phone" name="phone" type="tel" autocomplete="tel" />
+        </div>
+        <div class="field">
+          <label for="message">Pesan</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+        </div>
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+        <button class="pill pill--dark" type="submit" id="form-submit">Kirim Pesan</button>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const form = document.getElementById('kontak-form') as HTMLFormElement | null;
+  const status = document.getElementById('form-status');
+  const submit = document.getElementById('form-submit') as HTMLButtonElement | null;
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+    if (!status || !submit) return;
+
+    submit.disabled = true;
+    submit.textContent = 'Mengirim…';
+    status.textContent = '';
+    status.className = 'form-status';
+
+    // Demo-only state transition; POST /public/contact wiring lands in
+    // the implementation plan once the backend endpoint is consumed here.
+    window.setTimeout(() => {
+      submit.disabled = false;
+      submit.textContent = 'Kirim Pesan';
+      status.textContent = 'Pesan terkirim. Pengurus RT akan segera menghubungi Anda.';
+      status.className = 'form-status form-status--ok';
+      form.reset();
+    }, 900);
+  });
+</script>
+
+<style>
+  .page-hero {
+    padding-block: clamp(3rem, 7vw, 4.5rem) 2.5rem;
+  }
+  .page-hero__kicker {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.6rem;
+  }
+  .page-hero__title {
+    font-size: clamp(2.1rem, 5vw, 3.2rem);
+    margin-bottom: 1rem;
+    letter-spacing: -0.03em;
+  }
+  .page-hero__lede {
+    font-size: 1.08rem;
+    max-width: 58ch;
+  }
+
+  .band {
+    padding-block: clamp(3rem, 7vw, 4.5rem);
+  }
+
+  .kontak-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .kontak-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  .info-card {
+    background: var(--white);
+    padding: 1.3rem 1.4rem;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+  .info-card__label {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.4rem;
+  }
+  .info-card p {
+    margin: 0;
+    max-width: none;
+    font-size: 0.96rem;
+  }
+
+  .kontak-form {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.3rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .field label {
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--ink);
+  }
+  .field__optional {
+    font-weight: 400;
+  }
+  .field input,
+  .field textarea {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.7rem 0.85rem;
+    border: 1.5px solid var(--gray-300);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--ink);
+    resize: vertical;
+  }
+  .field input:focus-visible,
+  .field textarea:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 1px;
+    border-color: var(--ink);
+  }
+  .field input:invalid:not(:placeholder-shown),
+  .field textarea:invalid:not(:placeholder-shown) {
+    border-color: var(--gray-500);
+  }
+
+  .form-status {
+    min-height: 1.2em;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--gray-500);
+    max-width: none;
+  }
+  .form-status--ok {
+    color: var(--ink);
+  }
+  .form-status--error {
+    color: var(--ink);
+  }
+
+  .kontak-form .pill {
+    align-self: flex-start;
+  }
+
+  @media (max-width: 780px) {
+    .kontak-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

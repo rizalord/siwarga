@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Jadwal Kerja Bakti Bulanan — Minggu Pertama" active="blog">
+  <article class="post section-white">
+    <header class="post__header wrap">
+      <a class="back-link" href="/blog">← Semua pengumuman</a>
+      <span class="post__tag text-soft">Lingkungan</span>
+      <h1>Jadwal Kerja Bakti Bulanan — Minggu Pertama</h1>
+      <time class="post__date text-soft tnum">3 Agustus 2026</time>
+    </header>
+
+    <div class="post__body wrap">
+      <p>
+        Pengurus RT mengajak seluruh warga Perum Asabri Bumiayu Indah untuk berpartisipasi
+        dalam kerja bakti bulanan yang akan dilaksanakan pada:
+      </p>
+      <ul>
+        <li><strong>Hari, tanggal:</strong> Minggu, 9 Agustus 2026</li>
+        <li><strong>Waktu:</strong> 07.00 WIB – selesai</li>
+        <li><strong>Titik kumpul:</strong> Lapangan RT, dekat Blok A</li>
+      </ul>
+      <p>
+        Kegiatan meliputi pembersihan saluran air, penyapuan jalan lingkungan, dan
+        perapian area fasilitas umum. Warga dimohon membawa alat kebersihan masing-masing
+        (sapu, cangkul kecil, atau alat lain yang diperlukan).
+      </p>
+      <p>
+        Partisipasi seluruh warga sangat kami harapkan demi menjaga kebersihan dan
+        kenyamanan lingkungan bersama. Konsumsi ringan akan disediakan oleh pengurus RT
+        selama kegiatan berlangsung.
+      </p>
+      <p>
+        Untuk pertanyaan lebih lanjut, silakan hubungi pengurus RT melalui
+        <a class="post__link" href="/kontak">halaman kontak</a>.
+      </p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .post__header {
+    padding-block: clamp(2.4rem, 6vw, 3.2rem) 2rem;
+    border-bottom: 1px solid var(--gray-300);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .back-link {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--ink);
+    text-decoration: none;
+    margin-bottom: 0.4rem;
+  }
+  .post__tag {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .post__header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    max-width: 30ch;
+    letter-spacing: -0.03em;
+  }
+  .post__date {
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
+
+  .post__body {
+    max-width: 68ch;
+    padding-block: 2.6rem 4.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    font-size: 1.05rem;
+    color: var(--ink);
+  }
+  .post__body p,
+  .post__body ul {
+    max-width: none;
+  }
+  .post__body ul {
+    padding-left: 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .post__link {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration-thickness: 1.5px;
+  }
+</style>

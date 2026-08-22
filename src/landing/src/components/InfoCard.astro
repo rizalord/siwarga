@@ -1,0 +1,117 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  excerpt: string;
+  date: string;
+  tag: string;
+  isNew?: boolean;
+  dark?: boolean;
+}
+const { href, title, excerpt, date, tag, isNew = false, dark = false } = Astro.props;
+---
+
+<a href={href} class:list={['card', { 'card--dark': dark }]}>
+  <div class="card__head">
+    <span class="card__tag">{tag}</span>
+    {isNew && <span class="card__badge">Baru</span>}
+  </div>
+  <h3 class="card__title">{title}</h3>
+  <p class="card__excerpt">{excerpt}</p>
+  <div class="card__footer">
+    <time class="card__date tnum">{date}</time>
+    <span class="link-more">Baca</span>
+  </div>
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 1.7rem 1.6rem;
+    text-decoration: none;
+    color: var(--ink);
+    box-shadow: var(--shadow-card);
+    transition: transform 220ms var(--ease), box-shadow 220ms var(--ease);
+  }
+  .card:hover,
+  .card:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06), 0 24px 40px -16px rgba(0, 0, 0, 0.18);
+  }
+
+  .card--dark {
+    background: #1d1d1f;
+    color: var(--on-dark);
+  }
+  .card--dark .card__excerpt {
+    color: var(--on-dark-soft);
+  }
+  .card--dark .card__tag {
+    color: var(--on-dark-soft);
+  }
+  .card--dark .card__date {
+    color: var(--on-dark-soft);
+  }
+
+  .card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .card__tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+  }
+
+  .card__badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--ink);
+    color: var(--white);
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.26em 0.6em;
+    border-radius: 999px;
+  }
+  .card--dark .card__badge {
+    background: var(--white);
+    color: var(--ink);
+  }
+
+  .card__title {
+    font-size: 1.2rem;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  .card__excerpt {
+    font-size: 0.94rem;
+    color: var(--gray-500);
+    max-width: none;
+  }
+
+  .card__footer {
+    margin-top: auto;
+    padding-top: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card__date {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--gray-500);
+  }
+</style>

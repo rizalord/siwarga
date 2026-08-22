@@ -1,0 +1,280 @@
+/* ==========================================================================
+   SIWarga Landing — Perum Asabri Bumiayu Indah
+   Direction: Monokrom — black/white/gray, tight display type, pill controls.
+   See BaseLayout.astro for the full direction contract.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+:root {
+  /* Monochrome scale — off-black/off-white, not pure #000/#fff, so type and
+     hairlines stay soft under real daylight use rather than harsh. */
+  --black: #000000;
+  --ink: #1d1d1f;
+  --white: #ffffff;
+  --paper: #f5f5f7;
+  --gray-100: #f5f5f7;
+  --gray-200: #e8e8ed;
+  --gray-300: #d2d2d7;
+  --gray-500: #86868b;
+  --gray-700: #424245;
+  --gray-900: #1d1d1f;
+  --on-dark: #f5f5f7;
+  --on-dark-soft: #a1a1a6;
+
+  --font-display: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+
+  --measure: 62ch;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 28px -12px rgba(0, 0, 0, 0.12);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'ss01' 1;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--white);
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 6px;
+  border: 3px solid var(--paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 0;
+  color: inherit;
+}
+
+p {
+  margin: 0;
+  max-width: var(--measure);
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.wrap {
+  width: min(1180px, 100% - 3rem);
+  margin-inline: auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Sections — full-bleed bands that alternate white / paper / black, the
+   same rhythm every Apple product page uses to pace a long scroll.
+   ------------------------------------------------------------------------- */
+.section-white {
+  background: var(--white);
+  color: var(--ink);
+}
+.section-paper {
+  background: var(--paper);
+  color: var(--ink);
+}
+.section-black {
+  background: var(--black);
+  color: var(--on-dark);
+}
+.section-black .text-soft {
+  color: var(--on-dark-soft);
+}
+.text-soft {
+  color: var(--gray-500);
+}
+
+.hairline {
+  border-top: 1px solid var(--gray-300);
+}
+.section-black .hairline {
+  border-top-color: rgba(255, 255, 255, 0.16);
+}
+
+/* -------------------------------------------------------------------------
+   Pill controls — the single recurring control shape across the site.
+   ------------------------------------------------------------------------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  font-weight: 600;
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+  padding: 0.8rem 1.7rem;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 220ms var(--ease), opacity 220ms var(--ease), background-color 220ms var(--ease);
+}
+.pill:hover {
+  transform: translateY(-1px);
+}
+.pill:active {
+  transform: translateY(0);
+}
+.pill--dark {
+  background: var(--ink);
+  color: var(--white);
+}
+.pill--dark:hover {
+  background: var(--black);
+}
+.pill--light {
+  background: var(--white);
+  color: var(--ink);
+}
+.pill--light:hover {
+  background: var(--gray-100);
+}
+.pill--outline {
+  background: transparent;
+  border-color: currentColor;
+}
+.pill--outline:hover {
+  opacity: 0.7;
+}
+.pill:disabled {
+  opacity: 0.5;
+  cursor: progress;
+  transform: none;
+}
+
+.link-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: inherit;
+}
+.link-more::after {
+  content: '›';
+  font-weight: 400;
+  transition: transform 160ms var(--ease);
+}
+.link-more:hover::after {
+  transform: translateX(3px);
+}
+
+/* Hero entrance — the one authored motion moment on the site, played once
+   on load. Never scroll-gated: gating below-the-fold content on JS +
+   IntersectionObserver timing leaves it invisible whenever a capture,
+   crawler, or slow script beats the scroll — so every other section stays
+   visible by default with no motion at all. */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.hero-rise > * {
+  animation: hero-rise 780ms var(--ease) both;
+}
+.hero-rise > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.hero-rise > *:nth-child(2) {
+  animation-delay: 90ms;
+}
+.hero-rise > *:nth-child(3) {
+  animation-delay: 180ms;
+}
+.hero-rise > *:nth-child(4) {
+  animation-delay: 270ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise > * {
+    animation: none;
+  }
+}
