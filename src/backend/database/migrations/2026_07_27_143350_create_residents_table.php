@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('full_name', 150);
             $table->string('ktp_photo_path', 255)->nullable();
             $table->enum('status', ['kontrak', 'tetap']);
-            $table->string('phone_number', 20);
+            $table->string('phone_number', 20)->nullable();
             $table->enum('marital_status', ['menikah', 'belum_menikah']);
             $table->softDeletes();
             $table->timestamps();

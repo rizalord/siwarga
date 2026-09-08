@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AnnouncementResource;
+use App\Jobs\SendAnnouncementWhatsappJob;
 use App\Models\Announcement;
 use App\Policies\AnnouncementPolicy;
 use App\Services\AnnouncementService;
@@ -93,6 +94,19 @@ class AnnouncementController extends Controller
         $this->announcementService->delete($announcement);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
+    }
+
+    public function publish(Announcement $announcement)
+    {
+        $this->authorize('publish', $announcement);
+
+        if ($announcement->published_at === null) {
+            $announcement->update(['published_at' => now()]);
+        }
+
+        SendAnnouncementWhatsappJob::dispatch($announcement);
+
+        return response()->json(['data' => null, 'message' => 'Pengumuman sedang dikirim ke WhatsApp warga']);
     }
 
     /**
