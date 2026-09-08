@@ -1076,7 +1076,10 @@ class PollController extends Controller
 
     public function vote(Request $request, Poll $poll)
     {
-        $this->authorize('vote', $poll);
+        // Permission-only: the can:polls.vote route middleware already ran.
+        // Period/duplicate/foreign-option rejections are owned by PollService
+        // and return 422 (spec §2.2/§3) — no per-instance authorize() here,
+        // it would 403 cases the spec mandates as 422.
 
         $validated = $request->validate([
             'option_id' => ['required', 'integer', 'exists:poll_options,id'],
@@ -1124,7 +1127,7 @@ use App\Http\Controllers\Api\PollController;
     Route::get('polls/{poll}', [PollController::class, 'show'])->middleware('can:polls.view');
     Route::put('polls/{poll}', [PollController::class, 'update']);
     Route::delete('polls/{poll}', [PollController::class, 'destroy']);
-    Route::post('polls/{poll}/vote', [PollController::class, 'vote']);
+    Route::post('polls/{poll}/vote', [PollController::class, 'vote'])->middleware('can:polls.vote');
     Route::get('polls/{poll}/results', [PollController::class, 'results']);
 ```
 
