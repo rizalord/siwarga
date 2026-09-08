@@ -14,33 +14,43 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = User::create([
-            'name' => 'Admin RT',
-            'email' => 'admin@siwarga.test',
-            'password' => bcrypt('password'),
-            'is_active' => true,
-        ]);
-        $admin->roles()->attach(Role::where('name', 'admin')->first()->id);
+        $adminRoleId = Role::where('name', 'admin')->first()->id;
+        $bendaharaRoleId = Role::where('name', 'bendahara')->first()->id;
+        $wargaRoleId = Role::where('name', 'warga')->first()->id;
 
-        $bendahara = User::create([
-            'name' => 'Bendahara RT',
-            'email' => 'bendahara@siwarga.test',
-            'password' => bcrypt('password'),
-            'is_active' => true,
-        ]);
-        $bendahara->roles()->attach(Role::where('name', 'bendahara')->first()->id);
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@siwarga.test'],
+            [
+                'name' => 'Admin RT',
+                'password' => bcrypt('password'),
+                'is_active' => true,
+            ]
+        );
+        $admin->roles()->syncWithoutDetaching([$adminRoleId]);
+
+        $bendahara = User::updateOrCreate(
+            ['email' => 'bendahara@siwarga.test'],
+            [
+                'name' => 'Bendahara RT',
+                'password' => bcrypt('password'),
+                'is_active' => true,
+            ]
+        );
+        $bendahara->roles()->syncWithoutDetaching([$bendaharaRoleId]);
 
         // User warga demo — terhubung ke penghuni rumah pertama agar bisa login & lihat tagihan miliknya
         $firstHouseResident = HouseResident::whereNull('end_date')->first();
         if ($firstHouseResident) {
-            $warga = User::create([
-                'name' => $firstHouseResident->resident->full_name,
-                'email' => 'warga@siwarga.test',
-                'password' => bcrypt('password'),
-                'resident_id' => $firstHouseResident->resident_id,
-                'is_active' => true,
-            ]);
-            $warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+            $warga = User::updateOrCreate(
+                ['email' => 'warga@siwarga.test'],
+                [
+                    'name' => $firstHouseResident->resident->full_name,
+                    'password' => bcrypt('password'),
+                    'resident_id' => $firstHouseResident->resident_id,
+                    'is_active' => true,
+                ]
+            );
+            $warga->roles()->syncWithoutDetaching([$wargaRoleId]);
         }
     }
 }
