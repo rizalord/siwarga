@@ -479,3 +479,55 @@ export interface WargaAnnouncementFilter {
   sort?: string
   order?: 'asc' | 'desc'
 }
+
+export type PollStatus = 'upcoming' | 'ongoing' | 'ended'
+
+export interface PollOption {
+  id: number
+  label: string
+}
+
+export interface Poll {
+  id: number
+  title: string
+  description: string | null
+  starts_at: string
+  ends_at: string
+  status: PollStatus
+  options: PollOption[]
+  has_voted: boolean
+  user_voted_option_id: number | null
+  created_by: number
+  created_at: string
+}
+
+export interface CreatePollRequest {
+  title: string
+  description?: string
+  starts_at: string
+  ends_at: string
+  options: string[]
+}
+
+export interface PollResultOption {
+  id: number
+  label: string
+  votes: number
+  percent: number
+}
+
+export interface PollResults {
+  poll_id: number
+  total_votes: number
+  options: PollResultOption[]
+  user_voted_option_id: number | null
+}
+
+export interface PollFilter {
+  search?: string
+  status?: PollStatus
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}

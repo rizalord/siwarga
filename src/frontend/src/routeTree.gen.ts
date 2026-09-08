@@ -31,6 +31,7 @@ import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
 import { Route as AuthenticatedPengumumanIndexRouteImport } from './routes/_authenticated/pengumuman/index'
 import { Route as AuthenticatedPermissionsIndexRouteImport } from './routes/_authenticated/permissions/index'
+import { Route as AuthenticatedPollsIndexRouteImport } from './routes/_authenticated/polls/index'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports/index'
 import { Route as AuthenticatedResidentsIndexRouteImport } from './routes/_authenticated/residents/index'
 import { Route as AuthenticatedResidentsIdRouteImport } from './routes/_authenticated/residents/$id'
@@ -157,6 +158,11 @@ const AuthenticatedPermissionsIndexRoute =
     path: '/permissions/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPollsIndexRoute = AuthenticatedPollsIndexRouteImport.update({
+  id: '/polls/',
+  path: '/polls/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReportsIndexRoute =
   AuthenticatedReportsIndexRouteImport.update({
     id: '/reports/',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/permissions/': typeof AuthenticatedPermissionsIndexRoute
+  '/polls/': typeof AuthenticatedPollsIndexRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/residents/': typeof AuthenticatedResidentsIndexRoute
   '/roles/': typeof AuthenticatedRolesIndexRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/pengumuman': typeof AuthenticatedPengumumanIndexRoute
   '/permissions': typeof AuthenticatedPermissionsIndexRoute
+  '/polls': typeof AuthenticatedPollsIndexRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/residents': typeof AuthenticatedResidentsIndexRoute
   '/roles': typeof AuthenticatedRolesIndexRoute
@@ -267,6 +275,7 @@ export interface FileRoutesById {
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/_authenticated/permissions/': typeof AuthenticatedPermissionsIndexRoute
+  '/_authenticated/polls/': typeof AuthenticatedPollsIndexRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/residents/': typeof AuthenticatedResidentsIndexRoute
   '/_authenticated/roles/': typeof AuthenticatedRolesIndexRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/payments/'
     | '/pengumuman/'
     | '/permissions/'
+    | '/polls/'
     | '/reports/'
     | '/residents/'
     | '/roles/'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/payments'
     | '/pengumuman'
     | '/permissions'
+    | '/polls'
     | '/reports'
     | '/residents'
     | '/roles'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payments/'
     | '/_authenticated/pengumuman/'
     | '/_authenticated/permissions/'
+    | '/_authenticated/polls/'
     | '/_authenticated/reports/'
     | '/_authenticated/residents/'
     | '/_authenticated/roles/'
@@ -526,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPermissionsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/polls/': {
+      id: '/_authenticated/polls/'
+      path: '/polls'
+      fullPath: '/polls/'
+      preLoaderRoute: typeof AuthenticatedPollsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reports/': {
       id: '/_authenticated/reports/'
       path: '/reports'
@@ -581,6 +600,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
   AuthenticatedPengumumanIndexRoute: typeof AuthenticatedPengumumanIndexRoute
   AuthenticatedPermissionsIndexRoute: typeof AuthenticatedPermissionsIndexRoute
+  AuthenticatedPollsIndexRoute: typeof AuthenticatedPollsIndexRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
   AuthenticatedResidentsIndexRoute: typeof AuthenticatedResidentsIndexRoute
   AuthenticatedRolesIndexRoute: typeof AuthenticatedRolesIndexRoute
@@ -606,6 +626,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
   AuthenticatedPengumumanIndexRoute: AuthenticatedPengumumanIndexRoute,
   AuthenticatedPermissionsIndexRoute: AuthenticatedPermissionsIndexRoute,
+  AuthenticatedPollsIndexRoute: AuthenticatedPollsIndexRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
   AuthenticatedResidentsIndexRoute: AuthenticatedResidentsIndexRoute,
   AuthenticatedRolesIndexRoute: AuthenticatedRolesIndexRoute,
