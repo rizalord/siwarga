@@ -144,6 +144,7 @@ function AnnouncementsPageInner() {
   const { data, isLoading, isFetching } = useAnnouncements({
     page: search.page,
     per_page: search.pageSize,
+    category: search.category,
     search: search.search,
     sort: search.sort,
     order: search.order,

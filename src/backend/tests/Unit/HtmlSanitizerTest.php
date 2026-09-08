@@ -31,4 +31,12 @@ class HtmlSanitizerTest extends TestCase
         $this->assertStringContainsString('<em>', $result);
         $this->assertStringContainsString('<li>', $result);
     }
+
+    public function test_strips_javascript_uri_schemes_and_event_handlers()
+    {
+        $result = (new HtmlSanitizer)->sanitize('<p><a href="javascript:alert(1)">x</a></p><img src="x" onerror="alert(1)">');
+
+        $this->assertStringNotContainsString('javascript:', $result);
+        $this->assertStringNotContainsString('onerror', $result);
+    }
 }

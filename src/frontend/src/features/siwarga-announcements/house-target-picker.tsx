@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useHouses } from '@/hooks/use-houses'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,18 @@ type HouseTargetPickerProps = {
 
 export function HouseTargetPicker({ value, onChange }: HouseTargetPickerProps) {
   const [search, setSearch] = useState('')
-  const { data, isLoading } = useHouses({ search, per_page: 50 })
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300)
+
+    return () => clearTimeout(timer)
+  }, [search])
+
+  const { data, isLoading } = useHouses({
+    search: debouncedSearch,
+    per_page: 50,
+  })
 
   const toggle = (houseId: number) => {
     onChange(
@@ -30,10 +41,10 @@ export function HouseTargetPicker({ value, onChange }: HouseTargetPickerProps) {
       />
       <ScrollArea className='h-40 rounded-md border p-2'>
         {isLoading && (
-          <p className='text-muted-foreground text-sm'>Memuat...</p>
+          <p className='text-sm text-muted-foreground'>Memuat...</p>
         )}
         {!isLoading && data?.data.length === 0 && (
-          <p className='text-muted-foreground text-sm'>
+          <p className='text-sm text-muted-foreground'>
             Tidak ada rumah ditemukan.
           </p>
         )}
@@ -50,7 +61,13 @@ export function HouseTargetPicker({ value, onChange }: HouseTargetPickerProps) {
           </label>
         ))}
       </ScrollArea>
-      <p className='text-muted-foreground text-xs'>
+      {data && data.total > data.data.length && (
+        <p className='text-xs text-muted-foreground'>
+          Menampilkan {data.data.length} dari {data.total} rumah — persempit
+          pencarian.
+        </p>
+      )}
+      <p className='text-xs text-muted-foreground'>
         {value.length === 0
           ? 'Tidak ada rumah dipilih — pengumuman akan dikirim ke semua warga saat diterbitkan.'
           : `${value.length} rumah dipilih.`}

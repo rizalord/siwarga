@@ -436,7 +436,7 @@ export interface UpdateAnnouncementRequest {
 
 export interface AnnouncementFilter {
   search?: string
-  category?: AnnouncementCategory
+  category?: AnnouncementCategory | AnnouncementCategory[]
   page?: number
   per_page?: number
   sort?: string

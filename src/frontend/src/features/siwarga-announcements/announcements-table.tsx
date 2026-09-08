@@ -55,6 +55,9 @@ export function AnnouncementsTable({
     navigate,
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: true, key: 'search' },
+    columnFilters: [
+      { columnId: 'category', searchKey: 'category', type: 'array' },
+    ],
     sorting: {},
   })
 
@@ -88,7 +91,22 @@ export function AnnouncementsTable({
 
   return (
     <div className='flex min-h-0 flex-1 flex-col gap-4'>
-      <DataTableToolbar table={table} searchPlaceholder='Cari pengumuman...' />
+      <DataTableToolbar
+        table={table}
+        searchPlaceholder='Cari pengumuman...'
+        filters={[
+          {
+            columnId: 'category',
+            title: 'Kategori',
+            options: [
+              { label: 'Darurat', value: 'darurat' },
+              { label: 'Umum', value: 'umum' },
+              { label: 'Kegiatan', value: 'kegiatan' },
+              { label: 'Keuangan', value: 'keuangan' },
+            ],
+          },
+        ]}
+      />
       <div className='min-h-0 flex-1 overflow-auto'>
         <div
           className={cn(

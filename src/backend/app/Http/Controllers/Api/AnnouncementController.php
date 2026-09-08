@@ -30,7 +30,9 @@ class AnnouncementController extends Controller
         }
 
         if ($request->filled('category')) {
-            $query->where('category', $request->category);
+            is_array($request->category)
+                ? $query->whereIn('category', $request->category)
+                : $query->where('category', $request->category);
         }
 
         $this->applySorting($query, $request, ['title', 'category', 'published_at', 'created_at']);
@@ -69,7 +71,7 @@ class AnnouncementController extends Controller
         $this->authorize('update', $announcement);
 
         $validated = $request->validate([
-            'title' => ['sometimes', 'string', 'max:200'],
+            'title' => ['sometimes', 'string', 'min:1', 'max:200'],
             'content' => ['sometimes', 'nullable', 'string'],
             'category' => ['sometimes', 'in:darurat,umum,kegiatan,keuangan'],
             'is_public' => ['sometimes', 'boolean'],

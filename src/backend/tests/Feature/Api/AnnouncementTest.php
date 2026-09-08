@@ -161,4 +161,31 @@ class AnnouncementTest extends TestCase
         $response->assertStatus(200);
         $this->assertSoftDeleted('announcements', ['id' => $announcement->id]);
     }
+
+    public function test_can_filter_announcements_by_single_and_array_category()
+    {
+        Announcement::factory()->create(['category' => 'umum']);
+        Announcement::factory()->create(['category' => 'keuangan']);
+        Announcement::factory()->create(['category' => 'kegiatan']);
+
+        $single = $this->actingAs($this->admin)->getJson('/api/announcements?category=umum');
+
+        $single->assertStatus(200)->assertJsonCount(1, 'data');
+        $this->assertSame('umum', $single->json('data.0.category'));
+
+        $multiple = $this->actingAs($this->admin)->getJson('/api/announcements?category[]=umum&category[]=keuangan');
+
+        $multiple->assertStatus(200)->assertJsonCount(2, 'data');
+    }
+
+    public function test_update_rejects_empty_title()
+    {
+        $announcement = Announcement::factory()->create();
+
+        $response = $this->actingAs($this->admin)->putJson("/api/announcements/{$announcement->id}", [
+            'title' => '',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['title']);
+    }
 }

@@ -51,11 +51,11 @@ class PermissionTest extends TestCase
     public function test_can_create_custom_permission()
     {
         $response = $this->postJson('/api/permissions', [
-            'name' => 'announcements.manage',
-            'description' => 'Kelola pengumuman',
+            'name' => 'custom.export',
+            'description' => 'Ekspor kustom',
         ]);
 
-        $response->assertStatus(201)->assertJsonPath('data.name', 'announcements.manage');
+        $response->assertStatus(201)->assertJsonPath('data.name', 'custom.export');
     }
 
     public function test_rejects_invalid_permission_name_format()
@@ -102,7 +102,7 @@ class PermissionTest extends TestCase
 
     public function test_can_delete_custom_permission()
     {
-        $permission = Permission::create(['name' => 'announcements.manage', 'description' => 'Kelola pengumuman']);
+        $permission = Permission::create(['name' => 'custom.export', 'description' => 'Ekspor kustom']);
 
         $response = $this->deleteJson("/api/permissions/{$permission->id}");
 
