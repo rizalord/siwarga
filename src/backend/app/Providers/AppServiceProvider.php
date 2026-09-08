@@ -13,7 +13,9 @@ use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
 use App\Observers\ActivityLogObserver;
+use App\Policies\AnnouncementPolicy;
 use App\Policies\BillPolicy;
+use App\Policies\ContactMessagePolicy;
 use App\Policies\DueTypePolicy;
 use App\Policies\ExpenseCategoryPolicy;
 use App\Policies\ExpensePolicy;
@@ -90,6 +92,13 @@ class AppServiceProvider extends ServiceProvider
 
         // Pages
         Gate::define('pages.manage', [PagePolicy::class, 'update']);
+
+        // Announcements
+        Gate::define('announcements.view', [AnnouncementPolicy::class, 'viewAny']);
+        Gate::define('announcements.manage', [AnnouncementPolicy::class, 'create']);
+
+        // Contact messages
+        Gate::define('contact-messages.view', [ContactMessagePolicy::class, 'viewAny']);
 
         // Residents
         Gate::define('residents.view', [ResidentPolicy::class, 'viewAny']);
