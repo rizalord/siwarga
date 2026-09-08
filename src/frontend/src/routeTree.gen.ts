@@ -20,6 +20,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedActivityLogsIndexRouteImport } from './routes/_authenticated/activity-logs/index'
 import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_authenticated/announcements/index'
 import { Route as AuthenticatedBillsIndexRouteImport } from './routes/_authenticated/bills/index'
+import { Route as AuthenticatedContactMessagesIndexRouteImport } from './routes/_authenticated/contact-messages/index'
 import { Route as AuthenticatedDueTypesIndexRouteImport } from './routes/_authenticated/due-types/index'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedExpenseCategoriesIndexRouteImport } from './routes/_authenticated/expense-categories/index'
@@ -91,6 +92,12 @@ const AuthenticatedBillsIndexRoute = AuthenticatedBillsIndexRouteImport.update({
   path: '/bills/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedContactMessagesIndexRoute =
+  AuthenticatedContactMessagesIndexRouteImport.update({
+    id: '/contact-messages/',
+    path: '/contact-messages/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDueTypesIndexRoute =
   AuthenticatedDueTypesIndexRouteImport.update({
     id: '/due-types/',
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
   '/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/bills/': typeof AuthenticatedBillsIndexRoute
+  '/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/activity-logs': typeof AuthenticatedActivityLogsIndexRoute
   '/announcements': typeof AuthenticatedAnnouncementsIndexRoute
   '/bills': typeof AuthenticatedBillsIndexRoute
+  '/contact-messages': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
   '/expense-categories': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses': typeof AuthenticatedExpensesIndexRoute
@@ -240,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
   '/_authenticated/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/_authenticated/bills/': typeof AuthenticatedBillsIndexRoute
+  '/_authenticated/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/_authenticated/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/activity-logs/'
     | '/announcements/'
     | '/bills/'
+    | '/contact-messages/'
     | '/due-types/'
     | '/expense-categories/'
     | '/expenses/'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/activity-logs'
     | '/announcements'
     | '/bills'
+    | '/contact-messages'
     | '/due-types'
     | '/expense-categories'
     | '/expenses'
@@ -321,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/activity-logs/'
     | '/_authenticated/announcements/'
     | '/_authenticated/bills/'
+    | '/_authenticated/contact-messages/'
     | '/_authenticated/due-types/'
     | '/_authenticated/expense-categories/'
     | '/_authenticated/expenses/'
@@ -421,6 +434,13 @@ declare module '@tanstack/react-router' {
       path: '/bills'
       fullPath: '/bills/'
       preLoaderRoute: typeof AuthenticatedBillsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/contact-messages/': {
+      id: '/_authenticated/contact-messages/'
+      path: '/contact-messages'
+      fullPath: '/contact-messages/'
+      preLoaderRoute: typeof AuthenticatedContactMessagesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/due-types/': {
@@ -532,6 +552,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityLogsIndexRoute: typeof AuthenticatedActivityLogsIndexRoute
   AuthenticatedAnnouncementsIndexRoute: typeof AuthenticatedAnnouncementsIndexRoute
   AuthenticatedBillsIndexRoute: typeof AuthenticatedBillsIndexRoute
+  AuthenticatedContactMessagesIndexRoute: typeof AuthenticatedContactMessagesIndexRoute
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
   AuthenticatedExpenseCategoriesIndexRoute: typeof AuthenticatedExpenseCategoriesIndexRoute
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
@@ -553,6 +574,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityLogsIndexRoute: AuthenticatedActivityLogsIndexRoute,
   AuthenticatedAnnouncementsIndexRoute: AuthenticatedAnnouncementsIndexRoute,
   AuthenticatedBillsIndexRoute: AuthenticatedBillsIndexRoute,
+  AuthenticatedContactMessagesIndexRoute:
+    AuthenticatedContactMessagesIndexRoute,
   AuthenticatedDueTypesIndexRoute: AuthenticatedDueTypesIndexRoute,
   AuthenticatedExpenseCategoriesIndexRoute:
     AuthenticatedExpenseCategoriesIndexRoute,
