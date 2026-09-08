@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
 use App\Http\Controllers\Api\ContactMessageController;
@@ -57,6 +58,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pages
     Route::get('pages/{slug}', [PageController::class, 'show'])->middleware('can:pages.manage');
     Route::put('pages/{slug}', [PageController::class, 'update'])->middleware('can:pages.manage');
+
+    // Announcements
+    Route::get('announcements', [AnnouncementController::class, 'index'])->middleware('can:announcements.view');
+    Route::post('announcements', [AnnouncementController::class, 'store'])->middleware('can:announcements.manage');
+    Route::get('announcements/{announcement}', [AnnouncementController::class, 'show'])->middleware('can:announcements.view');
+    Route::put('announcements/{announcement}', [AnnouncementController::class, 'update']);
+    Route::delete('announcements/{announcement}', [AnnouncementController::class, 'destroy']);
 
     // Due Types
     Route::get('due-types', [DueTypeController::class, 'index'])->middleware('can:due-types.view');

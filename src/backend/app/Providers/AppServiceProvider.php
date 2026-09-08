@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Announcement;
 use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\Expense;
@@ -151,7 +152,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerActivityLogObservers(): void
     {
-        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class] as $model) {
+        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class, Announcement::class] as $model) {
             $model::observe(ActivityLogObserver::class);
         }
     }
