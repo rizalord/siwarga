@@ -25,6 +25,8 @@ import { Route as AuthenticatedDueTypesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedExpenseCategoriesIndexRouteImport } from './routes/_authenticated/expense-categories/index'
 import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authenticated/expenses/index'
+import { Route as AuthenticatedForumIndexRouteImport } from './routes/_authenticated/forum/index'
+import { Route as AuthenticatedForumThreadIdRouteImport } from './routes/_authenticated/forum/$threadId'
 import { Route as AuthenticatedHousesIndexRouteImport } from './routes/_authenticated/houses/index'
 import { Route as AuthenticatedHousesIdRouteImport } from './routes/_authenticated/houses/$id'
 import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authenticated/pages/index'
@@ -124,6 +126,17 @@ const AuthenticatedExpensesIndexRoute =
     path: '/expenses/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedForumIndexRoute = AuthenticatedForumIndexRouteImport.update({
+  id: '/forum/',
+  path: '/forum/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedForumThreadIdRoute =
+  AuthenticatedForumThreadIdRouteImport.update({
+    id: '/forum/$threadId',
+    path: '/forum/$threadId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHousesIndexRoute =
   AuthenticatedHousesIndexRouteImport.update({
     id: '/houses/',
@@ -201,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/forum/$threadId': typeof AuthenticatedForumThreadIdRoute
   '/houses/$id': typeof AuthenticatedHousesIdRoute
   '/residents/$id': typeof AuthenticatedResidentsIdRoute
   '/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
@@ -210,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
+  '/forum/': typeof AuthenticatedForumIndexRoute
   '/houses/': typeof AuthenticatedHousesIndexRoute
   '/pages/': typeof AuthenticatedPagesIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
@@ -230,6 +245,7 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/forum/$threadId': typeof AuthenticatedForumThreadIdRoute
   '/houses/$id': typeof AuthenticatedHousesIdRoute
   '/residents/$id': typeof AuthenticatedResidentsIdRoute
   '/activity-logs': typeof AuthenticatedActivityLogsIndexRoute
@@ -239,6 +255,7 @@ export interface FileRoutesByTo {
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
   '/expense-categories': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses': typeof AuthenticatedExpensesIndexRoute
+  '/forum': typeof AuthenticatedForumIndexRoute
   '/houses': typeof AuthenticatedHousesIndexRoute
   '/pages': typeof AuthenticatedPagesIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
@@ -261,6 +278,7 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/_authenticated/forum/$threadId': typeof AuthenticatedForumThreadIdRoute
   '/_authenticated/houses/$id': typeof AuthenticatedHousesIdRoute
   '/_authenticated/residents/$id': typeof AuthenticatedResidentsIdRoute
   '/_authenticated/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
@@ -270,6 +288,7 @@ export interface FileRoutesById {
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/_authenticated/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
+  '/_authenticated/forum/': typeof AuthenticatedForumIndexRoute
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
   '/_authenticated/pages/': typeof AuthenticatedPagesIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
@@ -292,6 +311,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/errors/$error'
+    | '/forum/$threadId'
     | '/houses/$id'
     | '/residents/$id'
     | '/activity-logs/'
@@ -301,6 +321,7 @@ export interface FileRouteTypes {
     | '/due-types/'
     | '/expense-categories/'
     | '/expenses/'
+    | '/forum/'
     | '/houses/'
     | '/pages/'
     | '/payments/'
@@ -321,6 +342,7 @@ export interface FileRouteTypes {
     | '/503'
     | '/'
     | '/errors/$error'
+    | '/forum/$threadId'
     | '/houses/$id'
     | '/residents/$id'
     | '/activity-logs'
@@ -330,6 +352,7 @@ export interface FileRouteTypes {
     | '/due-types'
     | '/expense-categories'
     | '/expenses'
+    | '/forum'
     | '/houses'
     | '/pages'
     | '/payments'
@@ -351,6 +374,7 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
+    | '/_authenticated/forum/$threadId'
     | '/_authenticated/houses/$id'
     | '/_authenticated/residents/$id'
     | '/_authenticated/activity-logs/'
@@ -360,6 +384,7 @@ export interface FileRouteTypes {
     | '/_authenticated/due-types/'
     | '/_authenticated/expense-categories/'
     | '/_authenticated/expenses/'
+    | '/_authenticated/forum/'
     | '/_authenticated/houses/'
     | '/_authenticated/pages/'
     | '/_authenticated/payments/'
@@ -496,6 +521,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExpensesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/forum/': {
+      id: '/_authenticated/forum/'
+      path: '/forum'
+      fullPath: '/forum/'
+      preLoaderRoute: typeof AuthenticatedForumIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/forum/$threadId': {
+      id: '/_authenticated/forum/$threadId'
+      path: '/forum/$threadId'
+      fullPath: '/forum/$threadId'
+      preLoaderRoute: typeof AuthenticatedForumThreadIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/houses/': {
       id: '/_authenticated/houses/'
       path: '/houses'
@@ -586,6 +625,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
+  AuthenticatedForumThreadIdRoute: typeof AuthenticatedForumThreadIdRoute
   AuthenticatedHousesIdRoute: typeof AuthenticatedHousesIdRoute
   AuthenticatedResidentsIdRoute: typeof AuthenticatedResidentsIdRoute
   AuthenticatedActivityLogsIndexRoute: typeof AuthenticatedActivityLogsIndexRoute
@@ -595,6 +635,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
   AuthenticatedExpenseCategoriesIndexRoute: typeof AuthenticatedExpenseCategoriesIndexRoute
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
+  AuthenticatedForumIndexRoute: typeof AuthenticatedForumIndexRoute
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
   AuthenticatedPagesIndexRoute: typeof AuthenticatedPagesIndexRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
@@ -610,6 +651,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
+  AuthenticatedForumThreadIdRoute: AuthenticatedForumThreadIdRoute,
   AuthenticatedHousesIdRoute: AuthenticatedHousesIdRoute,
   AuthenticatedResidentsIdRoute: AuthenticatedResidentsIdRoute,
   AuthenticatedActivityLogsIndexRoute: AuthenticatedActivityLogsIndexRoute,
@@ -621,6 +663,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedExpenseCategoriesIndexRoute:
     AuthenticatedExpenseCategoriesIndexRoute,
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,
+  AuthenticatedForumIndexRoute: AuthenticatedForumIndexRoute,
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
   AuthenticatedPagesIndexRoute: AuthenticatedPagesIndexRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,

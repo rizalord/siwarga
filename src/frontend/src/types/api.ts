@@ -531,3 +531,30 @@ export interface PollFilter {
   sort?: string
   order?: 'asc' | 'desc'
 }
+
+export interface ForumThread {
+  id: number
+  title: string
+  created_by: number
+  created_by_name: string | null
+  posts_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ForumPost {
+  id: number
+  thread_id: number
+  user_id: number
+  user_name: string | null
+  content: string
+  created_at: string
+}
+
+export interface ForumThreadFilter {
+  search?: string
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
