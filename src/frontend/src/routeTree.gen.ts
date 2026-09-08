@@ -29,6 +29,7 @@ import { Route as AuthenticatedHousesIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedHousesIdRouteImport } from './routes/_authenticated/houses/$id'
 import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authenticated/pages/index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
+import { Route as AuthenticatedPengumumanIndexRouteImport } from './routes/_authenticated/pengumuman/index'
 import { Route as AuthenticatedPermissionsIndexRouteImport } from './routes/_authenticated/permissions/index'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports/index'
 import { Route as AuthenticatedResidentsIndexRouteImport } from './routes/_authenticated/residents/index'
@@ -144,6 +145,12 @@ const AuthenticatedPaymentsIndexRoute =
     path: '/payments/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPengumumanIndexRoute =
+  AuthenticatedPengumumanIndexRouteImport.update({
+    id: '/pengumuman/',
+    path: '/pengumuman/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPermissionsIndexRoute =
   AuthenticatedPermissionsIndexRouteImport.update({
     id: '/permissions/',
@@ -200,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/houses/': typeof AuthenticatedHousesIndexRoute
   '/pages/': typeof AuthenticatedPagesIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
+  '/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/permissions/': typeof AuthenticatedPermissionsIndexRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/residents/': typeof AuthenticatedResidentsIndexRoute
@@ -227,6 +235,7 @@ export interface FileRoutesByTo {
   '/houses': typeof AuthenticatedHousesIndexRoute
   '/pages': typeof AuthenticatedPagesIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
+  '/pengumuman': typeof AuthenticatedPengumumanIndexRoute
   '/permissions': typeof AuthenticatedPermissionsIndexRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/residents': typeof AuthenticatedResidentsIndexRoute
@@ -256,6 +265,7 @@ export interface FileRoutesById {
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
   '/_authenticated/pages/': typeof AuthenticatedPagesIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
+  '/_authenticated/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/_authenticated/permissions/': typeof AuthenticatedPermissionsIndexRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/residents/': typeof AuthenticatedResidentsIndexRoute
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/houses/'
     | '/pages/'
     | '/payments/'
+    | '/pengumuman/'
     | '/permissions/'
     | '/reports/'
     | '/residents/'
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/houses'
     | '/pages'
     | '/payments'
+    | '/pengumuman'
     | '/permissions'
     | '/reports'
     | '/residents'
@@ -340,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated/houses/'
     | '/_authenticated/pages/'
     | '/_authenticated/payments/'
+    | '/_authenticated/pengumuman/'
     | '/_authenticated/permissions/'
     | '/_authenticated/reports/'
     | '/_authenticated/residents/'
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPaymentsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pengumuman/': {
+      id: '/_authenticated/pengumuman/'
+      path: '/pengumuman'
+      fullPath: '/pengumuman/'
+      preLoaderRoute: typeof AuthenticatedPengumumanIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/permissions/': {
       id: '/_authenticated/permissions/'
       path: '/permissions'
@@ -559,6 +579,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
   AuthenticatedPagesIndexRoute: typeof AuthenticatedPagesIndexRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
+  AuthenticatedPengumumanIndexRoute: typeof AuthenticatedPengumumanIndexRoute
   AuthenticatedPermissionsIndexRoute: typeof AuthenticatedPermissionsIndexRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
   AuthenticatedResidentsIndexRoute: typeof AuthenticatedResidentsIndexRoute
@@ -583,6 +604,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
   AuthenticatedPagesIndexRoute: AuthenticatedPagesIndexRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
+  AuthenticatedPengumumanIndexRoute: AuthenticatedPengumumanIndexRoute,
   AuthenticatedPermissionsIndexRoute: AuthenticatedPermissionsIndexRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
   AuthenticatedResidentsIndexRoute: AuthenticatedResidentsIndexRoute,

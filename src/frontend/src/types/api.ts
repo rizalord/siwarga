@@ -458,3 +458,24 @@ export interface ContactMessageFilter {
   page?: number
   per_page?: number
 }
+
+export interface WargaAnnouncement {
+  id: number
+  title: string
+  slug: string | null
+  content: string
+  category: AnnouncementCategory
+  published_at: string | null
+  is_read: boolean
+  read_at: string | null
+  created_at: string
+}
+
+export interface WargaAnnouncementFilter {
+  search?: string
+  category?: AnnouncementCategory | AnnouncementCategory[]
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}

@@ -64,6 +64,12 @@ export const sidebarData: SidebarData = {
           title: 'Pengumuman',
           url: '/announcements',
           icon: Megaphone,
+          permission: 'announcements.manage',
+        },
+        {
+          title: 'Pengumuman Warga',
+          url: '/pengumuman',
+          icon: Megaphone,
           permission: 'announcements.view',
         },
         {
