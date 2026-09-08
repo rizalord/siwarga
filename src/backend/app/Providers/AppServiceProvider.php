@@ -7,6 +7,7 @@ use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\ForumThread;
 use App\Models\House;
 use App\Models\Payment;
 use App\Models\Permission;
@@ -161,7 +162,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerActivityLogObservers(): void
     {
-        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class, Announcement::class, Poll::class] as $model) {
+        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class, Announcement::class, Poll::class, ForumThread::class] as $model) {
             $model::observe(ActivityLogObserver::class);
         }
     }

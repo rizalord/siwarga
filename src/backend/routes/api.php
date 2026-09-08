@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DueTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\ForumPostController;
+use App\Http\Controllers\Api\ForumThreadController;
 use App\Http\Controllers\Api\HouseController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PaymentController;
@@ -181,6 +183,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Activity Logs
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->middleware('can:activity-logs.view');
     Route::post('activity-logs/track', [ActivityLogController::class, 'track']);
+
+    // Forum
+    Route::get('forum-threads', [ForumThreadController::class, 'index'])->middleware('can:forum.view');
+    Route::post('forum-threads', [ForumThreadController::class, 'store'])->middleware('can:forum.view');
+    Route::get('forum-threads/{thread}', [ForumThreadController::class, 'show'])->middleware('can:forum.view');
+    Route::delete('forum-threads/{thread}', [ForumThreadController::class, 'destroy']);
+    Route::get('forum-threads/{thread}/posts', [ForumPostController::class, 'index'])->middleware('can:forum.view');
+    Route::post('forum-threads/{thread}/posts', [ForumPostController::class, 'store'])->middleware('can:forum.view');
+    Route::delete('forum-posts/{post}', [ForumPostController::class, 'destroy']);
 });
 
 Route::prefix('public')->group(function () {
