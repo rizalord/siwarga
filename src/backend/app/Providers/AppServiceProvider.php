@@ -20,9 +20,11 @@ use App\Policies\ContactMessagePolicy;
 use App\Policies\DueTypePolicy;
 use App\Policies\ExpenseCategoryPolicy;
 use App\Policies\ExpensePolicy;
+use App\Policies\ForumThreadPolicy;
 use App\Policies\HousePolicy;
 use App\Policies\PagePolicy;
 use App\Policies\PaymentPolicy;
+use App\Policies\PollPolicy;
 use App\Policies\ResidentPolicy;
 use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
@@ -100,6 +102,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Contact messages
         Gate::define('contact-messages.view', [ContactMessagePolicy::class, 'viewAny']);
+
+        // Polls & forum
+        Gate::define('polls.view', [PollPolicy::class, 'viewAny']);
+        Gate::define('polls.manage', [PollPolicy::class, 'create']);
+        Gate::define('polls.vote', fn (User $user) => $user->hasPermission('polls.vote'));
+        Gate::define('forum.view', [ForumThreadPolicy::class, 'viewAny']);
 
         // Residents
         Gate::define('residents.view', [ResidentPolicy::class, 'viewAny']);

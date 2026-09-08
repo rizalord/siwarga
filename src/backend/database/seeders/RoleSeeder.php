@@ -38,12 +38,14 @@ class RoleSeeder extends Seeder
             'expense-categories.view', 'expense-categories.manage', 'expense-categories.trash',
             'reports.view',
             'announcements.manage', 'announcements.view',
+            'polls.view', 'forum.view',
         ])->pluck('id'));
 
         // Warga can only view bills/payments within their own resident scope.
         $warga->permissions()->sync(Permission::whereIn('name', [
             'bills.view', 'bills.view.own', 'payments.view', 'payments.view.own',
             'announcements.view',
+            'polls.view', 'polls.vote', 'forum.view',
         ])->pluck('id'));
     }
 }
