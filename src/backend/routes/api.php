@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
+use App\Http\Controllers\Api\ContactMessageAdminController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DueTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
@@ -66,6 +67,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('announcements/{announcement}', [AnnouncementController::class, 'update']);
     Route::delete('announcements/{announcement}', [AnnouncementController::class, 'destroy']);
     Route::post('announcements/{announcement}/publish', [AnnouncementController::class, 'publish']);
+
+    // Contact messages (admin)
+    Route::get('contact-messages', [ContactMessageAdminController::class, 'index'])->middleware('can:contact-messages.view');
+    Route::get('contact-messages/{contactMessage}', [ContactMessageAdminController::class, 'show'])->middleware('can:contact-messages.view');
+    Route::post('contact-messages/{contactMessage}/mark-read', [ContactMessageAdminController::class, 'markRead'])->middleware('can:contact-messages.view');
 
     // Due Types
     Route::get('due-types', [DueTypeController::class, 'index'])->middleware('can:due-types.view');
