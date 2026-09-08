@@ -398,3 +398,63 @@ export interface UpdatePageRequest {
   content?: string
   hero_image?: File
 }
+
+export type AnnouncementCategory = 'darurat' | 'umum' | 'kegiatan' | 'keuangan'
+
+export interface Announcement {
+  id: number
+  title: string
+  slug: string | null
+  content: string
+  category: AnnouncementCategory
+  is_public: boolean
+  published_at: string | null
+  target_house_ids: number[]
+  created_by: number
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface CreateAnnouncementRequest {
+  title: string
+  content: string
+  category: AnnouncementCategory
+  is_public?: boolean
+  published_at?: string | null
+  target_house_ids?: number[]
+}
+
+export interface UpdateAnnouncementRequest {
+  title?: string
+  content?: string
+  category?: AnnouncementCategory
+  is_public?: boolean
+  published_at?: string | null
+  target_house_ids?: number[]
+}
+
+export interface AnnouncementFilter {
+  search?: string
+  category?: AnnouncementCategory
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+export interface ContactMessage {
+  id: number
+  name: string
+  email: string | null
+  phone: string | null
+  message: string
+  status: 'new' | 'read'
+  created_at: string
+}
+
+export interface ContactMessageFilter {
+  status?: 'new' | 'read'
+  page?: number
+  per_page?: number
+}
