@@ -6,6 +6,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
+  // Generous timeouts: CRUD flows navigate several pages and wait for
+  // real API responses (no mocks in e2e).
+  timeout: 60 * 1000,
+  expect: {
+    timeout: 10 * 1000,
+  },
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:5173',

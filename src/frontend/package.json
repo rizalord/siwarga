@@ -90,7 +90,7 @@
     "globals": "^17.5.0",
     "knip": "^6.4.1",
     "msw": "^2.15.0",
-    "playwright": "1.59.1",
+    "playwright": "^1.63.0",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "typescript": "~6.0.3",

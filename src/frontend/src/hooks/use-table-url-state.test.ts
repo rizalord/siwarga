@@ -150,9 +150,18 @@ describe('useTableUrlState', () => {
 
     expect(result.current.globalFilter).toBe('hello')
 
-    await act(() => {
-      result.current.onGlobalFilterChange?.('  next  ')
-    })
+    // onGlobalFilterChange debounces the navigate call by 400ms
+    vi.useFakeTimers()
+    try {
+      await act(() => {
+        result.current.onGlobalFilterChange?.('  next  ')
+      })
+      await act(() => {
+        vi.advanceTimersByTime(400)
+      })
+    } finally {
+      vi.useRealTimers()
+    }
 
     expect(applyLastSearchFn(navigate, { page: 2, filter: 'hello' })).toEqual({
       page: undefined,
@@ -171,9 +180,17 @@ describe('useTableUrlState', () => {
       })
     )
 
-    await act(() => {
-      result.current.onGlobalFilterChange?.('   ')
-    })
+    vi.useFakeTimers()
+    try {
+      await act(() => {
+        result.current.onGlobalFilterChange?.('   ')
+      })
+      await act(() => {
+        vi.advanceTimersByTime(400)
+      })
+    } finally {
+      vi.useRealTimers()
+    }
 
     expect(applyLastSearchFn(navigate, { filter: 'x' })).toMatchObject({
       filter: undefined,
@@ -191,9 +208,17 @@ describe('useTableUrlState', () => {
       })
     )
 
-    await act(() => {
-      result.current.onGlobalFilterChange?.('  spaced  ')
-    })
+    vi.useFakeTimers()
+    try {
+      await act(() => {
+        result.current.onGlobalFilterChange?.('  spaced  ')
+      })
+      await act(() => {
+        vi.advanceTimersByTime(400)
+      })
+    } finally {
+      vi.useRealTimers()
+    }
 
     expect(applyLastSearchFn(navigate, {})).toMatchObject({
       filter: '  spaced  ',

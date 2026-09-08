@@ -4,7 +4,9 @@ test.describe('Authentication', () => {
   test('Admin dapat login dan melihat dashboard', async ({ page }) => {
     await login(page, defaultAdmin.email, defaultAdmin.password)
     await expect(page).toHaveURL('/')
-    await expect(page.locator('text=Dashboard')).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Dashboard' })
+    ).toBeVisible()
   })
 
   test('Login gagal dengan kredensial salah', async ({ page }) => {
@@ -18,6 +20,6 @@ test.describe('Authentication', () => {
   test('Admin dapat logout', async ({ page }) => {
     await login(page, defaultAdmin.email, defaultAdmin.password)
     await logout(page)
-    await expect(page).toHaveURL('/sign-in')
+    await expect(page).toHaveURL(/\/sign-in/)
   })
 })

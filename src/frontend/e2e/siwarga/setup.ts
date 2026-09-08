@@ -1,6 +1,17 @@
-import { test as base, type Page } from '@playwright/test'
+import {
+  test as base,
+  type APIRequestContext,
+  type Page,
+} from '@playwright/test'
 
 export const baseURL = 'http://localhost:5173'
+
+export const apiBaseURL = 'http://localhost:8000'
+
+// ID unik pendek untuk data e2e (aman dari tabrakan antar worker paralel)
+export function uid(): string {
+  return `${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`
+}
 
 export const defaultAdmin = {
   email: 'admin@siwarga.test',
@@ -21,8 +32,61 @@ export async function login(page: Page, email: string, password: string) {
 }
 
 export async function logout(page: Page) {
-  await page.click('[data-testid="profile-dropdown"]')
-  await page.click('text=Keluar')
+  // Tombol avatar adalah menu terakhir di header (setelah Ganti tema)
+  await page.locator('header button[aria-haspopup="menu"]').last().click()
+  await page.getByRole('menuitem', { name: 'Keluar' }).click()
+  await page
+    .getByRole('alertdialog')
+    .getByRole('button', { name: 'Keluar' })
+    .click()
+}
+
+export async function apiToken(
+  request: APIRequestContext,
+  email: string = defaultAdmin.email,
+  password: string = defaultAdmin.password
+): Promise<string> {
+  const res = await request.post(`${apiBaseURL}/api/auth/login`, {
+    data: { email, password },
+  })
+  if (!res.ok()) {
+    throw new Error(`API login failed: ${res.status()} ${await res.text()}`)
+  }
+  const body = await res.json()
+  return body.data.token as string
+}
+
+export async function apiPost(
+  request: APIRequestContext,
+  token: string,
+  path: string,
+  data: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const res = await request.post(`${apiBaseURL}${path}`, {
+    data,
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok()) {
+    throw new Error(
+      `POST ${path} failed: ${res.status()} ${await res.text()}`
+    )
+  }
+  const body = await res.json()
+  return body.data as Record<string, unknown>
+}
+
+export async function apiGet(
+  request: APIRequestContext,
+  token: string,
+  path: string
+): Promise<unknown> {
+  const res = await request.get(`${apiBaseURL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok()) {
+    throw new Error(`GET ${path} failed: ${res.status()} ${await res.text()}`)
+  }
+  return res.json()
 }
 
 export const test = base.extend<{
