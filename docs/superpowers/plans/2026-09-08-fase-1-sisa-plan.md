@@ -1597,7 +1597,10 @@ export function useWargaAnnouncements(params?: WargaAnnouncementFilter) {
 export function useWargaAnnouncement(id: number | null) {
   const qc = useQueryClient()
   return useQuery({
-    queryKey: ['warga-announcements', id],
+    // NOTE: singular 'warga-announcement' key on purpose — the queryFn below
+    // invalidates the plural 'warga-announcements' list prefix, which must
+    // NOT match this detail query or it refetch-loops (TanStack anti-pattern).
+    queryKey: ['warga-announcement', id],
     queryFn: async () => {
       const res = await wargaAnnouncementsService.getById(id as number)
       // Opening the detail marks it read server-side: refresh the list badge.
