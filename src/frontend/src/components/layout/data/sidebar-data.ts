@@ -7,6 +7,8 @@ import {
   ShoppingCart,
   Tag,
   FileText,
+  Megaphone,
+  Mail,
   UserCog,
   Banknote,
   ShieldCheck,
@@ -52,6 +54,23 @@ export const sidebarData: SidebarData = {
           url: '/pages',
           icon: FileText,
           permission: 'pages.manage',
+        },
+      ],
+    },
+    {
+      title: 'Komunikasi',
+      items: [
+        {
+          title: 'Pengumuman',
+          url: '/announcements',
+          icon: Megaphone,
+          permission: 'announcements.view',
+        },
+        {
+          title: 'Pesan Kontak',
+          url: '/contact-messages',
+          icon: Mail,
+          permission: 'contact-messages.view',
         },
       ],
     },
