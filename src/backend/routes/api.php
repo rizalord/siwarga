@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\HouseController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\PollController;
 use App\Http\Controllers\Api\PublicAnnouncementController;
 use App\Http\Controllers\Api\PublicEventController;
 use App\Http\Controllers\Api\PublicPageController;
@@ -72,6 +73,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Warga announcements (scoped, read-only)
     Route::get('warga/announcements', [WargaAnnouncementController::class, 'index'])->middleware('can:announcements.view');
     Route::get('warga/announcements/{announcement}', [WargaAnnouncementController::class, 'show'])->middleware('can:announcements.view');
+
+    // Polls
+    Route::get('polls', [PollController::class, 'index'])->middleware('can:polls.view');
+    Route::post('polls', [PollController::class, 'store'])->middleware('can:polls.manage');
+    Route::get('polls/{poll}', [PollController::class, 'show'])->middleware('can:polls.view');
+    Route::put('polls/{poll}', [PollController::class, 'update']);
+    Route::delete('polls/{poll}', [PollController::class, 'destroy']);
+    Route::post('polls/{poll}/vote', [PollController::class, 'vote'])->middleware('can:polls.vote');
+    Route::get('polls/{poll}/results', [PollController::class, 'results']);
 
     // Contact messages (admin)
     Route::get('contact-messages', [ContactMessageAdminController::class, 'index'])->middleware('can:contact-messages.view');
