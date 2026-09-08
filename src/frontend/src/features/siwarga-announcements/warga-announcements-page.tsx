@@ -64,7 +64,7 @@ function WargaAnnouncementsPageInner() {
   const canManage = useHasPermission('announcements.manage')
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { data, isLoading } = useWargaAnnouncements({
+  const { data, isLoading, isError, refetch } = useWargaAnnouncements({
     page: search.page,
     per_page: search.pageSize,
     category: search.category,
@@ -76,9 +76,12 @@ function WargaAnnouncementsPageInner() {
   const [searchInput, setSearchInput] = useState(search.search ?? '')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
-  const { data: detail, isLoading: isDetailLoading } = useWargaAnnouncement(
-    detailOpen ? selectedId : null
-  )
+  const {
+    data: detail,
+    isLoading: isDetailLoading,
+    isError: isDetailError,
+    refetch: refetchDetail,
+  } = useWargaAnnouncement(detailOpen ? selectedId : null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
@@ -169,6 +172,7 @@ function WargaAnnouncementsPageInner() {
         <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
           <Input
             placeholder='Cari pengumuman'
+            aria-label='Cari pengumuman'
             value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
             className='sm:max-w-sm'
@@ -194,6 +198,13 @@ function WargaAnnouncementsPageInner() {
           <div className='flex flex-1 items-center justify-center'>
             <p className='text-muted-foreground'>Memuat data...</p>
           </div>
+        ) : isError ? (
+          <div className='flex flex-1 flex-col items-center justify-center gap-3 rounded-md border py-12'>
+            <p className='text-muted-foreground'>Gagal memuat data.</p>
+            <Button variant='outline' size='sm' onClick={() => refetch()}>
+              Coba lagi
+            </Button>
+          </div>
         ) : (data?.data ?? []).length === 0 ? (
           <div className='flex flex-1 items-center justify-center rounded-md border'>
             <p className='text-muted-foreground py-12'>
@@ -207,7 +218,16 @@ function WargaAnnouncementsPageInner() {
                 <Card
                   key={announcement.id}
                   className='cursor-pointer transition-shadow hover:shadow-md'
+                  role='button'
+                  tabIndex={0}
+                  aria-label={announcement.title}
                   onClick={() => handleOpenDetail(announcement)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleOpenDetail(announcement)
+                    }
+                  }}
                 >
                   <CardHeader>
                     <div className='flex flex-wrap items-center gap-2'>
@@ -278,11 +298,25 @@ function WargaAnnouncementsPageInner() {
                 : ''}
             </DialogDescription>
           </DialogHeader>
-          {isDetailLoading || !detailAnnouncement ? (
+          {isDetailError ? (
+            <div className='flex flex-col items-start gap-3'>
+              <p className='text-muted-foreground text-sm'>
+                Gagal memuat data.
+              </p>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => refetchDetail()}
+              >
+                Coba lagi
+              </Button>
+            </div>
+          ) : isDetailLoading || !detailAnnouncement ? (
             <p className='text-muted-foreground text-sm'>Memuat data...</p>
           ) : (
             <div
               className='prose prose-sm max-w-none'
+              // Content is sanitized server-side (Task 2): never render unsanitized input here.
               dangerouslySetInnerHTML={{
                 __html: detailAnnouncement.content,
               }}
