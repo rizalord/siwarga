@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\WargaAnnouncementController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -67,6 +68,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('announcements/{announcement}', [AnnouncementController::class, 'update']);
     Route::delete('announcements/{announcement}', [AnnouncementController::class, 'destroy']);
     Route::post('announcements/{announcement}/publish', [AnnouncementController::class, 'publish']);
+
+    // Warga announcements (scoped, read-only)
+    Route::get('warga/announcements', [WargaAnnouncementController::class, 'index'])->middleware('can:announcements.view');
+    Route::get('warga/announcements/{announcement}', [WargaAnnouncementController::class, 'show'])->middleware('can:announcements.view');
 
     // Contact messages (admin)
     Route::get('contact-messages', [ContactMessageAdminController::class, 'index'])->middleware('can:contact-messages.view');

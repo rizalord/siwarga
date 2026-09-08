@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,5 +33,28 @@ class Announcement extends Model
     public function reads(): HasMany
     {
         return $this->hasMany(AnnouncementRead::class);
+    }
+
+    /**
+     * Published announcements visible to the given user: broadcasts plus
+     * those targeted at the user's current houses. Holders of
+     * announcements.manage (admin) bypass the target filter.
+     */
+    public function scopeVisibleToWarga(Builder $query, User $user): Builder
+    {
+        $query->whereNotNull('published_at');
+
+        if ($user->hasPermission('announcements.manage')) {
+            return $query;
+        }
+
+        $houseIds = HouseResident::where('resident_id', $user->resident_id)
+            ->whereNull('end_date')
+            ->pluck('house_id');
+
+        return $query->where(function (Builder $q) use ($houseIds): void {
+            $q->whereDoesntHave('targets')
+                ->orWhereHas('targets', fn (Builder $t) => $t->whereIn('house_id', $houseIds));
+        });
     }
 }

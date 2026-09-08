@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Announcement;
+use App\Models\HouseResident;
 use App\Models\Role;
 use App\Models\User;
 
@@ -45,6 +46,34 @@ class AnnouncementPolicy
     {
         return $user->hasPermission('announcements.manage')
             && $this->canManageCategory($user, $announcement->category);
+    }
+
+    /**
+     * Warga-side visibility: published + broadcast-or-targeted.
+     * announcements.manage holders (admin) bypass the target filter.
+     */
+    public function viewForWarga(User $user, Announcement $announcement): bool
+    {
+        if (! $user->hasPermission('announcements.view')) {
+            return false;
+        }
+
+        if ($announcement->published_at === null) {
+            return false;
+        }
+
+        if ($user->hasPermission('announcements.manage')) {
+            return true;
+        }
+
+        if (! $announcement->targets()->exists()) {
+            return true;
+        }
+
+        return HouseResident::where('resident_id', $user->resident_id)
+            ->whereNull('end_date')
+            ->whereIn('house_id', $announcement->targets()->pluck('house_id'))
+            ->exists();
     }
 
     /**
