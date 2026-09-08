@@ -86,6 +86,33 @@ class WargaAnnouncementTest extends TestCase
         $this->assertEquals(1, AnnouncementRead::where('announcement_id', $announcement->id)->where('user_id', $this->warga->id)->count());
     }
 
+    public function test_index_handles_array_and_scalar_category_filter()
+    {
+        Announcement::factory()->create(['title' => 'Umum Info', 'category' => 'umum', 'published_at' => now()]);
+        Announcement::factory()->create(['title' => 'Kegiatan Info', 'category' => 'kegiatan', 'published_at' => now()]);
+
+        $arrayResponse = $this->actingAs($this->warga)->getJson('/api/warga/announcements?category[]=umum');
+
+        $arrayResponse->assertStatus(200);
+        $arrayTitles = collect($arrayResponse->json('data'))->pluck('title')->all();
+        $this->assertContains('Umum Info', $arrayTitles);
+        $this->assertNotContains('Kegiatan Info', $arrayTitles);
+
+        $scalarResponse = $this->actingAs($this->warga)->getJson('/api/warga/announcements?category=umum');
+
+        $scalarResponse->assertStatus(200);
+        $scalarTitles = collect($scalarResponse->json('data'))->pluck('title')->all();
+        $this->assertContains('Umum Info', $scalarTitles);
+        $this->assertNotContains('Kegiatan Info', $scalarTitles);
+
+        $multiResponse = $this->actingAs($this->warga)->getJson('/api/warga/announcements?category[]=umum&category[]=kegiatan');
+
+        $multiResponse->assertStatus(200);
+        $multiTitles = collect($multiResponse->json('data'))->pluck('title')->all();
+        $this->assertContains('Umum Info', $multiTitles);
+        $this->assertContains('Kegiatan Info', $multiTitles);
+    }
+
     public function test_admin_bypasses_target_filter_without_recording_read()
     {
         $otherHouse = House::factory()->create();

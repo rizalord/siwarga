@@ -26,7 +26,9 @@ class WargaAnnouncementController extends Controller
         }
 
         if ($request->filled('category')) {
-            $query->where('category', $request->category);
+            is_array($request->category)
+                ? $query->whereIn('category', $request->category)
+                : $query->where('category', $request->category);
         }
 
         $this->applySorting($query, $request, ['title', 'category', 'published_at', 'created_at'], 'published_at');
