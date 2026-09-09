@@ -28,6 +28,8 @@ use App\Policies\PagePolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\PollPolicy;
 use App\Policies\ResidentPolicy;
+use App\Policies\SuggestionPolicy;
+use App\Policies\TicketPolicy;
 use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -110,6 +112,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('polls.manage', [PollPolicy::class, 'create']);
         Gate::define('polls.vote', fn (User $user) => $user->hasPermission('polls.vote'));
         Gate::define('forum.view', [ForumThreadPolicy::class, 'viewAny']);
+
+        // Tickets & suggestions
+        Gate::define('tickets.view', [TicketPolicy::class, 'viewAny']);
+        Gate::define('tickets.view-all', fn (User $user) => $user->hasPermission('tickets.view-all'));
+        Gate::define('tickets.create', [TicketPolicy::class, 'create']);
+        Gate::define('tickets.manage-status', [TicketPolicy::class, 'updateStatus']);
+        Gate::define('tickets.assign', [TicketPolicy::class, 'assign']);
+        Gate::define('suggestions.view', [SuggestionPolicy::class, 'viewAny']);
+        Gate::define('suggestions.create', [SuggestionPolicy::class, 'create']);
 
         // Residents
         Gate::define('residents.view', [ResidentPolicy::class, 'viewAny']);
