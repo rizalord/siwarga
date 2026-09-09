@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ContactMessageAdminController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DueTypeController;
+use App\Http\Controllers\Api\EmergencyContactController;
 use App\Http\Controllers\Api\EventAdminController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\Api\HouseController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PanicAlertController;
+use App\Http\Controllers\Api\PatrolScheduleController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PollController;
@@ -273,6 +275,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('panic-alerts/{panicAlert}/handle', [PanicAlertController::class, 'handle']);
     Route::post('panic-alerts/{panicAlert}/resolve', [PanicAlertController::class, 'resolve']);
     Route::post('panic-alerts/{panicAlert}/cancel', [PanicAlertController::class, 'cancel']);
+
+    // Security — patrols & emergency contacts (Fase 4)
+    Route::get('patrol-schedules', [PatrolScheduleController::class, 'index'])->middleware('can:patrol-schedules.view');
+    Route::post('patrol-schedules', [PatrolScheduleController::class, 'store'])->middleware('can:patrol-schedules.manage');
+    Route::get('patrol-schedules/{patrolSchedule}', [PatrolScheduleController::class, 'show'])->middleware('can:patrol-schedules.view');
+    Route::put('patrol-schedules/{patrolSchedule}', [PatrolScheduleController::class, 'update']);
+    Route::delete('patrol-schedules/{patrolSchedule}', [PatrolScheduleController::class, 'destroy']);
+    Route::get('emergency-contacts', [EmergencyContactController::class, 'index']);
+    Route::post('emergency-contacts', [EmergencyContactController::class, 'store'])->middleware('can:emergency-contacts.manage');
+    Route::put('emergency-contacts/{emergencyContact}', [EmergencyContactController::class, 'update']);
+    Route::delete('emergency-contacts/{emergencyContact}', [EmergencyContactController::class, 'destroy']);
 });
 
 Route::prefix('public')->group(function () {
