@@ -251,7 +251,8 @@ class PaymentTransactionTest extends TestCase
         $this->actingAs($this->warga)->postJson("/api/payment-transactions/{$first->id}/simulate-pay")
             ->assertStatus(200)->assertJsonPath('data.status', 'paid');
         $this->actingAs($this->warga)->postJson("/api/payment-transactions/{$second->id}/simulate-pay")
-            ->assertStatus(422);
+            ->assertStatus(422)
+            ->assertJsonPath('errors.bill_id.0', 'Tagihan ini sudah lunas.');
 
         $this->assertEquals(1, Payment::where('bill_id', $this->bill->id)->count());
         $this->assertEquals('lunas', $this->bill->fresh()->status);
@@ -274,6 +275,11 @@ class PaymentTransactionTest extends TestCase
                 'qr_string' => 'QRTESTPAYLOAD',
                 'expires_at' => now()->addMinutes(30)->toIso8601String(),
             ], 200),
+            '*/callback_virtual_accounts' => Http::response([
+                'id' => 'cva_123',
+                'account_number' => '1234567890',
+                'expiration_date' => now()->addHours(24)->toIso8601String(),
+            ], 200),
         ]);
 
         $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
@@ -282,10 +288,25 @@ class PaymentTransactionTest extends TestCase
             'provider' => 'xendit',
         ])->assertStatus(201);
 
+        $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
+            'bill_id' => $this->bill->id,
+            'channel' => 'va',
+            'bank_code' => 'BRI',
+            'provider' => 'xendit',
+        ])->assertStatus(201);
+
         Http::assertSent(function ($request) {
             $header = $request->header('Authorization')[0] ?? '';
 
-            return $header === 'Basic '.base64_encode('test-secret-key:');
+            return str_contains($request->url(), '/qr_codes')
+                && $header === 'Basic '.base64_encode('test-secret-key:');
+        });
+
+        Http::assertSent(function ($request) {
+            $header = $request->header('Authorization')[0] ?? '';
+
+            return str_contains($request->url(), '/callback_virtual_accounts')
+                && $header === 'Basic '.base64_encode('test-secret-key:');
         });
     }
 }

@@ -51,6 +51,9 @@ class PaymentTransactionController extends Controller
             'bank_code' => ['required_if:channel,va', 'nullable', 'string', 'max:20'],
             'provider' => ['nullable', Rule::in(['simulator', 'xendit', 'midtrans'])],
             'proof' => 'required_if:channel,manual_transfer|nullable|image|max:2048',
+        ], [
+            'channel.in' => 'Kanal pembayaran tidak valid.',
+            'bank_code.required_if' => 'Kode bank wajib diisi untuk kanal VA.',
         ]);
 
         $bill = Bill::findOrFail($validated['bill_id']);
