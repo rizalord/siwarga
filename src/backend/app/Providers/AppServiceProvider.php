@@ -18,10 +18,12 @@ use App\Models\User;
 use App\Observers\ActivityLogObserver;
 use App\Policies\AnnouncementPolicy;
 use App\Policies\BillPolicy;
+use App\Policies\BookingPolicy;
 use App\Policies\ContactMessagePolicy;
 use App\Policies\DueTypePolicy;
 use App\Policies\ExpenseCategoryPolicy;
 use App\Policies\ExpensePolicy;
+use App\Policies\FacilityPolicy;
 use App\Policies\ForumThreadPolicy;
 use App\Policies\HousePolicy;
 use App\Policies\PagePolicy;
@@ -121,6 +123,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('tickets.assign', [TicketPolicy::class, 'assign']);
         Gate::define('suggestions.view', [SuggestionPolicy::class, 'viewAny']);
         Gate::define('suggestions.create', [SuggestionPolicy::class, 'create']);
+
+        // Facilities & bookings
+        Gate::define('facilities.view', [FacilityPolicy::class, 'viewAny']);
+        Gate::define('facilities.manage', [FacilityPolicy::class, 'create']);
+        Gate::define('bookings.view', [BookingPolicy::class, 'viewAny']);
+        Gate::define('bookings.create', [BookingPolicy::class, 'create']);
+        Gate::define('bookings.review', fn (User $user) => $user->hasPermission('bookings.review'));
 
         // Residents
         Gate::define('residents.view', [ResidentPolicy::class, 'viewAny']);

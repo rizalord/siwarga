@@ -47,6 +47,7 @@ class RoleSeeder extends Seeder
             'announcements.view',
             'polls.view', 'polls.vote', 'forum.view',
             'tickets.view', 'tickets.create', 'suggestions.create',
+            'facilities.view', 'bookings.view', 'bookings.create',
         ])->pluck('id'));
     }
 }
