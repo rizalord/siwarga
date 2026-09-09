@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import type { Booking, BookingStatus, Facility } from '@/types/api'
 import { Plus } from 'lucide-react'
@@ -19,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -185,33 +184,12 @@ function BookingsPageInner() {
     per_page: search.pageSize,
     status: search.status,
     facility_id: search.facility_id,
-    ...(search.search ? { search: search.search } : {}),
   })
 
-  const [searchInput, setSearchInput] = useState(search.search ?? '')
   const [requestOpen, setRequestOpen] = useState(false)
   const [selectedFacilityId, setSelectedFacilityId] = useState<number | null>(
     null
   )
-
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  useEffect(() => {
-    return () => clearTimeout(debounceRef.current)
-  }, [])
-
-  const handleSearchChange = (value: string) => {
-    setSearchInput(value)
-    clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          search: value ? value : undefined,
-          page: undefined,
-        }),
-      })
-    }, 400)
-  }
 
   const handleStatusChange = (value: string) => {
     navigate({
@@ -329,13 +307,6 @@ function BookingsPageInner() {
           </h3>
 
           <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
-            <Input
-              placeholder='Cari booking'
-              aria-label='Cari booking'
-              value={searchInput}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className='sm:max-w-sm'
-            />
             <Select
               value={search.status ?? 'all'}
               onValueChange={handleStatusChange}
