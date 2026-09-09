@@ -28,6 +28,15 @@ const STATUS_LABELS: Record<string, string> = {
   open: 'Terbuka',
   in_progress: 'Diproses',
   resolved: 'Selesai',
+  active: 'Aktif',
+  handled: 'Ditangani',
+  cancelled: 'Dibatalkan',
+  pending: 'Menunggu',
+  paid: 'Lunas',
+  rejected: 'Ditolak',
+  expired: 'Kedaluarsa',
+  failed: 'Gagal',
+  none: '—',
 }
 
 function statusLabel(value: string): string {
@@ -79,7 +88,9 @@ function NotificationRow({
           </Badge>
         </div>
         <CardTitle className='leading-snug'>
-          {notification.data.title}
+          {notification.data.title === 'Panic Alert'
+            ? 'Laporan Darurat'
+            : notification.data.title}
         </CardTitle>
         <CardDescription>
           {notification.data.actor_name} ·{' '}

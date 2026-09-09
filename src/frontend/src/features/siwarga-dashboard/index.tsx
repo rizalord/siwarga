@@ -6,8 +6,9 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { SummaryCards } from '@/features/siwarga-dashboard/summary-cards'
 import { IncomeExpenseChart } from '@/features/siwarga-dashboard/income-expense-chart'
+import { SecurityWidgets } from '@/features/siwarga-dashboard/security-widgets'
+import { SummaryCards } from '@/features/siwarga-dashboard/summary-cards'
 
 export function DashboardPage() {
   const [year, setYear] = useState(new Date().getFullYear())
@@ -29,6 +30,7 @@ export function DashboardPage() {
             Ringkasan kas RT tahun berjalan.
           </p>
         </div>
+        <SecurityWidgets />
         {isLoading ? (
           <div className='flex flex-1 items-center justify-center'>
             <p className='text-muted-foreground'>Memuat data...</p>
