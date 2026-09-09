@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Facility;
 use App\Models\FacilityBooking;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,7 +20,7 @@ class FacilityBookingFactory extends Factory
     public function definition(): array
     {
         return [
-            'facility_id' => null,
+            'facility_id' => Facility::factory(),
             'booked_by' => User::factory(),
             'event_id' => null,
             'start_at' => now()->addDay(),

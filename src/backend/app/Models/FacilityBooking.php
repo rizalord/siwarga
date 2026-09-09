@@ -12,6 +12,10 @@ class FacilityBooking extends Model
 
     protected $fillable = ['facility_id', 'booked_by', 'event_id', 'start_at', 'end_at', 'status', 'approved_by'];
 
+    protected $attributes = [
+        'status' => 'pending',
+    ];
+
     protected function casts(): array
     {
         return [

@@ -4,11 +4,13 @@ use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
+use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ContactMessageAdminController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DueTypeController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\ForumPostController;
 use App\Http\Controllers\Api\ForumThreadController;
 use App\Http\Controllers\Api\HouseController;
@@ -205,6 +207,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('tickets/{ticket}/comments', [TicketController::class, 'comments'])->middleware('can:tickets.view');
     Route::post('tickets/{ticket}/comments', [TicketController::class, 'storeComment'])->middleware('can:tickets.view');
     Route::post('tickets/{ticket}/attachments', [TicketController::class, 'storeAttachment'])->middleware('can:tickets.view');
+
+    // Facilities & bookings
+    Route::get('facilities', [FacilityController::class, 'index'])->middleware('can:facilities.view');
+    Route::post('facilities', [FacilityController::class, 'store'])->middleware('can:facilities.manage');
+    Route::get('facilities/{facility}', [FacilityController::class, 'show'])->middleware('can:facilities.view');
+    Route::put('facilities/{facility}', [FacilityController::class, 'update']);
+    Route::delete('facilities/{facility}', [FacilityController::class, 'destroy']);
+    Route::get('bookings', [BookingController::class, 'index'])->middleware('can:bookings.view');
+    Route::post('bookings', [BookingController::class, 'store'])->middleware('can:bookings.create');
+    Route::get('bookings/{booking}', [BookingController::class, 'show'])->middleware('can:bookings.view');
+    Route::post('bookings/{booking}/approve', [BookingController::class, 'approve']);
+    Route::post('bookings/{booking}/reject', [BookingController::class, 'reject']);
+    Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 
     // Notifications (own only, no permission gate beyond auth)
     Route::get('notifications', [NotificationController::class, 'index']);

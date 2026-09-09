@@ -7,6 +7,8 @@ use App\Models\Bill;
 use App\Models\DueType;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\Facility;
+use App\Models\FacilityBooking;
 use App\Models\ForumThread;
 use App\Models\House;
 use App\Models\Payment;
@@ -94,6 +96,8 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerGates(): void
     {
+        Gate::policy(FacilityBooking::class, BookingPolicy::class);
+
         // Houses
         Gate::define('houses.view', [HousePolicy::class, 'viewAny']);
         Gate::define('houses.create', [HousePolicy::class, 'create']);
@@ -192,7 +196,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerActivityLogObservers(): void
     {
-        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class, Announcement::class, Poll::class, ForumThread::class] as $model) {
+        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class, Announcement::class, Poll::class, ForumThread::class, Facility::class] as $model) {
             $model::observe(ActivityLogObserver::class);
         }
     }
