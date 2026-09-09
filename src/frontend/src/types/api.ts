@@ -607,3 +607,17 @@ export interface TicketFilter {
   sort?: string
   order?: 'asc' | 'desc'
 }
+
+export interface AppNotification {
+  id: string
+  type: string
+  data: {
+    ticket_id: number
+    title: string
+    old_status: string
+    new_status: string
+    actor_name: string
+  }
+  read_at: string | null
+  created_at: string
+}
