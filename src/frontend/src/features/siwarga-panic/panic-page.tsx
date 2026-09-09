@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
+import { getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import type { PanicAlert, PanicStatus } from '@/types/api'
 import { Phone, Siren } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth-store'
@@ -12,6 +13,7 @@ import {
   useResolvePanic,
 } from '@/hooks/use-panic'
 import { useHasPermission } from '@/hooks/use-permission'
+import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -40,6 +42,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfigDrawer } from '@/components/config-drawer'
+import { DataTablePagination } from '@/components/data-table'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { NotificationBell } from '@/components/layout/notification-bell'
@@ -236,9 +239,29 @@ function PanicPageInner() {
   const canHandle = useHasPermission('panic-alerts.handle')
   const currentUserId = useAuthStore((state) => state.auth.user?.id)
 
+  const {
+    columnFilters,
+    onColumnFiltersChange,
+    pagination,
+    onPaginationChange,
+    ensurePageInRange,
+  } = useTableUrlState({
+    search: search as unknown as Record<string, unknown>,
+    navigate,
+    pagination: { defaultPage: 1, defaultPageSize: 10 },
+    globalFilter: { enabled: false },
+    columnFilters: [
+      { columnId: 'status', searchKey: 'status', type: 'string' },
+    ],
+  })
+
+  const statusFilter = columnFilters.find((f) => f.id === 'status')?.value as
+    PanicStatus | undefined
+
   const { data, isLoading, isError, refetch } = usePanicAlerts({
-    page: search.page,
-    status: search.status,
+    page: pagination.pageIndex + 1,
+    per_page: pagination.pageSize,
+    status: statusFilter,
   })
   const { data: contactsData } = useEmergencyContacts()
   const handlePanic = useHandlePanic()
@@ -251,25 +274,30 @@ function PanicPageInner() {
     (alert) => alert.status === 'active' && alert.reporter_id === currentUserId
   )
 
+  const pageCount = data?.last_page ?? 1
+
+  // Lightweight table instance driving the shared DataTablePagination while
+  // the list itself renders as mobile-first cards.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({
+    data: data?.data ?? [],
+    columns: [],
+    state: { pagination },
+    pageCount,
+    manualPagination: true,
+    getRowId: (row) => String(row.id),
+    getCoreRowModel: getCoreRowModel(),
+    onPaginationChange,
+  })
+
+  useEffect(() => {
+    ensurePageInRange(pageCount)
+  }, [pageCount, ensurePageInRange])
+
   const handleStatusChange = (value: string) => {
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        status: value === 'all' ? undefined : (value as PanicStatus),
-        page: undefined,
-      }),
-    })
-  }
-
-  const currentPage = data?.current_page ?? search.page ?? 1
-  const lastPage = data?.last_page ?? 1
-
-  const handlePageChange = (nextPage: number) => {
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        page: nextPage <= 1 ? undefined : nextPage,
-      }),
+    onColumnFiltersChange((prev) => {
+      const rest = prev.filter((f) => f.id !== 'status')
+      return value === 'all' ? rest : [...rest, { id: 'status', value }]
     })
   }
 
@@ -293,6 +321,7 @@ function PanicPageInner() {
 
         <Button
           size='lg'
+          aria-label='Lapor Darurat'
           className='w-full bg-red-600 py-8 text-lg font-bold text-white hover:bg-red-700 sm:w-auto sm:px-12'
           onClick={() => setReportOpen(true)}
         >
@@ -327,7 +356,7 @@ function PanicPageInner() {
 
         <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
           <Select
-            value={search.status ?? 'all'}
+            value={statusFilter ?? 'all'}
             onValueChange={handleStatusChange}
           >
             <SelectTrigger
@@ -379,29 +408,7 @@ function PanicPageInner() {
               ))}
             </div>
 
-            <div className='flex items-center justify-between gap-2'>
-              <p className='text-sm text-muted-foreground'>
-                Halaman {currentPage} dari {lastPage}
-              </p>
-              <div className='flex gap-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  disabled={currentPage <= 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  Sebelumnya
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  disabled={currentPage >= lastPage}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  Berikutnya
-                </Button>
-              </div>
-            </div>
+            <DataTablePagination table={table} />
           </>
         )}
 

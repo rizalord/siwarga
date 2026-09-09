@@ -325,7 +325,7 @@ function RegisterGuestDialog({
             form='register-guest-form'
             disabled={!canSubmit}
           >
-            {registerGuest.isPending ? 'Mendaftarkan...' : 'Daftarkan Tamu'}
+            {registerGuest.isPending ? 'Mengirim...' : 'Kirim Pendaftaran'}
           </Button>
         </DialogFooter>
       </DialogContent>

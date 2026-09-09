@@ -12,6 +12,7 @@ const guestLogsSearchSchema = z.object({
     ])
     .optional()
     .catch(undefined),
+  search: z.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_authenticated/guest-logs/')({
