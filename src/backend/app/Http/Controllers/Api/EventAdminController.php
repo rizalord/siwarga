@@ -101,7 +101,7 @@ class EventAdminController extends Controller
     {
         $this->authorize('delete', $documentation->event);
 
-        $documentation->delete();
+        $this->eventAdminService->deleteDocumentation($documentation);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }

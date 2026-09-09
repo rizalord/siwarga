@@ -81,6 +81,26 @@ class EventAdminTest extends TestCase
         $this->actingAs($this->admin)->deleteJson("/api/event-documentation/{$id}")->assertStatus(200);
     }
 
+    public function test_deleting_documentation_removes_stored_file()
+    {
+        Storage::fake('public');
+        $event = Event::factory()->create();
+
+        $this->actingAs($this->admin)->postJson("/api/events/{$event->id}/documentation", [
+            'photo' => UploadedFile::fake()->image('galeri.jpg', 800, 600)->size(500),
+            'media_type' => 'foto',
+        ])->assertStatus(201);
+
+        $doc = $event->documentation()->firstOrFail();
+        $path = $doc->file_path;
+        Storage::disk('public')->assertExists($path);
+
+        $this->actingAs($this->admin)->deleteJson("/api/event-documentation/{$doc->id}")->assertStatus(200);
+
+        Storage::disk('public')->assertMissing($path);
+        $this->assertDatabaseMissing('event_documentation', ['id' => $doc->id]);
+    }
+
     public function test_documentation_list_returns_uploaded_docs_in_order()
     {
         Storage::fake('public');

@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\EventDocumentation;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -57,6 +58,12 @@ class EventAdminService
             'file_path' => $file->store('event-documentation', 'public'),
             'caption' => $caption,
         ]);
+    }
+
+    public function deleteDocumentation(EventDocumentation $doc): void
+    {
+        Storage::disk('public')->delete($doc->file_path);
+        $doc->delete();
     }
 
     private function uniqueSlug(string $title, ?int $exceptId = null): string

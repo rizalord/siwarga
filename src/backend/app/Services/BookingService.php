@@ -37,7 +37,7 @@ class BookingService
             throw ValidationException::withMessages(['status' => ['Hanya booking pending yang bisa disetujui.']]);
         }
 
-        return DB::transaction(function () use ($booking, $actor): FacilityBooking {
+        $result = DB::transaction(function () use ($booking, $actor): array {
             Facility::whereKey($booking->facility_id)->lockForUpdate()->first();
 
             if ($this->overlaps($booking->facility_id, $booking->start_at, $booking->end_at, $booking->id)) {
@@ -55,14 +55,23 @@ class BookingService
 
             foreach ($conflicts as $conflict) {
                 $conflict->update(['status' => 'rejected', 'approved_by' => $actor->id]);
-                $this->notify($conflict->fresh('facility'), 'rejected', $actor, 'Slot bentrok dengan booking yang disetujui.');
             }
 
             $this->maybeBill($booking->fresh(['facility', 'booker']), $actor);
-            $this->notify($booking->fresh('facility'), 'approved', $actor, null);
 
-            return $booking->fresh(['facility', 'booker', 'approver']);
+            return [
+                'booking' => $booking->fresh(['facility', 'booker', 'approver']),
+                'conflicts' => $conflicts->map(fn (FacilityBooking $conflict) => $conflict->fresh('facility'))->all(),
+            ];
         });
+
+        foreach ($result['conflicts'] as $conflict) {
+            $this->notify($conflict, 'rejected', $actor, 'Slot bentrok dengan booking yang disetujui.');
+        }
+
+        $this->notify($result['booking'], 'approved', $actor, null);
+
+        return FacilityBooking::with(['facility', 'booker', 'approver'])->findOrFail($result['booking']->id);
     }
 
     public function reject(FacilityBooking $booking, ?string $reason, User $actor): FacilityBooking
