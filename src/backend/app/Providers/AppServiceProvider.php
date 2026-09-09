@@ -239,5 +239,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('panic', function (Request $request) {
             return Limit::perMinute(3)->by($request->user()?->id ?? $request->ip());
         });
+
+        RateLimiter::for('webhooks', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
     }
 }

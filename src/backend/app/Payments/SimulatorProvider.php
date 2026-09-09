@@ -27,7 +27,7 @@ class SimulatorProvider implements PaymentProvider
     {
         return new ProviderWebhook(
             reference: (string) $request->input('reference'),
-            status: (string) $request->input('status', 'paid'),
+            status: (string) $request->input('status', ''),
             raw: $request->all(),
         );
     }

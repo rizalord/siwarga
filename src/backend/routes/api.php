@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PanicAlertController;
 use App\Http\Controllers\Api\PatrolScheduleController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PaymentTransactionController;
+use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PollController;
 use App\Http\Controllers\Api\PublicAnnouncementController;
@@ -151,6 +153,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->middleware('can:payments.view');
     Route::put('payments/{payment}', [PaymentController::class, 'update'])->middleware('can:payments.create');
     Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->middleware('can:payments.create');
+
+    Route::get('payment-transactions', [PaymentTransactionController::class, 'index'])->middleware('can:payments.online');
+    Route::post('payment-transactions', [PaymentTransactionController::class, 'store'])->middleware('can:payments.online');
+    Route::get('payment-transactions/{paymentTransaction}', [PaymentTransactionController::class, 'show'])->middleware('can:payments.online');
+    Route::post('payment-transactions/{paymentTransaction}/proof', [PaymentTransactionController::class, 'proof']);
+    Route::post('payment-transactions/{paymentTransaction}/verify', [PaymentTransactionController::class, 'verify']);
+    Route::post('payment-transactions/{paymentTransaction}/simulate-pay', [PaymentTransactionController::class, 'simulatePay']);
 
     // Expenses
     Route::get('expenses', [ExpenseController::class, 'index'])->middleware('can:expenses.view');
@@ -306,4 +315,7 @@ Route::prefix('public')->group(function () {
     Route::get('events/{slug}', [PublicEventController::class, 'show']);
     Route::post('contact', [ContactMessageController::class, 'store'])->middleware('throttle:contact');
     Route::get('households/{token}', [HouseholdCardController::class, 'verify']);
+    Route::post('payments/webhook/{provider}', [PaymentWebhookController::class, 'handle'])
+        ->name('payments.webhook')
+        ->middleware('throttle:webhooks');
 });
