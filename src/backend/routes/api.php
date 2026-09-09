@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ForumPostController;
 use App\Http\Controllers\Api\ForumThreadController;
 use App\Http\Controllers\Api\HouseController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionController;
@@ -203,6 +204,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('tickets/{ticket}/comments', [TicketController::class, 'comments'])->middleware('can:tickets.view');
     Route::post('tickets/{ticket}/comments', [TicketController::class, 'storeComment'])->middleware('can:tickets.view');
     Route::post('tickets/{ticket}/attachments', [TicketController::class, 'storeAttachment'])->middleware('can:tickets.view');
+
+    // Notifications (own only, no permission gate beyond auth)
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead']);
 });
 
 Route::prefix('public')->group(function () {

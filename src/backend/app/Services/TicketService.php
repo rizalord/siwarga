@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
+use App\Jobs\SendTicketWhatsappJob;
 use App\Models\HouseResident;
 use App\Models\Ticket;
 use App\Models\TicketAttachment;
 use App\Models\TicketComment;
 use App\Models\User;
+use App\Notifications\TicketStatusUpdated;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class TicketService
@@ -49,6 +52,27 @@ class TicketService
                 'comment' => "Status diubah {$oldStatus} → {$newStatus} oleh {$actor->name}.",
             ]);
         });
+
+        $reporter = $ticket->reporter;
+
+        if ($reporter !== null) {
+            try {
+                $reporter->notify(new TicketStatusUpdated(
+                    $ticket->id,
+                    $ticket->title,
+                    $oldStatus,
+                    $newStatus,
+                    $actor->name,
+                ));
+            } catch (\Throwable $exception) {
+                Log::warning('TicketService: failed to store status notification', [
+                    'ticket_id' => $ticket->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+
+            SendTicketWhatsappJob::dispatch($ticket->id, $oldStatus, $newStatus);
+        }
 
         return $ticket->fresh(['reporter', 'assignee'])->loadCount(['comments', 'attachments']);
     }
