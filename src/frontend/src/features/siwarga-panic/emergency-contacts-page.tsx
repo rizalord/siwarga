@@ -65,10 +65,13 @@ function ContactFormDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit) return
+    const parsedSortOrder = Number(sortOrder)
     const input = {
       name: name.trim(),
       phone: phone.trim(),
-      ...(sortOrder.trim() ? { sort_order: Number(sortOrder) } : {}),
+      ...(sortOrder.trim() && !Number.isNaN(parsedSortOrder)
+        ? { sort_order: parsedSortOrder }
+        : {}),
     }
     if (initial) {
       updateContact.mutate(

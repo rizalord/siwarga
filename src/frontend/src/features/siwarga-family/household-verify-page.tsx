@@ -17,6 +17,7 @@ export function HouseholdVerifyPage() {
         .get<VerifyResponse>(`/api/public/households/${token}`)
         .then((r) => r.data),
     retry: false,
+    enabled: !!token,
   })
 
   return (
