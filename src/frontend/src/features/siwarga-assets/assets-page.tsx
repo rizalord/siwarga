@@ -7,6 +7,7 @@ import type {
   AssetLoanStatus,
 } from '@/types/api'
 import { Minus, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   useAssetLoans,
   useAssets,
@@ -215,25 +216,37 @@ function RequestLoanDialog({
 }) {
   const requestLoan = useRequestAssetLoan()
   const max = asset ? availableOf(asset) : 1
-  const [quantity, setQuantity] = useState(1)
+  const [qtyRaw, setQtyRaw] = useState('1')
 
   const clamp = (value: number) => {
     if (Number.isNaN(value)) return 1
     return Math.min(Math.max(1, Math.floor(value)), Math.max(1, max))
   }
 
+  const parsedQty = parseInt(qtyRaw || '1', 10) || 1
+
   const canSubmit =
     asset != null && max > 0 && !requestLoan.isPending
+
+  const handleBlur = () => {
+    setQtyRaw(String(clamp(parsedQty)))
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit || asset == null) return
+    const parsed = parseInt(qtyRaw || '1', 10) || 1
+    if (parsed < 1 || parsed > max) {
+      toast.error(`Jumlah harus antara 1 sampai ${max}`)
+      return
+    }
+    const quantity = Math.min(Math.max(parsed, 1), max)
     requestLoan.mutate(
-      { asset_id: asset.id, quantity: clamp(quantity) },
+      { asset_id: asset.id, quantity },
       {
         // Keep the draft on failure so the user does not lose their input.
         onSuccess: () => {
-          setQuantity(1)
+          setQtyRaw('1')
           onOpenChange(false)
         },
       }
@@ -264,8 +277,8 @@ function RequestLoanDialog({
                 variant='outline'
                 size='icon'
                 aria-label='Kurangi jumlah'
-                disabled={quantity <= 1}
-                onClick={() => setQuantity((q) => clamp(q - 1))}
+                disabled={parsedQty <= 1}
+                onClick={() => setQtyRaw(String(clamp(parsedQty - 1)))}
               >
                 <Minus size={16} />
               </Button>
@@ -274,8 +287,9 @@ function RequestLoanDialog({
                 type='number'
                 min={1}
                 max={Math.max(1, max)}
-                value={quantity}
-                onChange={(e) => setQuantity(clamp(Number(e.target.value)))}
+                value={qtyRaw}
+                onChange={(e) => setQtyRaw(e.target.value)}
+                onBlur={handleBlur}
                 className='text-center'
               />
               <Button
@@ -283,8 +297,8 @@ function RequestLoanDialog({
                 variant='outline'
                 size='icon'
                 aria-label='Tambah jumlah'
-                disabled={quantity >= max}
-                onClick={() => setQuantity((q) => clamp(q + 1))}
+                disabled={parsedQty >= max}
+                onClick={() => setQtyRaw(String(clamp(parsedQty + 1)))}
               >
                 <Plus size={16} />
               </Button>
