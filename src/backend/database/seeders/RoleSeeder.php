@@ -61,8 +61,8 @@ class RoleSeeder extends Seeder
 
         // Satpam handles security operations, no finance or resident data.
         $satpam->permissions()->sync(Permission::whereIn('name', [
-            'guest-logs.view', 'guest-logs.manage',
-            'panic-alerts.handle',
+            'guest-logs.view', 'guest-logs.register', 'guest-logs.manage',
+            'panic-alerts.report', 'panic-alerts.handle',
             'patrol-schedules.view',
         ])->pluck('id'));
     }

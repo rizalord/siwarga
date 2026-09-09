@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\ForumPostController;
 use App\Http\Controllers\Api\ForumThreadController;
+use App\Http\Controllers\Api\GuestLogController;
 use App\Http\Controllers\Api\HouseController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PageController;
@@ -256,6 +257,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('suggestions', [SuggestionController::class, 'store'])->middleware(['can:suggestions.create', 'throttle:suggestions']);
     Route::get('suggestions', [SuggestionController::class, 'index'])->middleware('can:suggestions.view');
     Route::post('suggestions/{suggestion}/mark-reviewed', [SuggestionController::class, 'markReviewed'])->middleware('can:suggestions.view');
+
+    // Security — guest log (Fase 4)
+    Route::get('guest-logs', [GuestLogController::class, 'index'])->middleware('can:guest-logs.view');
+    Route::post('guest-logs', [GuestLogController::class, 'store'])->middleware('can:guest-logs.register');
+    Route::get('guest-logs/{guestLog}', [GuestLogController::class, 'show'])->middleware('can:guest-logs.view');
+    Route::post('guest-logs/{guestLog}/check-in', [GuestLogController::class, 'checkIn']);
+    Route::post('guest-logs/{guestLog}/check-out', [GuestLogController::class, 'checkOut']);
 });
 
 Route::prefix('public')->group(function () {
