@@ -17,10 +17,13 @@ use App\Models\Role;
 use App\Models\User;
 use App\Observers\ActivityLogObserver;
 use App\Policies\AnnouncementPolicy;
+use App\Policies\AssetLoanPolicy;
+use App\Policies\AssetPolicy;
 use App\Policies\BillPolicy;
 use App\Policies\BookingPolicy;
 use App\Policies\ContactMessagePolicy;
 use App\Policies\DueTypePolicy;
+use App\Policies\EventPolicy;
 use App\Policies\ExpenseCategoryPolicy;
 use App\Policies\ExpensePolicy;
 use App\Policies\FacilityPolicy;
@@ -130,6 +133,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('bookings.view', [BookingPolicy::class, 'viewAny']);
         Gate::define('bookings.create', [BookingPolicy::class, 'create']);
         Gate::define('bookings.review', fn (User $user) => $user->hasPermission('bookings.review'));
+
+        // Assets & events
+        Gate::define('assets.view', [AssetPolicy::class, 'viewAny']);
+        Gate::define('assets.manage', [AssetPolicy::class, 'create']);
+        Gate::define('asset-loans.request', [AssetLoanPolicy::class, 'create']);
+        Gate::define('asset-loans.review', fn (User $user) => $user->hasPermission('asset-loans.review'));
+        Gate::define('events.manage', [EventPolicy::class, 'viewAny']);
 
         // Residents
         Gate::define('residents.view', [ResidentPolicy::class, 'viewAny']);
