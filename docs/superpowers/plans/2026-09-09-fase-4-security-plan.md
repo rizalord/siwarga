@@ -783,7 +783,8 @@ class GuestLogTest extends TestCase
 
     public function test_warga_cannot_check_in_and_sees_only_own()
     {
-        GuestLog::factory()->create(['house_id' => $this->house->id, 'registered_by' => 999]);
+        $other = User::factory()->create();
+        GuestLog::factory()->create(['house_id' => $this->house->id, 'registered_by' => $other->id]);
         $own = GuestLog::factory()->create(['house_id' => $this->house->id, 'registered_by' => $this->warga->id]);
 
         $this->actingAs($this->warga)->postJson("/api/guest-logs/{$own->id}/check-in")->assertStatus(403);
