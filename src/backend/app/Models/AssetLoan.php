@@ -12,6 +12,10 @@ class AssetLoan extends Model
 
     protected $fillable = ['asset_id', 'borrowed_by', 'quantity', 'status', 'borrowed_at', 'returned_at'];
 
+    protected $attributes = [
+        'status' => 'pending',
+    ];
+
     protected function casts(): array
     {
         return [

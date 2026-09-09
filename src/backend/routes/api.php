@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AnnouncementController;
+use App\Http\Controllers\Api\AssetController;
+use App\Http\Controllers\Api\AssetLoanController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
 use App\Http\Controllers\Api\BookingController;
@@ -220,6 +222,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('bookings/{booking}/approve', [BookingController::class, 'approve']);
     Route::post('bookings/{booking}/reject', [BookingController::class, 'reject']);
     Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+
+    // Assets & loans
+    Route::get('assets', [AssetController::class, 'index'])->middleware('can:assets.view');
+    Route::post('assets', [AssetController::class, 'store'])->middleware('can:assets.manage');
+    Route::get('assets/{asset}', [AssetController::class, 'show'])->middleware('can:assets.view');
+    Route::put('assets/{asset}', [AssetController::class, 'update']);
+    Route::delete('assets/{asset}', [AssetController::class, 'destroy']);
+    Route::get('asset-loans', [AssetLoanController::class, 'index'])->middleware('can:asset-loans.request');
+    Route::post('asset-loans', [AssetLoanController::class, 'store'])->middleware('can:asset-loans.request');
+    Route::get('asset-loans/{loan}', [AssetLoanController::class, 'show'])->middleware('can:asset-loans.request');
+    Route::post('asset-loans/{loan}/approve', [AssetLoanController::class, 'approve']);
+    Route::post('asset-loans/{loan}/reject', [AssetLoanController::class, 'reject']);
+    Route::post('asset-loans/{loan}/return', [AssetLoanController::class, 'markReturned']);
 
     // Notifications (own only, no permission gate beyond auth)
     Route::get('notifications', [NotificationController::class, 'index']);

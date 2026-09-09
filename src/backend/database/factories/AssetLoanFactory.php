@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Asset;
 use App\Models\AssetLoan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,10 +20,7 @@ class AssetLoanFactory extends Factory
     public function definition(): array
     {
         return [
-            // Null like Task 1's FacilityBookingFactory (facility_id/event_id):
-            // BelongsTo nested factories are persisted even on make(), and the
-            // assets table only arrives with the Task 4 migrations.
-            'asset_id' => null,
+            'asset_id' => Asset::factory(),
             'borrowed_by' => User::factory(),
             'quantity' => 1,
             'status' => 'pending',
