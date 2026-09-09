@@ -628,8 +628,14 @@ Warga list gains (append inside the existing `whereIn` array):
             'guest-logs.view', 'guest-logs.register',
             'panic-alerts.report',
             'patrol-schedules.view',
-            'family-members.view', 'family-members.manage',
+            'family-members.view',
 ```
+
+Ruling (2026-09-09, Task 1 pre-review): warga holds only `family-members.view`.
+Scoped own-house create/update/delete still works because `FamilyMemberPolicy::create`
+admits view-holders and update/delete delegate to scoped `view()`; global view stays
+admin-only via `manage`. The brief's test asserting warga cannot view other-house
+members governs.
 
 After the warga sync block, add:
 
