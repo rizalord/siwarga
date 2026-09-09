@@ -2868,7 +2868,7 @@ export function useReturnAssetLoan() {
 
 - [ ] **Step 2: Write the page, route, and sidebar**
 
-`assets-page.tsx`: stock cards/table (`Tersedia X dari Y` per asset, condition badge) + `Pinjam` button per row opening a dialog (quantity stepper max = available, submit `Ajukan Pinjaman`); loans list with status filter; approve/reject buttons (review permission) + `Kembalikan` (borrower or reviewer); admin asset CRUD (name/quantity/condition) gated by `assets.manage`; error + retry states.
+`assets-page.tsx`: stock cards/table (`Tersedia X dari Y` per asset, condition badge) + `Pinjam` button per row opening a dialog (quantity stepper max = available; quantity held as RAW STRING state so the field stays editable while typing — clamp to [1, available] only on stepper click, blur, and submit — submit `Ajukan Pinjaman`); loans list with status filter; approve/reject buttons (review permission) + `Kembalikan` (borrower or reviewer); admin asset CRUD (name/quantity/condition) gated by `assets.manage`; error + retry states.
 Route `assets/index.tsx` + sidebar entry in `Fasilitas` group:
 
 ```ts
