@@ -526,6 +526,7 @@ function HistorySection() {
                   <TableHead>Tagihan</TableHead>
                   <TableHead>Jumlah</TableHead>
                   <TableHead>Kanal</TableHead>
+                  <TableHead>Bukti</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className='text-right'>Aksi</TableHead>
                 </TableRow>
@@ -541,6 +542,23 @@ function HistorySection() {
                       {formatRupiah(trx.amount)}
                     </TableCell>
                     <TableCell>{CHANNEL_LABELS[trx.channel]}</TableCell>
+                    <TableCell>
+                      {trx.proof_url ? (
+                        <a
+                          href={trx.proof_url}
+                          target='_blank'
+                          rel='noreferrer'
+                        >
+                          <img
+                            src={trx.proof_url}
+                            alt={`Bukti pembayaran ${trx.reference}`}
+                            className='h-12 w-12 rounded border object-cover'
+                          />
+                        </a>
+                      ) : (
+                        <span className='text-sm text-muted-foreground'>—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={

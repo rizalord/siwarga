@@ -936,6 +936,7 @@ export interface PaymentTransaction {
   qr_payload: string | null
   expires_at: string | null
   proof_path: string | null
+  proof_url: string | null
   verified_by: number | null
   rejection_reason: string | null
   paid_at: string | null

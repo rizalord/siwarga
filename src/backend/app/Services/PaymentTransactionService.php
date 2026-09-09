@@ -122,6 +122,8 @@ class PaymentTransactionService
 
     public function handleWebhook(string $providerKey, Request $request): PaymentTransaction
     {
+        abort_unless($providerKey !== 'simulator' || app()->environment('local', 'testing'), 403, 'Webhook simulator hanya tersedia di lingkungan lokal/pengujian.');
+
         $provider = PaymentProviderRegistry::for($providerKey);
 
         if (! $provider->verifySignature($request)) {

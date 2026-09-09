@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class PaymentTransactionResource extends JsonResource
 {
@@ -24,6 +25,7 @@ class PaymentTransactionResource extends JsonResource
             'qr_payload' => $this->channel === 'qris' ? $this->pay_code : null,
             'expires_at' => $this->expires_at,
             'proof_path' => $this->proof_path,
+            'proof_url' => $this->proof_path ? Storage::disk('public')->url($this->proof_path) : null,
             'verified_by' => $this->verified_by,
             'rejection_reason' => $this->rejection_reason,
             'paid_at' => $this->paid_at,

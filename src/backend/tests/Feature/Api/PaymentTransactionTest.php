@@ -150,6 +150,47 @@ class PaymentTransactionTest extends TestCase
         $this->postJson('/api/public/payments/webhook/nope', [])->assertStatus(404);
     }
 
+    public function test_simulator_webhook_blocked_outside_local_testing()
+    {
+        $created = $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
+            'bill_id' => $this->bill->id,
+            'channel' => 'qris',
+        ])->json('data');
+
+        $originalEnv = app()->environment();
+        app()->detectEnvironment(fn () => 'production');
+
+        try {
+            $this->postJson('/api/public/payments/webhook/simulator', [
+                'reference' => $created['reference'],
+                'status' => 'paid',
+            ])->assertStatus(403);
+        } finally {
+            app()->detectEnvironment(fn () => $originalEnv);
+        }
+
+        $this->assertEquals('pending', PaymentTransaction::find($created['id'])->status);
+    }
+
+    public function test_proof_url_exposed_and_resolvable()
+    {
+        Storage::fake('public');
+
+        $created = $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
+            'bill_id' => $this->bill->id,
+            'channel' => 'manual_transfer',
+            'proof' => UploadedFile::fake()->image('bukti.jpg'),
+        ])->assertStatus(201)->assertJsonPath('data.status', 'awaiting_verification')->json('data');
+
+        $this->assertNotNull($created['proof_url']);
+        $this->assertStringContainsString($created['proof_path'], $created['proof_url']);
+        Storage::disk('public')->assertExists($created['proof_path']);
+
+        $this->actingAs($this->bendahara)->getJson("/api/payment-transactions/{$created['id']}")
+            ->assertStatus(200)
+            ->assertJsonPath('data.proof_url', $created['proof_url']);
+    }
+
     public function test_non_paid_webhook_after_settlement_is_noop()
     {
         $created = $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
