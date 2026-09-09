@@ -558,3 +558,52 @@ export interface ForumThreadFilter {
   sort?: string
   order?: 'asc' | 'desc'
 }
+
+export type TicketStatus = 'open' | 'in_progress' | 'resolved'
+
+export interface TicketAttachment {
+  id: number
+  url: string
+  created_at: string | null
+}
+
+export interface Ticket {
+  id: number
+  title: string
+  description: string
+  category: string | null
+  status: TicketStatus
+  reported_by: number
+  reporter_name: string | null
+  house_id: number | null
+  assigned_to: number | null
+  assignee_name: string | null
+  comments_count: number
+  attachments: TicketAttachment[]
+  created_at: string
+  updated_at: string
+}
+
+export interface TicketComment {
+  id: number
+  user_id: number
+  user_name: string | null
+  comment: string
+  created_at: string | null
+}
+
+export interface CreateTicketRequest {
+  title: string
+  description: string
+  category?: string
+  house_id?: number
+}
+
+export interface TicketFilter {
+  search?: string
+  status?: TicketStatus
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}

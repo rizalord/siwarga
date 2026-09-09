@@ -12,6 +12,7 @@ import {
   Mail,
   Vote,
   UserCog,
+  Wrench,
   Banknote,
   ShieldCheck,
   KeyRound,
@@ -91,6 +92,17 @@ export const sidebarData: SidebarData = {
           url: '/forum',
           icon: MessagesSquare,
           permission: 'forum.view',
+        },
+      ],
+    },
+    {
+      title: 'Layanan',
+      items: [
+        {
+          title: 'Tiket Pengaduan',
+          url: '/tickets',
+          icon: Wrench,
+          permission: 'tickets.view',
         },
       ],
     },
