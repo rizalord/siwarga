@@ -3060,7 +3060,7 @@ git commit -m "feat: add admin event CRUD and gallery UI"
 - [ ] **Step 1: Write the e2e spec**
 
 ```ts
-import { test, expect, apiToken, apiPost, uid, defaultAdmin } from './setup'
+import { test, expect, apiToken, apiPost, apiBaseURL, uid, defaultAdmin } from './setup'
 
 test('warga requests a booking and admin approves it', async ({
   wargaPage,
@@ -3110,12 +3110,12 @@ test('overlapping approve is rejected with a clear message', async ({ request })
   const firstId = (first as { id: number }).id
   const secondId = (second as { id: number }).id
 
-  const ok = await request.post(`http://localhost:8000/api/bookings/${firstId}/approve`, {
+  const ok = await request.post(`${apiBaseURL}/api/bookings/${firstId}/approve`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   expect(ok.ok()).toBeTruthy()
 
-  const clash = await request.post(`http://localhost:8000/api/bookings/${secondId}/approve`, {
+  const clash = await request.post(`${apiBaseURL}/api/bookings/${secondId}/approve`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   expect(clash.status()).toBe(422)
