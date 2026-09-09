@@ -60,6 +60,15 @@ export function useDeleteEvent() {
   })
 }
 
+export function useEventDocumentation(eventId: number | null) {
+  return useQuery({
+    queryKey: ['event-documentation', eventId],
+    queryFn: () => eventsAdminService.getDocumentation(eventId as number),
+    select: (res) => res.data.data,
+    enabled: eventId !== null,
+  })
+}
+
 export function useUploadDocumentation(id: number) {
   const qc = useQueryClient()
   return useMutation({
@@ -76,6 +85,7 @@ export function useUploadDocumentation(id: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-events'] })
       qc.invalidateQueries({ queryKey: ['admin-event', id] })
+      qc.invalidateQueries({ queryKey: ['event-documentation', id] })
       toast.success('Dokumentasi berhasil diunggah')
     },
     onError: () => toast.error('Gagal mengunggah dokumentasi'),
@@ -89,6 +99,8 @@ export function useDeleteDocumentation() {
       eventsAdminService.deleteDocumentation(docId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-events'] })
+      qc.invalidateQueries({ queryKey: ['admin-event'] })
+      qc.invalidateQueries({ queryKey: ['event-documentation'] })
       toast.success('Dokumentasi berhasil dihapus')
     },
     onError: () => toast.error('Gagal menghapus dokumentasi'),

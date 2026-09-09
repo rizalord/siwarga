@@ -80,4 +80,24 @@ class EventAdminTest extends TestCase
         $id = $event->documentation()->first()->id;
         $this->actingAs($this->admin)->deleteJson("/api/event-documentation/{$id}")->assertStatus(200);
     }
+
+    public function test_documentation_list_returns_uploaded_docs_in_order()
+    {
+        Storage::fake('public');
+        $event = Event::factory()->create();
+        $photo = fn () => UploadedFile::fake()->image('galeri.jpg', 800, 600)->size(500);
+
+        $this->actingAs($this->admin)->postJson("/api/events/{$event->id}/documentation", [
+            'photo' => $photo(), 'media_type' => 'foto', 'caption' => 'Satu',
+        ])->assertStatus(201);
+        $this->actingAs($this->admin)->postJson("/api/events/{$event->id}/documentation", [
+            'photo' => $photo(), 'media_type' => 'foto', 'caption' => 'Dua',
+        ])->assertStatus(201);
+
+        $this->actingAs($this->admin)->getJson("/api/events/{$event->id}/documentation")
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.caption', 'Satu')
+            ->assertJsonPath('data.1.caption', 'Dua');
+    }
 }

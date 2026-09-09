@@ -243,6 +243,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('events/{event}', [EventAdminController::class, 'show'])->middleware('can:events.manage');
     Route::put('events/{event}', [EventAdminController::class, 'update']);
     Route::delete('events/{event}', [EventAdminController::class, 'destroy']);
+    Route::get('events/{event}/documentation', [EventAdminController::class, 'documentation'])->middleware('can:events.manage');
     Route::post('events/{event}/documentation', [EventAdminController::class, 'storeDocumentation'])->middleware('can:events.manage');
     Route::delete('event-documentation/{documentation}', [EventAdminController::class, 'destroyDocumentation']);
 

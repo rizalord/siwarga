@@ -77,6 +77,13 @@ class EventAdminController extends Controller
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
+    public function documentation(Event $event)
+    {
+        return EventDocumentationResource::collection(
+            $event->documentation()->orderBy('id')->get()
+        );
+    }
+
     public function storeDocumentation(Request $request, Event $event)
     {
         $validated = $request->validate([

@@ -9,6 +9,7 @@ import {
   useCreateEvent,
   useDeleteDocumentation,
   useDeleteEvent,
+  useEventDocumentation,
   useUpdateEvent,
   useUploadDocumentation,
 } from '@/hooks/use-events-admin'
@@ -253,10 +254,22 @@ function EventFormDialog({
 function GallerySection({ eventId }: { eventId: number }) {
   const uploadDocumentation = useUploadDocumentation(eventId)
   const deleteDocumentation = useDeleteDocumentation()
-  const [docs, setDocs] = useState<EventDocumentation[]>([])
+  const {
+    data: serverDocs,
+    isLoading: docsLoading,
+    isError: docsError,
+    refetch: refetchDocs,
+  } = useEventDocumentation(eventId)
+  const [sessionDocs, setSessionDocs] = useState<EventDocumentation[]>([])
   const [caption, setCaption] = useState('')
 
-  const atLimit = docs.length >= MAX_DOCS
+  // Seed the grid from server history; session uploads are appended locally
+  // and de-duplicated once the history query refetches them.
+  const serverIds = new Set((serverDocs ?? []).map((d) => d.id))
+  const extraDocs = sessionDocs.filter((d) => !serverIds.has(d.id))
+  const allDocs = [...(serverDocs ?? []), ...extraDocs]
+  const usedCount = allDocs.length
+  const atLimit = usedCount >= MAX_DOCS
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -280,7 +293,7 @@ function GallerySection({ eventId }: { eventId: number }) {
       },
       {
         onSuccess: (res) => {
-          setDocs((prev) => [...prev, res.data.data])
+          setSessionDocs((prev) => [...prev, res.data.data])
           setCaption('')
         },
         onSettled: () => {
@@ -293,16 +306,33 @@ function GallerySection({ eventId }: { eventId: number }) {
   const handleDeleteDoc = (doc: EventDocumentation) => {
     if (deleteDocumentation.isPending) return
     deleteDocumentation.mutate(doc.id, {
-      onSuccess: () => setDocs((prev) => prev.filter((d) => d.id !== doc.id)),
+      onSuccess: () =>
+        setSessionDocs((prev) => prev.filter((d) => d.id !== doc.id)),
     })
   }
 
   return (
     <div className='space-y-3 border-t pt-4'>
-      <h3 className='text-sm font-semibold'>Galeri dokumentasi</h3>
-      {docs.length > 0 ? (
+      <div className='flex items-center justify-between gap-2'>
+        <h3 className='text-sm font-semibold'>Galeri dokumentasi</h3>
+        <span className='text-xs text-muted-foreground'>
+          {usedCount}/{MAX_DOCS} terpakai
+        </span>
+      </div>
+      {docsLoading ? (
+        <p className='text-sm text-muted-foreground'>Memuat dokumentasi...</p>
+      ) : docsError ? (
+        <div className='flex items-center gap-2'>
+          <p className='text-sm text-muted-foreground'>
+            Gagal memuat dokumentasi.
+          </p>
+          <Button variant='outline' size='sm' onClick={() => refetchDocs()}>
+            Coba lagi
+          </Button>
+        </div>
+      ) : allDocs.length > 0 ? (
         <div className='grid grid-cols-2 gap-2 sm:grid-cols-3'>
-          {docs.map((doc) => (
+          {allDocs.map((doc) => (
             <figure key={doc.id} className='overflow-hidden rounded-md border'>
               <img
                 src={doc.url}
@@ -330,9 +360,7 @@ function GallerySection({ eventId }: { eventId: number }) {
           ))}
         </div>
       ) : (
-        <p className='text-sm text-muted-foreground'>
-          Belum ada dokumentasi yang diunggah di sesi ini.
-        </p>
+        <p className='text-sm text-muted-foreground'>Belum ada dokumentasi.</p>
       )}
 
       <div className='space-y-2'>

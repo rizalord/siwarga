@@ -35,4 +35,8 @@ export const eventsAdminService = {
   },
   deleteDocumentation: (docId: number) =>
     api.delete<ApiResponse<null>>(`/api/event-documentation/${docId}`),
+  getDocumentation: (eventId: number) =>
+    api.get<ApiResponse<EventDocumentation[]>>(
+      `/api/events/${eventId}/documentation`
+    ),
 }
