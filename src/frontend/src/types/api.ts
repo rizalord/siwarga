@@ -929,7 +929,7 @@ export interface PaymentTransaction {
   payer_name: string | null
   provider: string
   channel: PaymentChannel
-  amount: string
+  amount: number
   status: PaymentTrxStatus
   reference: string
   pay_code: string | null

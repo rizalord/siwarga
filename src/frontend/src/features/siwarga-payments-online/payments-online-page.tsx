@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import type { PaymentChannel, PaymentTransaction } from '@/types/api'
 import { QRCodeSVG } from 'qrcode.react'
+import { toast } from 'sonner'
 import { useBills } from '@/hooks/use-bills'
 import {
   useCreateTransaction,
@@ -73,12 +74,12 @@ const CHANNEL_LABELS: Record<PaymentChannel, string> = {
   manual_transfer: 'Transfer Manual',
 }
 
-function formatRupiah(value: string | number): string {
+function formatRupiah(value: number): string {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-  }).format(Number(value))
+  }).format(value)
 }
 
 function formatDateTime(value: string | null): string {
@@ -92,11 +93,58 @@ function formatDateTime(value: string | null): string {
   })
 }
 
+// Backend `proof` rule is `image|max:2048` — mirror it client-side so
+// invalid files are rejected before submit instead of failing server-side.
+const MAX_PROOF_SIZE = 2_048_000
+
+function handleProofFileChange(
+  e: React.ChangeEvent<HTMLInputElement>,
+  setProof: (file: File | null) => void
+) {
+  const file = e.target.files?.[0] ?? null
+  if (!file) {
+    setProof(null)
+    return
+  }
+  if (!file.type.startsWith('image/') || file.size > MAX_PROOF_SIZE) {
+    toast.error('File harus gambar JPG/PNG maksimal 2MB')
+    e.target.value = ''
+    setProof(null)
+    return
+  }
+  setProof(file)
+}
+
+// Seconds remaining until expiry, ticking every second. Returns null when
+// there is no expiry. Interval is cleared on unmount or when inactive.
+function useCountdown(expiresAt: string | null, active: boolean) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!active || !expiresAt) return
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [active, expiresAt])
+  if (!expiresAt) return null
+  return Math.max(
+    0,
+    Math.floor((new Date(expiresAt).getTime() - now) / 1000)
+  )
+}
+
+function formatCountdown(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
 function CreateForm({ onCreated }: { onCreated: (id: number) => void }) {
   const createTransaction = useCreateTransaction()
   const { data: billsData, isLoading: billsLoading } = useBills({
     status: 'belum_lunas',
-    per_page: 100,
+    // Daftar tagihan dibatasi server berdasarkan peran (warga hanya
+    // menerima tagihannya sendiri), jadi 200 sekadar menghindari
+    // pemotongan pada RT besar.
+    per_page: 200,
   })
   const [billId, setBillId] = useState('')
   const [channel, setChannel] = useState<PaymentChannel>('qris')
@@ -154,9 +202,7 @@ function CreateForm({ onCreated }: { onCreated: (id: number) => void }) {
                   unpaidBills.map((bill) => (
                     <SelectItem key={bill.id} value={String(bill.id)}>
                       {bill.due_type.name} — {bill.house.house_number} —{' '}
-                      {formatRupiah(
-                        Number(bill.amount_due) - Number(bill.total_paid)
-                      )}
+                      {formatRupiah(bill.amount_due - bill.total_paid)}
                     </SelectItem>
                   ))
                 )}
@@ -203,7 +249,7 @@ function CreateForm({ onCreated }: { onCreated: (id: number) => void }) {
               id='trx-proof'
               type='file'
               accept='image/*'
-              onChange={(e) => setProof(e.target.files?.[0] ?? null)}
+              onChange={(e) => handleProofFileChange(e, setProof)}
             />
             {channel === 'manual_transfer' && (
               <p className='text-sm text-muted-foreground'>
@@ -231,6 +277,10 @@ function TransactionDetail({
   const uploadProof = useUploadProof()
   const simulatePay = useSimulatePay()
   const [proof, setProof] = useState<File | null>(null)
+  const remaining = useCountdown(
+    trx?.expires_at ?? null,
+    trx?.status === 'pending' || trx?.status === 'awaiting_verification'
+  )
 
   if (isLoading || !trx) {
     return (
@@ -274,7 +324,18 @@ function TransactionDetail({
               Jumlah:{' '}
               <span className='font-semibold'>{formatRupiah(trx.amount)}</span>
             </p>
-            <p>Berlaku hingga {formatDateTime(trx.expires_at)}</p>
+            {remaining !== null && (
+              <p className='font-medium'>
+                {remaining > 0 ? (
+                  <>Sisa waktu {formatCountdown(remaining)}</>
+                ) : (
+                  <>Kedaluarsa</>
+                )}
+              </p>
+            )}
+            <p className='text-muted-foreground'>
+              Berlaku hingga {formatDateTime(trx.expires_at)}
+            </p>
             <p>
               Status:{' '}
               <Badge variant={trx.status === 'paid' ? 'default' : 'secondary'}>
@@ -291,7 +352,7 @@ function TransactionDetail({
                 id='trx-proof-retry'
                 type='file'
                 accept='image/*'
-                onChange={(e) => setProof(e.target.files?.[0] ?? null)}
+                onChange={(e) => handleProofFileChange(e, setProof)}
               />
             </div>
             <Button
