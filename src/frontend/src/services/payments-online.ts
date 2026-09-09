@@ -26,9 +26,14 @@ export const paymentsOnlineService = {
     form.append('channel', input.channel)
     if (input.provider) form.append('provider', input.provider)
     if (input.proof) form.append('proof', input.proof)
+    // Drop the instance JSON Content-Type so axios sends raw FormData and
+    // the browser sets `multipart/form-data; boundary=...` itself (same
+    // pattern as residents/pages photo uploads). Otherwise axios
+    // JSON-serializes the FormData and the File never reaches the server.
     return api.post<ApiResponse<PaymentTransaction>>(
       '/api/payment-transactions',
-      form
+      form,
+      { headers: { 'Content-Type': undefined } }
     )
   },
   uploadProof: (id: number, proof: File) => {
@@ -36,7 +41,8 @@ export const paymentsOnlineService = {
     form.append('proof', proof)
     return api.post<ApiResponse<PaymentTransaction>>(
       `/api/payment-transactions/${id}/proof`,
-      form
+      form,
+      { headers: { 'Content-Type': undefined } }
     )
   },
   verify: (id: number, approve: boolean, reason?: string) =>
