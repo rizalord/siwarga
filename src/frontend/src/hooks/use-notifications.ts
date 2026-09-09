@@ -27,6 +27,7 @@ export function useMarkNotificationRead() {
     mutationFn: (id: string) => notificationsService.markRead(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] })
+      qc.invalidateQueries({ queryKey: ['notifications-unread'] })
     },
     onError: () => toast.error('Gagal menandai notifikasi'),
   })
@@ -38,6 +39,7 @@ export function useMarkAllNotificationsRead() {
     mutationFn: () => notificationsService.markAllRead(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] })
+      qc.invalidateQueries({ queryKey: ['notifications-unread'] })
       toast.success('Semua notifikasi ditandai dibaca')
     },
     onError: () => toast.error('Gagal menandai notifikasi'),
