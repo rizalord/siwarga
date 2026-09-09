@@ -3,12 +3,16 @@ import { guestLogsService } from '@/services/guest-logs'
 import type { GuestLogFilter, RegisterGuestInput } from '@/types/api'
 import { toast } from 'sonner'
 
-export function useGuestLogs(params?: GuestLogFilter) {
+export function useGuestLogs(
+  params?: GuestLogFilter,
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: ['guest-logs', params],
     queryFn: () => guestLogsService.getAll(params),
     select: (res) => res.data,
     placeholderData: (prev) => prev,
+    enabled: options?.enabled ?? true,
   })
 }
 

@@ -3,12 +3,16 @@ import { patrolsService } from '@/services/patrols'
 import type { PatrolFilter, PatrolInput } from '@/types/api'
 import { toast } from 'sonner'
 
-export function usePatrols(params?: PatrolFilter) {
+export function usePatrols(
+  params?: PatrolFilter,
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: ['patrols', params],
     queryFn: () => patrolsService.getAll(params),
     select: (res) => res.data,
     placeholderData: (prev) => prev,
+    enabled: options?.enabled ?? true,
   })
 }
 

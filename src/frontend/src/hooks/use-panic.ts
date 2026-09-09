@@ -3,12 +3,16 @@ import { panicService, emergencyContactsService } from '@/services/panic'
 import type { PanicFilter } from '@/types/api'
 import { toast } from 'sonner'
 
-export function usePanicAlerts(params?: PanicFilter) {
+export function usePanicAlerts(
+  params?: PanicFilter,
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: ['panic-alerts', params],
     queryFn: () => panicService.getAll(params),
     select: (res) => res.data,
     placeholderData: (prev) => prev,
+    enabled: options?.enabled ?? true,
     refetchInterval: (query) =>
       query.state.data?.data.data.some((a) => a.status === 'active')
         ? 15000

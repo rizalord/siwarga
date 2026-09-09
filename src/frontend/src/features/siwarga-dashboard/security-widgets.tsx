@@ -30,18 +30,27 @@ export function SecurityWidgets() {
   const canHandle = useHasPermission('panic-alerts.handle')
   const canGuest = useHasPermission('guest-logs.view')
   const canPatrol = useHasPermission('patrol-schedules.view')
-  const { data: panic, isLoading: panicLoading } = usePanicAlerts({
-    status: 'active',
-    per_page: 1,
-  })
-  const { data: guests, isLoading: guestsLoading } = useGuestLogs({
-    date: todayISO(),
-    per_page: 1,
-  })
-  const { data: patrols, isLoading: patrolsLoading } = usePatrols({
-    from: todayISO(),
-    per_page: 1,
-  })
+  const { data: panic, isLoading: panicLoading } = usePanicAlerts(
+    {
+      status: 'active',
+      per_page: 1,
+    },
+    { enabled: canHandle }
+  )
+  const { data: guests, isLoading: guestsLoading } = useGuestLogs(
+    {
+      date: todayISO(),
+      per_page: 1,
+    },
+    { enabled: canGuest }
+  )
+  const { data: patrols, isLoading: patrolsLoading } = usePatrols(
+    {
+      from: todayISO(),
+      per_page: 1,
+    },
+    { enabled: canPatrol }
+  )
 
   const nextPatrol = patrols?.data[0]
 
