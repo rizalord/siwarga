@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ContactMessageAdminController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DueTypeController;
+use App\Http\Controllers\Api\EventAdminController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\FacilityController;
@@ -235,6 +236,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('asset-loans/{loan}/approve', [AssetLoanController::class, 'approve']);
     Route::post('asset-loans/{loan}/reject', [AssetLoanController::class, 'reject']);
     Route::post('asset-loans/{loan}/return', [AssetLoanController::class, 'markReturned']);
+
+    // Events (admin)
+    Route::get('events', [EventAdminController::class, 'index'])->middleware('can:events.manage');
+    Route::post('events', [EventAdminController::class, 'store'])->middleware('can:events.manage');
+    Route::get('events/{event}', [EventAdminController::class, 'show'])->middleware('can:events.manage');
+    Route::put('events/{event}', [EventAdminController::class, 'update']);
+    Route::delete('events/{event}', [EventAdminController::class, 'destroy']);
+    Route::post('events/{event}/documentation', [EventAdminController::class, 'storeDocumentation'])->middleware('can:events.manage');
+    Route::delete('event-documentation/{documentation}', [EventAdminController::class, 'destroyDocumentation']);
 
     // Notifications (own only, no permission gate beyond auth)
     Route::get('notifications', [NotificationController::class, 'index']);

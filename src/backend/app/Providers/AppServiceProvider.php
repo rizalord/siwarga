@@ -6,6 +6,7 @@ use App\Models\Announcement;
 use App\Models\Asset;
 use App\Models\Bill;
 use App\Models\DueType;
+use App\Models\Event;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Facility;
@@ -197,7 +198,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerActivityLogObservers(): void
     {
-        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class, Announcement::class, Poll::class, ForumThread::class, Facility::class, Asset::class] as $model) {
+        foreach ([Resident::class, House::class, DueType::class, Bill::class, Payment::class, Expense::class, ExpenseCategory::class, User::class, Role::class, Permission::class, Announcement::class, Poll::class, ForumThread::class, Facility::class, Asset::class, Event::class] as $model) {
             $model::observe(ActivityLogObserver::class);
         }
     }
