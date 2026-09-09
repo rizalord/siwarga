@@ -641,9 +641,12 @@ After the warga sync block, add:
 
 ```php
         // Satpam handles security operations, no finance or resident data.
+        // Note: satpam also holds guest-logs.register + panic-alerts.report —
+        // walk-in guest input and own emergency reports go through the same
+        // create endpoints as warga (ruling 2026-09-09, Task 2 pre-review).
         $satpam->permissions()->sync(Permission::whereIn('name', [
-            'guest-logs.view', 'guest-logs.manage',
-            'panic-alerts.handle',
+            'guest-logs.view', 'guest-logs.manage', 'guest-logs.register',
+            'panic-alerts.report', 'panic-alerts.handle',
             'patrol-schedules.view',
         ])->pluck('id'));
 ```
@@ -1630,7 +1633,8 @@ Routes (inside `auth:sanctum` group, after guest-logs block):
     Route::post('panic-alerts/{panicAlert}/cancel', [PanicAlertController::class, 'cancel']);
 ```
 
-Note: `index` uses `can:panic-alerts.report` (all three roles have report or handle; satpam has handle but NOT report — `can:panic-alerts.report` would 403 satpam on index!). Fix: satpam needs index access. Options: give satpam `panic-alerts.report` too, or use `can:panic-alerts.handle` with fallback. Simplest correct: add `'panic-alerts.report'` to the satpam sync list in RoleSeeder (reporting your own emergency is harmless and keeps one gate for list/show). Do that in this task: modify `RoleSeeder` satpam list to include `'panic-alerts.report'`. Update Task 1's Step 7 accordingly — implementer of Task 3 must add it here if Task 1 didn't.
+Note: satpam already holds `panic-alerts.report` from the Task 1 seeder (same ruling as
+guest-logs.register) — no seeder change needed in this task.
 
 Limiter in `AppServiceProvider`, next to the existing `suggestions` limiter:
 
