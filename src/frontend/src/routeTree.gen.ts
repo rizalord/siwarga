@@ -17,6 +17,7 @@ import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as VerifikasiKeluargaTokenRouteImport } from './routes/verifikasi-keluarga.$token'
 import { Route as AuthenticatedActivityLogsIndexRouteImport } from './routes/_authenticated/activity-logs/index'
 import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_authenticated/announcements/index'
 import { Route as AuthenticatedAssetsIndexRouteImport } from './routes/_authenticated/assets/index'
@@ -24,10 +25,12 @@ import { Route as AuthenticatedBillsIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedBookingsIndexRouteImport } from './routes/_authenticated/bookings/index'
 import { Route as AuthenticatedContactMessagesIndexRouteImport } from './routes/_authenticated/contact-messages/index'
 import { Route as AuthenticatedDueTypesIndexRouteImport } from './routes/_authenticated/due-types/index'
+import { Route as AuthenticatedEmergencyContactsIndexRouteImport } from './routes/_authenticated/emergency-contacts/index'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
 import { Route as AuthenticatedExpenseCategoriesIndexRouteImport } from './routes/_authenticated/expense-categories/index'
 import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authenticated/expenses/index'
+import { Route as AuthenticatedExportsIndexRouteImport } from './routes/_authenticated/exports/index'
 import { Route as AuthenticatedFacilitiesIndexRouteImport } from './routes/_authenticated/facilities/index'
 import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenticated/family/index'
 import { Route as AuthenticatedForumIndexRouteImport } from './routes/_authenticated/forum/index'
@@ -39,6 +42,7 @@ import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authenticated/pages/index'
 import { Route as AuthenticatedPanicIndexRouteImport } from './routes/_authenticated/panic/index'
 import { Route as AuthenticatedPatrolsIndexRouteImport } from './routes/_authenticated/patrols/index'
+import { Route as AuthenticatedPaymentsOnlineIndexRouteImport } from './routes/_authenticated/payments-online/index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
 import { Route as AuthenticatedPengumumanIndexRouteImport } from './routes/_authenticated/pengumuman/index'
 import { Route as AuthenticatedPermissionsIndexRouteImport } from './routes/_authenticated/permissions/index'
@@ -90,6 +94,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const VerifikasiKeluargaTokenRoute = VerifikasiKeluargaTokenRouteImport.update({
+  id: '/verifikasi-keluarga/$token',
+  path: '/verifikasi-keluarga/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedActivityLogsIndexRoute =
   AuthenticatedActivityLogsIndexRouteImport.update({
     id: '/activity-logs/',
@@ -131,6 +140,12 @@ const AuthenticatedDueTypesIndexRoute =
     path: '/due-types/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedEmergencyContactsIndexRoute =
+  AuthenticatedEmergencyContactsIndexRouteImport.update({
+    id: '/emergency-contacts/',
+    path: '/emergency-contacts/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
@@ -153,6 +168,12 @@ const AuthenticatedExpensesIndexRoute =
   AuthenticatedExpensesIndexRouteImport.update({
     id: '/expenses/',
     path: '/expenses/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedExportsIndexRoute =
+  AuthenticatedExportsIndexRouteImport.update({
+    id: '/exports/',
+    path: '/exports/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedFacilitiesIndexRoute =
@@ -215,6 +236,12 @@ const AuthenticatedPatrolsIndexRoute =
   AuthenticatedPatrolsIndexRouteImport.update({
     id: '/patrols/',
     path: '/patrols/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPaymentsOnlineIndexRoute =
+  AuthenticatedPaymentsOnlineIndexRouteImport.update({
+    id: '/payments-online/',
+    path: '/payments-online/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPaymentsIndexRoute =
@@ -289,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/verifikasi-keluarga/$token': typeof VerifikasiKeluargaTokenRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/forum/$threadId': typeof AuthenticatedForumThreadIdRoute
   '/houses/$id': typeof AuthenticatedHousesIdRoute
@@ -300,9 +328,11 @@ export interface FileRoutesByFullPath {
   '/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
+  '/emergency-contacts/': typeof AuthenticatedEmergencyContactsIndexRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
   '/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
+  '/exports/': typeof AuthenticatedExportsIndexRoute
   '/facilities/': typeof AuthenticatedFacilitiesIndexRoute
   '/family/': typeof AuthenticatedFamilyIndexRoute
   '/forum/': typeof AuthenticatedForumIndexRoute
@@ -312,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/pages/': typeof AuthenticatedPagesIndexRoute
   '/panic/': typeof AuthenticatedPanicIndexRoute
   '/patrols/': typeof AuthenticatedPatrolsIndexRoute
+  '/payments-online/': typeof AuthenticatedPaymentsOnlineIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/permissions/': typeof AuthenticatedPermissionsIndexRoute
@@ -330,6 +361,7 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/verifikasi-keluarga/$token': typeof VerifikasiKeluargaTokenRoute
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/forum/$threadId': typeof AuthenticatedForumThreadIdRoute
@@ -342,9 +374,11 @@ export interface FileRoutesByTo {
   '/bookings': typeof AuthenticatedBookingsIndexRoute
   '/contact-messages': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
+  '/emergency-contacts': typeof AuthenticatedEmergencyContactsIndexRoute
   '/events': typeof AuthenticatedEventsIndexRoute
   '/expense-categories': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses': typeof AuthenticatedExpensesIndexRoute
+  '/exports': typeof AuthenticatedExportsIndexRoute
   '/facilities': typeof AuthenticatedFacilitiesIndexRoute
   '/family': typeof AuthenticatedFamilyIndexRoute
   '/forum': typeof AuthenticatedForumIndexRoute
@@ -354,6 +388,7 @@ export interface FileRoutesByTo {
   '/pages': typeof AuthenticatedPagesIndexRoute
   '/panic': typeof AuthenticatedPanicIndexRoute
   '/patrols': typeof AuthenticatedPatrolsIndexRoute
+  '/payments-online': typeof AuthenticatedPaymentsOnlineIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/pengumuman': typeof AuthenticatedPengumumanIndexRoute
   '/permissions': typeof AuthenticatedPermissionsIndexRoute
@@ -374,6 +409,7 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
+  '/verifikasi-keluarga/$token': typeof VerifikasiKeluargaTokenRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/forum/$threadId': typeof AuthenticatedForumThreadIdRoute
@@ -386,9 +422,11 @@ export interface FileRoutesById {
   '/_authenticated/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/_authenticated/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
+  '/_authenticated/emergency-contacts/': typeof AuthenticatedEmergencyContactsIndexRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
+  '/_authenticated/exports/': typeof AuthenticatedExportsIndexRoute
   '/_authenticated/facilities/': typeof AuthenticatedFacilitiesIndexRoute
   '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
   '/_authenticated/forum/': typeof AuthenticatedForumIndexRoute
@@ -398,6 +436,7 @@ export interface FileRoutesById {
   '/_authenticated/pages/': typeof AuthenticatedPagesIndexRoute
   '/_authenticated/panic/': typeof AuthenticatedPanicIndexRoute
   '/_authenticated/patrols/': typeof AuthenticatedPatrolsIndexRoute
+  '/_authenticated/payments-online/': typeof AuthenticatedPaymentsOnlineIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/_authenticated/permissions/': typeof AuthenticatedPermissionsIndexRoute
@@ -419,6 +458,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/verifikasi-keluarga/$token'
     | '/errors/$error'
     | '/forum/$threadId'
     | '/houses/$id'
@@ -430,9 +470,11 @@ export interface FileRouteTypes {
     | '/bookings/'
     | '/contact-messages/'
     | '/due-types/'
+    | '/emergency-contacts/'
     | '/events/'
     | '/expense-categories/'
     | '/expenses/'
+    | '/exports/'
     | '/facilities/'
     | '/family/'
     | '/forum/'
@@ -442,6 +484,7 @@ export interface FileRouteTypes {
     | '/pages/'
     | '/panic/'
     | '/patrols/'
+    | '/payments-online/'
     | '/payments/'
     | '/pengumuman/'
     | '/permissions/'
@@ -460,6 +503,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/verifikasi-keluarga/$token'
     | '/'
     | '/errors/$error'
     | '/forum/$threadId'
@@ -472,9 +516,11 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/contact-messages'
     | '/due-types'
+    | '/emergency-contacts'
     | '/events'
     | '/expense-categories'
     | '/expenses'
+    | '/exports'
     | '/facilities'
     | '/family'
     | '/forum'
@@ -484,6 +530,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/panic'
     | '/patrols'
+    | '/payments-online'
     | '/payments'
     | '/pengumuman'
     | '/permissions'
@@ -503,6 +550,7 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
+    | '/verifikasi-keluarga/$token'
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
     | '/_authenticated/forum/$threadId'
@@ -515,9 +563,11 @@ export interface FileRouteTypes {
     | '/_authenticated/bookings/'
     | '/_authenticated/contact-messages/'
     | '/_authenticated/due-types/'
+    | '/_authenticated/emergency-contacts/'
     | '/_authenticated/events/'
     | '/_authenticated/expense-categories/'
     | '/_authenticated/expenses/'
+    | '/_authenticated/exports/'
     | '/_authenticated/facilities/'
     | '/_authenticated/family/'
     | '/_authenticated/forum/'
@@ -527,6 +577,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pages/'
     | '/_authenticated/panic/'
     | '/_authenticated/patrols/'
+    | '/_authenticated/payments-online/'
     | '/_authenticated/payments/'
     | '/_authenticated/pengumuman/'
     | '/_authenticated/permissions/'
@@ -547,6 +598,7 @@ export interface RootRouteChildren {
   errors404Route: typeof errors404Route
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
+  VerifikasiKeluargaTokenRoute: typeof VerifikasiKeluargaTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -607,6 +659,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/verifikasi-keluarga/$token': {
+      id: '/verifikasi-keluarga/$token'
+      path: '/verifikasi-keluarga/$token'
+      fullPath: '/verifikasi-keluarga/$token'
+      preLoaderRoute: typeof VerifikasiKeluargaTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/activity-logs/': {
       id: '/_authenticated/activity-logs/'
       path: '/activity-logs'
@@ -656,6 +715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDueTypesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/emergency-contacts/': {
+      id: '/_authenticated/emergency-contacts/'
+      path: '/emergency-contacts'
+      fullPath: '/emergency-contacts/'
+      preLoaderRoute: typeof AuthenticatedEmergencyContactsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -682,6 +748,13 @@ declare module '@tanstack/react-router' {
       path: '/expenses'
       fullPath: '/expenses/'
       preLoaderRoute: typeof AuthenticatedExpensesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/exports/': {
+      id: '/_authenticated/exports/'
+      path: '/exports'
+      fullPath: '/exports/'
+      preLoaderRoute: typeof AuthenticatedExportsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/facilities/': {
@@ -759,6 +832,13 @@ declare module '@tanstack/react-router' {
       path: '/patrols'
       fullPath: '/patrols/'
       preLoaderRoute: typeof AuthenticatedPatrolsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payments-online/': {
+      id: '/_authenticated/payments-online/'
+      path: '/payments-online'
+      fullPath: '/payments-online/'
+      preLoaderRoute: typeof AuthenticatedPaymentsOnlineIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/payments/': {
@@ -854,9 +934,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookingsIndexRoute: typeof AuthenticatedBookingsIndexRoute
   AuthenticatedContactMessagesIndexRoute: typeof AuthenticatedContactMessagesIndexRoute
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
+  AuthenticatedEmergencyContactsIndexRoute: typeof AuthenticatedEmergencyContactsIndexRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
   AuthenticatedExpenseCategoriesIndexRoute: typeof AuthenticatedExpenseCategoriesIndexRoute
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
+  AuthenticatedExportsIndexRoute: typeof AuthenticatedExportsIndexRoute
   AuthenticatedFacilitiesIndexRoute: typeof AuthenticatedFacilitiesIndexRoute
   AuthenticatedFamilyIndexRoute: typeof AuthenticatedFamilyIndexRoute
   AuthenticatedForumIndexRoute: typeof AuthenticatedForumIndexRoute
@@ -866,6 +948,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPagesIndexRoute: typeof AuthenticatedPagesIndexRoute
   AuthenticatedPanicIndexRoute: typeof AuthenticatedPanicIndexRoute
   AuthenticatedPatrolsIndexRoute: typeof AuthenticatedPatrolsIndexRoute
+  AuthenticatedPaymentsOnlineIndexRoute: typeof AuthenticatedPaymentsOnlineIndexRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
   AuthenticatedPengumumanIndexRoute: typeof AuthenticatedPengumumanIndexRoute
   AuthenticatedPermissionsIndexRoute: typeof AuthenticatedPermissionsIndexRoute
@@ -892,10 +975,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedContactMessagesIndexRoute:
     AuthenticatedContactMessagesIndexRoute,
   AuthenticatedDueTypesIndexRoute: AuthenticatedDueTypesIndexRoute,
+  AuthenticatedEmergencyContactsIndexRoute:
+    AuthenticatedEmergencyContactsIndexRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
   AuthenticatedExpenseCategoriesIndexRoute:
     AuthenticatedExpenseCategoriesIndexRoute,
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,
+  AuthenticatedExportsIndexRoute: AuthenticatedExportsIndexRoute,
   AuthenticatedFacilitiesIndexRoute: AuthenticatedFacilitiesIndexRoute,
   AuthenticatedFamilyIndexRoute: AuthenticatedFamilyIndexRoute,
   AuthenticatedForumIndexRoute: AuthenticatedForumIndexRoute,
@@ -905,6 +991,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPagesIndexRoute: AuthenticatedPagesIndexRoute,
   AuthenticatedPanicIndexRoute: AuthenticatedPanicIndexRoute,
   AuthenticatedPatrolsIndexRoute: AuthenticatedPatrolsIndexRoute,
+  AuthenticatedPaymentsOnlineIndexRoute: AuthenticatedPaymentsOnlineIndexRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
   AuthenticatedPengumumanIndexRoute: AuthenticatedPengumumanIndexRoute,
   AuthenticatedPermissionsIndexRoute: AuthenticatedPermissionsIndexRoute,
@@ -928,6 +1015,7 @@ const rootRouteChildren: RootRouteChildren = {
   errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
+  VerifikasiKeluargaTokenRoute: VerifikasiKeluargaTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
