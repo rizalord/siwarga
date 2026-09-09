@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\PublicPageController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WargaAnnouncementController;
 use Illuminate\Support\Facades\Route;
@@ -192,6 +193,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('forum-threads/{thread}/posts', [ForumPostController::class, 'index'])->middleware('can:forum.view');
     Route::post('forum-threads/{thread}/posts', [ForumPostController::class, 'store'])->middleware('can:forum.view');
     Route::delete('forum-posts/{post}', [ForumPostController::class, 'destroy']);
+
+    // Tickets
+    Route::get('tickets', [TicketController::class, 'index'])->middleware('can:tickets.view');
+    Route::post('tickets', [TicketController::class, 'store'])->middleware('can:tickets.create');
+    Route::get('tickets/{ticket}', [TicketController::class, 'show'])->middleware('can:tickets.view');
+    Route::post('tickets/{ticket}/status', [TicketController::class, 'changeStatus'])->middleware('can:tickets.manage-status');
+    Route::post('tickets/{ticket}/assign', [TicketController::class, 'assign'])->middleware('can:tickets.assign');
+    Route::get('tickets/{ticket}/comments', [TicketController::class, 'comments'])->middleware('can:tickets.view');
+    Route::post('tickets/{ticket}/comments', [TicketController::class, 'storeComment'])->middleware('can:tickets.view');
+    Route::post('tickets/{ticket}/attachments', [TicketController::class, 'storeAttachment'])->middleware('can:tickets.view');
 });
 
 Route::prefix('public')->group(function () {
