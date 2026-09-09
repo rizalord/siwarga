@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\GuestLogController;
 use App\Http\Controllers\Api\HouseController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PageController;
+use App\Http\Controllers\Api\PanicAlertController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PollController;
@@ -264,6 +265,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('guest-logs/{guestLog}', [GuestLogController::class, 'show'])->middleware('can:guest-logs.view');
     Route::post('guest-logs/{guestLog}/check-in', [GuestLogController::class, 'checkIn']);
     Route::post('guest-logs/{guestLog}/check-out', [GuestLogController::class, 'checkOut']);
+
+    // Security — panic alerts (Fase 4)
+    Route::get('panic-alerts', [PanicAlertController::class, 'index'])->middleware('can:panic-alerts.report');
+    Route::post('panic-alerts', [PanicAlertController::class, 'store'])->middleware(['can:panic-alerts.report', 'throttle:panic']);
+    Route::get('panic-alerts/{panicAlert}', [PanicAlertController::class, 'show'])->middleware('can:panic-alerts.report');
+    Route::post('panic-alerts/{panicAlert}/handle', [PanicAlertController::class, 'handle']);
+    Route::post('panic-alerts/{panicAlert}/resolve', [PanicAlertController::class, 'resolve']);
+    Route::post('panic-alerts/{panicAlert}/cancel', [PanicAlertController::class, 'cancel']);
 });
 
 Route::prefix('public')->group(function () {
