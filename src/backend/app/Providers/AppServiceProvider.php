@@ -40,6 +40,7 @@ use App\Policies\PagePolicy;
 use App\Policies\PanicAlertPolicy;
 use App\Policies\PatrolSchedulePolicy;
 use App\Policies\PaymentPolicy;
+use App\Policies\PaymentTransactionPolicy;
 use App\Policies\PollPolicy;
 use App\Policies\ResidentPolicy;
 use App\Policies\SuggestionPolicy;
@@ -190,6 +191,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('payments.view', [PaymentPolicy::class, 'viewAny']);
         Gate::define('payments.create', [PaymentPolicy::class, 'create']);
         Gate::define('payments.trash', [PaymentPolicy::class, 'restore']);
+        Gate::define('payments.online', [PaymentTransactionPolicy::class, 'create']);
+        Gate::define('payments.verify', fn (User $user) => $user->hasPermission('payments.verify'));
 
         // Expenses
         Gate::define('expenses.view', [ExpensePolicy::class, 'viewAny']);

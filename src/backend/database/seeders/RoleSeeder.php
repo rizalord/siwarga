@@ -37,7 +37,7 @@ class RoleSeeder extends Seeder
         $bendahara->permissions()->sync(Permission::whereIn('name', [
             'houses.view',
             'bills.view', 'bills.view.all', 'bills.generate', 'bills.trash',
-            'payments.view', 'payments.view.all', 'payments.create', 'payments.trash',
+            'payments.view', 'payments.view.all', 'payments.create', 'payments.trash', 'payments.verify',
             'expenses.view', 'expenses.create', 'expenses.edit', 'expenses.delete', 'expenses.trash',
             'expense-categories.view', 'expense-categories.manage', 'expense-categories.trash',
             'reports.view',
@@ -47,7 +47,7 @@ class RoleSeeder extends Seeder
 
         // Warga can only view bills/payments within their own resident scope.
         $warga->permissions()->sync(Permission::whereIn('name', [
-            'bills.view', 'bills.view.own', 'payments.view', 'payments.view.own',
+            'bills.view', 'bills.view.own', 'payments.view', 'payments.view.own', 'payments.online',
             'announcements.view',
             'polls.view', 'polls.vote', 'forum.view',
             'tickets.view', 'tickets.create', 'suggestions.create',

@@ -82,6 +82,8 @@ class Permission extends Model
         'payments.view.own' => 'Lihat pembayaran sendiri',
         'payments.create' => 'Catat pembayaran',
         'payments.trash' => 'Kelola data pembayaran terhapus',
+        'payments.online' => 'Bayar tagihan secara online',
+        'payments.verify' => 'Verifikasi bukti pembayaran manual',
         'expenses.view' => 'Lihat pengeluaran',
         'expenses.create' => 'Catat pengeluaran',
         'expenses.edit' => 'Ubah pengeluaran',
