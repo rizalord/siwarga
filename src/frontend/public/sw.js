@@ -1,4 +1,4 @@
-const CACHE = 'siwarga-shell-v1'
+const CACHE = 'siwarga-shell-v2'
 const SHELL = ['/', '/offline.html', '/manifest.webmanifest']
 
 self.addEventListener('install', (event) => {

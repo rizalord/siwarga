@@ -34,6 +34,7 @@ export function useCreateTransaction() {
       bill_id: number
       channel: PaymentChannel
       provider?: string
+      bank_code?: string
       proof?: File
     }) => paymentsOnlineService.create(input),
     onSuccess: () => {

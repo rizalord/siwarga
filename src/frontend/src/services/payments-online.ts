@@ -19,12 +19,14 @@ export const paymentsOnlineService = {
     bill_id: number
     channel: PaymentChannel
     provider?: string
+    bank_code?: string
     proof?: File
   }) => {
     const form = new FormData()
     form.append('bill_id', String(input.bill_id))
     form.append('channel', input.channel)
     if (input.provider) form.append('provider', input.provider)
+    if (input.bank_code) form.append('bank_code', input.bank_code)
     if (input.proof) form.append('proof', input.proof)
     // Drop the instance JSON Content-Type so axios sends raw FormData and
     // the browser sets `multipart/form-data; boundary=...` itself (same

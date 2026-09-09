@@ -74,6 +74,11 @@ const CHANNEL_LABELS: Record<PaymentChannel, string> = {
   manual_transfer: 'Transfer Manual',
 }
 
+// Backend accepts only qris|va|manual_transfer (see
+// PaymentTransactionController@store) — ewallet stays in CHANNEL_LABELS so
+// historic rows still render a badge, but it is never offered as a choice.
+const CREATABLE_CHANNELS: PaymentChannel[] = ['qris', 'va', 'manual_transfer']
+
 function formatRupiah(value: number): string {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -125,10 +130,7 @@ function useCountdown(expiresAt: string | null, active: boolean) {
     return () => clearInterval(timer)
   }, [active, expiresAt])
   if (!expiresAt) return null
-  return Math.max(
-    0,
-    Math.floor((new Date(expiresAt).getTime() - now) / 1000)
-  )
+  return Math.max(0, Math.floor((new Date(expiresAt).getTime() - now) / 1000))
 }
 
 function formatCountdown(totalSeconds: number): string {
@@ -149,6 +151,8 @@ function CreateForm({ onCreated }: { onCreated: (id: number) => void }) {
   const [billId, setBillId] = useState('')
   const [channel, setChannel] = useState<PaymentChannel>('qris')
   const [provider, setProvider] = useState('simulator')
+  const [bankCode, setBankCode] = useState('')
+  const [bankCodeError, setBankCodeError] = useState<string | null>(null)
   const [proof, setProof] = useState<File | null>(null)
 
   const unpaidBills = billsData?.data ?? []
@@ -160,11 +164,20 @@ function CreateForm({ onCreated }: { onCreated: (id: number) => void }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit) return
+    // Backend `bank_code.required_if` message, mirrored client-side so VA
+    // without a bank code surfaces the Bahasa message without a round-trip.
+    if (channel === 'va' && bankCode.trim() === '') {
+      setBankCodeError('Kode bank wajib diisi untuk kanal VA.')
+      toast.error('Kode bank wajib diisi untuk kanal VA.')
+      return
+    }
+    setBankCodeError(null)
     createTransaction.mutate(
       {
         bill_id: Number(billId),
         channel,
         provider,
+        bank_code: channel === 'va' ? bankCode.trim() : undefined,
         proof: proof ?? undefined,
       },
       {
@@ -214,19 +227,20 @@ function CreateForm({ onCreated }: { onCreated: (id: number) => void }) {
               <Label htmlFor='trx-channel'>Kanal pembayaran</Label>
               <Select
                 value={channel}
-                onValueChange={(v) => setChannel(v as PaymentChannel)}
+                onValueChange={(v) => {
+                  setChannel(v as PaymentChannel)
+                  setBankCodeError(null)
+                }}
               >
                 <SelectTrigger id='trx-channel' aria-label='Kanal pembayaran'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(Object.keys(CHANNEL_LABELS) as PaymentChannel[]).map(
-                    (c) => (
-                      <SelectItem key={c} value={c}>
-                        {CHANNEL_LABELS[c]}
-                      </SelectItem>
-                    )
-                  )}
+                  {CREATABLE_CHANNELS.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {CHANNEL_LABELS[c]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -243,6 +257,23 @@ function CreateForm({ onCreated }: { onCreated: (id: number) => void }) {
               </Select>
             </div>
           </div>
+          {channel === 'va' && (
+            <div className='space-y-2'>
+              <Label htmlFor='trx-bank-code'>Kode bank</Label>
+              <Input
+                id='trx-bank-code'
+                placeholder='cth: BRI, BCA, Mandiri'
+                value={bankCode}
+                onChange={(e) => {
+                  setBankCode(e.target.value.toUpperCase())
+                  if (bankCodeError) setBankCodeError(null)
+                }}
+              />
+              {bankCodeError && (
+                <p className='text-sm text-destructive'>{bankCodeError}</p>
+              )}
+            </div>
+          )}
           <div className='space-y-2'>
             <Label htmlFor='trx-proof'>Upload Bukti</Label>
             <Input

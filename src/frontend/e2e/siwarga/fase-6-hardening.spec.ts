@@ -84,6 +84,69 @@ async function seedWargaWithHouse(
   }
 }
 
+// seedWargaWithHouse plus one unpaid bill (fase-5 convenience pattern):
+// due-type → house → resident → assign → bills/generate → user, so the
+// payment create form has a selectable Tagihan.
+async function seedWargaWithBill(
+  request: Parameters<typeof apiToken>[0],
+  suffix: string,
+  dueTypeName: string
+): Promise<{ email: string; password: string }> {
+  const adminToken = await apiToken(
+    request,
+    defaultAdmin.email,
+    defaultAdmin.password
+  )
+  const rolesBody = (await apiGet(
+    request,
+    adminToken,
+    '/api/roles?per_page=50'
+  )) as { data: { id: number; name: string }[] }
+  const wargaRole = rolesBody.data.find((r) => r.name === 'warga')
+  if (!wargaRole) throw new Error('warga role not found')
+
+  await apiPost(request, adminToken, '/api/due-types', {
+    name: dueTypeName,
+    amount: 75000,
+    billing_cycle: 'bulanan',
+  })
+
+  const house = (await apiPost(request, adminToken, '/api/houses', {
+    house_number: `E2E-H6V-${suffix}`,
+    address: 'Jl. E2E Hardening VA',
+  })) as RecordLike
+
+  const resident = (await apiPost(request, adminToken, '/api/residents', {
+    full_name: `E2E Huni VA ${suffix}`,
+    status: 'tetap',
+    phone_number: randomPhone(),
+    marital_status: 'belum_menikah',
+  })) as RecordLike
+
+  await apiPost(
+    request,
+    adminToken,
+    `/api/houses/${house.id as number}/assign-resident`,
+    { resident_id: resident.id as number, start_date: '2026-01-01' }
+  )
+  await apiPost(request, adminToken, '/api/bills/generate', {
+    month: 6,
+    year: 2028,
+  })
+
+  const email = `e2e-hard-va-${suffix}@siwarga.test`
+  const password = 'password123'
+  await apiPost(request, adminToken, '/api/users', {
+    name: `E2E Hard VA ${suffix}`,
+    email,
+    password,
+    resident_id: resident.id as number,
+    role_ids: [wargaRole.id],
+  })
+
+  return { email, password }
+}
+
 test.describe('Hardening backlog', () => {
   test('QR scan lands on VALID verify page; bad token invalid', async ({
     page,
@@ -271,5 +334,56 @@ test.describe('Hardening backlog', () => {
       '/api/family-members?per_page=100'
     )) as { data: { name: string }[] }
     expect(members.data.find((m) => m.name === memberName)).toBeUndefined()
+  })
+
+  test('payment channel UI matches API contract (no ewallet, VA needs bank code)', async ({
+    page,
+    request,
+  }) => {
+    const suffix = uid()
+    const dueTypeName = `E2E VA ${suffix}`
+    const { email, password } = await seedWargaWithBill(
+      request,
+      suffix,
+      dueTypeName
+    )
+    await login(page, email, password)
+    await page.goto('/payments-online')
+    await expect(
+      page.getByRole('heading', { name: 'Bayar Online' })
+    ).toBeVisible()
+
+    // (a) The channel Select must not offer ewallet: backend accepts only
+    // qris|va|manual_transfer (422 otherwise). Assert a valid option first
+    // so the absence assertion can't pass on an unopened listbox.
+    await page.getByLabel('Kanal pembayaran').click()
+    await expect(
+      page.getByRole('option', { name: 'Virtual Account' })
+    ).toBeVisible()
+    await expect(page.getByRole('option', { name: 'E-Wallet' })).toHaveCount(0)
+    await page.getByRole('option', { name: 'Virtual Account' }).click()
+
+    // (b) Selecting va reveals bank_code; submitting VA without bank_code
+    // surfaces the Bahasa message.
+    await expect(page.getByLabel('Kode bank')).toBeVisible()
+    await page.getByLabel('Tagihan').click()
+    await page
+      .getByRole('option')
+      .filter({ hasText: dueTypeName })
+      .first()
+      .click()
+    await page.getByRole('button', { name: 'Kirim Pembayaran' }).click()
+    // Both the inline field error and the toast carry the message — either
+    // one surfacing satisfies the contract.
+    await expect(
+      page.getByText('Kode bank wajib diisi untuk kanal VA.').first()
+    ).toBeVisible({ timeout: 30_000 })
+
+    // Filling the bank code unblocks VA creation end-to-end (simulator).
+    await page.getByLabel('Kode bank').fill('BRI')
+    await page.getByRole('button', { name: 'Kirim Pembayaran' }).click()
+    await expect(page.getByText(/Detail Pembayaran/)).toBeVisible({
+      timeout: 30_000,
+    })
   })
 })
