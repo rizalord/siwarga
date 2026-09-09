@@ -177,13 +177,11 @@ function HouseholdCardSection() {
 }
 
 type MemberColumnsProps = {
-  canManage: boolean
   onEdit: (member: FamilyMember) => void
   onDelete: (member: FamilyMember) => void
 }
 
 function memberColumns({
-  canManage,
   onEdit,
   onDelete,
 }: MemberColumnsProps): ColumnDef<FamilyMember>[] {
@@ -252,7 +250,6 @@ function memberColumns({
       id: 'actions',
       header: 'Aksi',
       cell: ({ row }) => {
-        if (!canManage) return <span className='text-muted-foreground'>—</span>
         const member = row.original
         return (
           <div className='flex gap-2'>
@@ -501,7 +498,6 @@ function FamilyPageInner() {
   const table = useReactTable({
     data: data?.data ?? [],
     columns: memberColumns({
-      canManage,
       onEdit: (member) => {
         setEditing(member)
         setDialogOpen(true)

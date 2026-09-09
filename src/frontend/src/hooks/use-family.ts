@@ -33,7 +33,7 @@ export function useUpdateMember() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['family-members'] })
       qc.invalidateQueries({ queryKey: ['household-card'] })
-      toast.success('Anggota keluarga ditambahkan')
+      toast.success('Anggota keluarga disimpan')
     },
     onError: () => toast.error('Gagal menyimpan anggota keluarga'),
   })
