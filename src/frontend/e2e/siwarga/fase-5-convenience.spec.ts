@@ -219,13 +219,11 @@ test.describe('Fase 5 convenience', () => {
     expect(created).toBeDefined()
     expect(created!.status).toBe('awaiting_verification')
 
-    // Verification via UI (Setujui). NOTE: performed as admin, which holds
-    // `payments.verify` like bendahara. The seeded bendahara account cannot
-    // reach this list: index/show routes require `can:payments.online`,
-    // which only warga holds (RoleSeeder) — see task report for follow-up.
+    // Verification via UI (Setujui) as the seeded bendahara, which holds
+    // `payments.verify` and lists the verification inbox via policy `viewAny`.
     const verifierPage = await browser.newPage()
     try {
-      await login(verifierPage, defaultAdmin.email, defaultAdmin.password)
+      await login(verifierPage, 'bendahara@siwarga.test', 'password')
       await verifierPage.goto('/payments-online?status=awaiting_verification')
       const row = verifierPage
         .getByRole('row', { name: new RegExp(created!.reference) })
@@ -281,7 +279,7 @@ test.describe('Fase 5 convenience', () => {
 
     const verifierPage2 = await browser.newPage()
     try {
-      await login(verifierPage2, defaultAdmin.email, defaultAdmin.password)
+      await login(verifierPage2, 'bendahara@siwarga.test', 'password')
       await verifierPage2.goto('/payments-online?status=awaiting_verification')
       const row2 = verifierPage2
         .getByRole('row', { name: new RegExp(createdReject!.reference) })

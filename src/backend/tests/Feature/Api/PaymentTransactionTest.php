@@ -126,6 +126,25 @@ class PaymentTransactionTest extends TestCase
         $this->assertDatabaseHas('notifications', ['notifiable_id' => $this->warga->id]);
     }
 
+    public function test_bendahara_can_list_and_view_verification_inbox()
+    {
+        Storage::fake('public');
+
+        $created = $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
+            'bill_id' => $this->bill->id,
+            'channel' => 'manual_transfer',
+            'proof' => UploadedFile::fake()->image('bukti.jpg'),
+        ])->assertStatus(201)->assertJsonPath('data.status', 'awaiting_verification')->json('data');
+
+        $this->actingAs($this->bendahara)->getJson('/api/payment-transactions?status=awaiting_verification')
+            ->assertStatus(200)
+            ->assertJsonPath('data.0.reference', $created['reference']);
+
+        $this->actingAs($this->bendahara)->getJson("/api/payment-transactions/{$created['id']}")
+            ->assertStatus(200)
+            ->assertJsonPath('data.reference', $created['reference']);
+    }
+
     public function test_webhook_wrong_provider_is_rejected()
     {
         $this->postJson('/api/public/payments/webhook/nope', [])->assertStatus(404);

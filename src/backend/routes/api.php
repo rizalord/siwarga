@@ -155,9 +155,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('payments/{payment}', [PaymentController::class, 'update'])->middleware('can:payments.create');
     Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->middleware('can:payments.create');
 
-    Route::get('payment-transactions', [PaymentTransactionController::class, 'index'])->middleware('can:payments.online');
+    Route::get('payment-transactions', [PaymentTransactionController::class, 'index']);
     Route::post('payment-transactions', [PaymentTransactionController::class, 'store'])->middleware('can:payments.online');
-    Route::get('payment-transactions/{paymentTransaction}', [PaymentTransactionController::class, 'show'])->middleware('can:payments.online');
+    Route::get('payment-transactions/{paymentTransaction}', [PaymentTransactionController::class, 'show']);
     Route::post('payment-transactions/{paymentTransaction}/proof', [PaymentTransactionController::class, 'proof']);
     Route::post('payment-transactions/{paymentTransaction}/verify', [PaymentTransactionController::class, 'verify']);
     Route::post('payment-transactions/{paymentTransaction}/simulate-pay', [PaymentTransactionController::class, 'simulatePay']);

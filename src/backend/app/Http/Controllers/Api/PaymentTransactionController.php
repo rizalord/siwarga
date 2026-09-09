@@ -7,18 +7,24 @@ use App\Http\Resources\PaymentTransactionResource;
 use App\Models\Bill;
 use App\Models\PaymentTransaction;
 use App\Services\PaymentTransactionService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class PaymentTransactionController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(private PaymentTransactionService $service) {}
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', PaymentTransaction::class);
+
         $query = PaymentTransaction::with(['bill.dueType', 'payer']);
 
-        if (! $request->user()->hasPermission('payments.view.all')) {
+        if (! $request->user()->hasPermission('payments.view.all')
+            && ! $request->user()->hasPermission('payments.verify')) {
             $query->where('user_id', $request->user()->id);
         }
 
@@ -67,12 +73,7 @@ class PaymentTransactionController extends Controller
 
     public function show(Request $request, PaymentTransaction $paymentTransaction)
     {
-        abort_unless(
-            $request->user()->hasPermission('payments.view.all')
-                || ($request->user()->hasPermission('payments.online')
-                    && $paymentTransaction->user_id === $request->user()->id),
-            403
-        );
+        $this->authorize('view', $paymentTransaction);
 
         $paymentTransaction->load(['bill.dueType', 'payer', 'verifier']);
 

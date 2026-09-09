@@ -9,12 +9,13 @@ class PaymentTransactionPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('payments.online');
+        return $user->hasPermission('payments.online')
+            || $user->hasPermission('payments.verify');
     }
 
     public function view(User $user, PaymentTransaction $transaction): bool
     {
-        if ($user->hasPermission('payments.view.all')) {
+        if ($user->hasPermission('payments.view.all') || $user->hasPermission('payments.verify')) {
             return true;
         }
 
