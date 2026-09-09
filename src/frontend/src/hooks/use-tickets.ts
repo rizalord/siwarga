@@ -75,6 +75,7 @@ export function useAddTicketComment(id: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ticket-comments', id] })
       qc.invalidateQueries({ queryKey: ['tickets'] })
+      qc.invalidateQueries({ queryKey: ['ticket', id] })
       toast.success('Komentar terkirim')
     },
     onError: () => toast.error('Gagal mengirim komentar'),
