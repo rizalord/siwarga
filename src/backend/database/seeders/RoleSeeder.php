@@ -25,6 +25,10 @@ class RoleSeeder extends Seeder
             ['name' => 'warga'],
             ['description' => 'Warga']
         );
+        $satpam = Role::updateOrCreate(
+            ['name' => 'satpam'],
+            ['description' => 'Satpam']
+        );
 
         // Admin gets all permissions
         $admin->permissions()->sync(Permission::all()->pluck('id'));
@@ -49,6 +53,17 @@ class RoleSeeder extends Seeder
             'tickets.view', 'tickets.create', 'suggestions.create',
             'facilities.view', 'bookings.view', 'bookings.create',
             'assets.view', 'asset-loans.request',
+            'guest-logs.view', 'guest-logs.register',
+            'panic-alerts.report',
+            'patrol-schedules.view',
+            'family-members.view',
+        ])->pluck('id'));
+
+        // Satpam handles security operations, no finance or resident data.
+        $satpam->permissions()->sync(Permission::whereIn('name', [
+            'guest-logs.view', 'guest-logs.manage',
+            'panic-alerts.handle',
+            'patrol-schedules.view',
         ])->pluck('id'));
     }
 }

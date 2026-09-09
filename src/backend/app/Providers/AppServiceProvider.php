@@ -27,13 +27,18 @@ use App\Policies\BillPolicy;
 use App\Policies\BookingPolicy;
 use App\Policies\ContactMessagePolicy;
 use App\Policies\DueTypePolicy;
+use App\Policies\EmergencyContactPolicy;
 use App\Policies\EventPolicy;
 use App\Policies\ExpenseCategoryPolicy;
 use App\Policies\ExpensePolicy;
 use App\Policies\FacilityPolicy;
+use App\Policies\FamilyMemberPolicy;
 use App\Policies\ForumThreadPolicy;
+use App\Policies\GuestLogPolicy;
 use App\Policies\HousePolicy;
 use App\Policies\PagePolicy;
+use App\Policies\PanicAlertPolicy;
+use App\Policies\PatrolSchedulePolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\PollPolicy;
 use App\Policies\ResidentPolicy;
@@ -146,6 +151,18 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('asset-loans.request', [AssetLoanPolicy::class, 'create']);
         Gate::define('asset-loans.review', fn (User $user) => $user->hasPermission('asset-loans.review'));
         Gate::define('events.manage', [EventPolicy::class, 'viewAny']);
+
+        // Security (Fase 4)
+        Gate::define('guest-logs.view', [GuestLogPolicy::class, 'viewAny']);
+        Gate::define('guest-logs.manage', fn (User $user) => $user->hasPermission('guest-logs.manage'));
+        Gate::define('guest-logs.register', [GuestLogPolicy::class, 'create']);
+        Gate::define('panic-alerts.report', [PanicAlertPolicy::class, 'report']);
+        Gate::define('panic-alerts.handle', fn (User $user) => $user->hasPermission('panic-alerts.handle'));
+        Gate::define('patrol-schedules.view', [PatrolSchedulePolicy::class, 'viewAny']);
+        Gate::define('patrol-schedules.manage', [PatrolSchedulePolicy::class, 'create']);
+        Gate::define('family-members.view', [FamilyMemberPolicy::class, 'viewAny']);
+        Gate::define('family-members.manage', fn (User $user) => $user->hasPermission('family-members.manage'));
+        Gate::define('emergency-contacts.manage', [EmergencyContactPolicy::class, 'create']);
 
         // Residents
         Gate::define('residents.view', [ResidentPolicy::class, 'viewAny']);

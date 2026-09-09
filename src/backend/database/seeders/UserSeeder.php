@@ -38,6 +38,18 @@ class UserSeeder extends Seeder
         );
         $bendahara->roles()->syncWithoutDetaching([$bendaharaRoleId]);
 
+        $satpamRoleId = Role::where('name', 'satpam')->first()->id;
+
+        $satpam = User::updateOrCreate(
+            ['email' => 'satpam@siwarga.test'],
+            [
+                'name' => 'Satpam Pos Utama',
+                'password' => bcrypt('password'),
+                'is_active' => true,
+            ]
+        );
+        $satpam->roles()->syncWithoutDetaching([$satpamRoleId]);
+
         // User warga demo — terhubung ke penghuni rumah pertama agar bisa login & lihat tagihan miliknya
         $firstHouseResident = HouseResident::whereNull('end_date')->first();
         if ($firstHouseResident) {
