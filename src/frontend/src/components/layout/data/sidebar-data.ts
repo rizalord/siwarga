@@ -158,6 +158,18 @@ export const sidebarData: SidebarData = {
           permission: 'guest-logs.view',
         },
         {
+          title: 'Jadwal Ronda',
+          url: '/patrols',
+          icon: CalendarDays,
+          permission: 'patrol-schedules.view',
+        },
+        {
+          title: 'Kartu Keluarga',
+          url: '/family',
+          icon: Users,
+          permission: 'family-members.view',
+        },
+        {
           title: 'Panic Button',
           url: '/panic',
           icon: Siren,

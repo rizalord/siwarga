@@ -834,3 +834,79 @@ export interface EmergencyContact {
   phone: string
   sort_order: number
 }
+
+export type PatrolShift = 'pagi' | 'siang' | 'malam'
+
+export interface PatrolSchedule {
+  id: number
+  date: string
+  shift: PatrolShift
+  personnel_name: string
+  user_id: number | null
+  area: string | null
+  note: string | null
+  created_at: string
+}
+
+export interface PatrolFilter {
+  page?: number
+  per_page?: number
+  from?: string
+  to?: string
+}
+
+export interface PatrolInput {
+  date: string
+  shift: PatrolShift
+  personnel_name: string
+  user_id?: number | null
+  area?: string
+  note?: string
+}
+
+export type FamilyRelationship =
+  | 'kepala_keluarga'
+  | 'pasangan'
+  | 'anak'
+  | 'orang_tua'
+  | 'famili_lain'
+  | 'pembantu'
+  | 'kontrak'
+
+export interface FamilyMember {
+  id: number
+  house_id: number
+  house_number: string | null
+  name: string
+  relationship: FamilyRelationship
+  nik: string | null
+  birth_date: string | null
+  phone: string | null
+  created_at: string
+}
+
+export interface FamilyFilter {
+  page?: number
+  per_page?: number
+  house_id?: number
+  relationship?: FamilyRelationship
+  search?: string
+}
+
+export interface FamilyInput {
+  house_id?: number
+  name: string
+  relationship: FamilyRelationship
+  nik?: string
+  birth_date?: string
+  phone?: string
+}
+
+export interface HouseholdCard {
+  house_id: number
+  house_number: string
+  address: string | null
+  head_name: string
+  member_count: number
+  verify_token: string
+}

@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-table'
 import type { GuestLog, GuestLogStatus } from '@/types/api'
 import { Copy, LogIn, LogOut, Plus } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -346,15 +347,16 @@ function GuestTokenCard({
       <CardHeader>
         <CardTitle>Kode kunjungan {log.guest_name}</CardTitle>
         <CardDescription>
-          Tunjukkan kode ini kepada satpam saat tiba di gerbang. Tampilan kode
-          QR menyusul — untuk saat ini gunakan kode teks di bawah ini.
+          Tunjukkan kode QR ini kepada satpam saat tiba di gerbang.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className='flex flex-wrap items-center gap-2'>
-          <code className='rounded-md bg-muted px-3 py-2 font-mono text-sm break-all'>
-            {log.qr_token}
-          </code>
+        <div className='flex flex-wrap items-center gap-4'>
+          <QRCodeSVG
+            value={log.qr_token}
+            size={160}
+            aria-label={`Kode QR kunjungan ${log.guest_name}`}
+          />
           <Button
             variant='outline'
             size='sm'

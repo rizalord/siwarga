@@ -29,6 +29,7 @@ import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedExpenseCategoriesIndexRouteImport } from './routes/_authenticated/expense-categories/index'
 import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authenticated/expenses/index'
 import { Route as AuthenticatedFacilitiesIndexRouteImport } from './routes/_authenticated/facilities/index'
+import { Route as AuthenticatedFamilyIndexRouteImport } from './routes/_authenticated/family/index'
 import { Route as AuthenticatedForumIndexRouteImport } from './routes/_authenticated/forum/index'
 import { Route as AuthenticatedForumThreadIdRouteImport } from './routes/_authenticated/forum/$threadId'
 import { Route as AuthenticatedGuestLogsIndexRouteImport } from './routes/_authenticated/guest-logs/index'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedHousesIdRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authenticated/pages/index'
 import { Route as AuthenticatedPanicIndexRouteImport } from './routes/_authenticated/panic/index'
+import { Route as AuthenticatedPatrolsIndexRouteImport } from './routes/_authenticated/patrols/index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
 import { Route as AuthenticatedPengumumanIndexRouteImport } from './routes/_authenticated/pengumuman/index'
 import { Route as AuthenticatedPermissionsIndexRouteImport } from './routes/_authenticated/permissions/index'
@@ -159,6 +161,12 @@ const AuthenticatedFacilitiesIndexRoute =
     path: '/facilities/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFamilyIndexRoute =
+  AuthenticatedFamilyIndexRouteImport.update({
+    id: '/family/',
+    path: '/family/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedForumIndexRoute = AuthenticatedForumIndexRouteImport.update({
   id: '/forum/',
   path: '/forum/',
@@ -203,6 +211,12 @@ const AuthenticatedPanicIndexRoute = AuthenticatedPanicIndexRouteImport.update({
   path: '/panic/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPatrolsIndexRoute =
+  AuthenticatedPatrolsIndexRouteImport.update({
+    id: '/patrols/',
+    path: '/patrols/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPaymentsIndexRoute =
   AuthenticatedPaymentsIndexRouteImport.update({
     id: '/payments/',
@@ -290,12 +304,14 @@ export interface FileRoutesByFullPath {
   '/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/facilities/': typeof AuthenticatedFacilitiesIndexRoute
+  '/family/': typeof AuthenticatedFamilyIndexRoute
   '/forum/': typeof AuthenticatedForumIndexRoute
   '/guest-logs/': typeof AuthenticatedGuestLogsIndexRoute
   '/houses/': typeof AuthenticatedHousesIndexRoute
   '/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/pages/': typeof AuthenticatedPagesIndexRoute
   '/panic/': typeof AuthenticatedPanicIndexRoute
+  '/patrols/': typeof AuthenticatedPatrolsIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/permissions/': typeof AuthenticatedPermissionsIndexRoute
@@ -330,12 +346,14 @@ export interface FileRoutesByTo {
   '/expense-categories': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses': typeof AuthenticatedExpensesIndexRoute
   '/facilities': typeof AuthenticatedFacilitiesIndexRoute
+  '/family': typeof AuthenticatedFamilyIndexRoute
   '/forum': typeof AuthenticatedForumIndexRoute
   '/guest-logs': typeof AuthenticatedGuestLogsIndexRoute
   '/houses': typeof AuthenticatedHousesIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/pages': typeof AuthenticatedPagesIndexRoute
   '/panic': typeof AuthenticatedPanicIndexRoute
+  '/patrols': typeof AuthenticatedPatrolsIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/pengumuman': typeof AuthenticatedPengumumanIndexRoute
   '/permissions': typeof AuthenticatedPermissionsIndexRoute
@@ -372,12 +390,14 @@ export interface FileRoutesById {
   '/_authenticated/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/_authenticated/facilities/': typeof AuthenticatedFacilitiesIndexRoute
+  '/_authenticated/family/': typeof AuthenticatedFamilyIndexRoute
   '/_authenticated/forum/': typeof AuthenticatedForumIndexRoute
   '/_authenticated/guest-logs/': typeof AuthenticatedGuestLogsIndexRoute
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/pages/': typeof AuthenticatedPagesIndexRoute
   '/_authenticated/panic/': typeof AuthenticatedPanicIndexRoute
+  '/_authenticated/patrols/': typeof AuthenticatedPatrolsIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/_authenticated/permissions/': typeof AuthenticatedPermissionsIndexRoute
@@ -414,12 +434,14 @@ export interface FileRouteTypes {
     | '/expense-categories/'
     | '/expenses/'
     | '/facilities/'
+    | '/family/'
     | '/forum/'
     | '/guest-logs/'
     | '/houses/'
     | '/notifications/'
     | '/pages/'
     | '/panic/'
+    | '/patrols/'
     | '/payments/'
     | '/pengumuman/'
     | '/permissions/'
@@ -454,12 +476,14 @@ export interface FileRouteTypes {
     | '/expense-categories'
     | '/expenses'
     | '/facilities'
+    | '/family'
     | '/forum'
     | '/guest-logs'
     | '/houses'
     | '/notifications'
     | '/pages'
     | '/panic'
+    | '/patrols'
     | '/payments'
     | '/pengumuman'
     | '/permissions'
@@ -495,12 +519,14 @@ export interface FileRouteTypes {
     | '/_authenticated/expense-categories/'
     | '/_authenticated/expenses/'
     | '/_authenticated/facilities/'
+    | '/_authenticated/family/'
     | '/_authenticated/forum/'
     | '/_authenticated/guest-logs/'
     | '/_authenticated/houses/'
     | '/_authenticated/notifications/'
     | '/_authenticated/pages/'
     | '/_authenticated/panic/'
+    | '/_authenticated/patrols/'
     | '/_authenticated/payments/'
     | '/_authenticated/pengumuman/'
     | '/_authenticated/permissions/'
@@ -665,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFacilitiesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/family/': {
+      id: '/_authenticated/family/'
+      path: '/family'
+      fullPath: '/family/'
+      preLoaderRoute: typeof AuthenticatedFamilyIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/forum/': {
       id: '/_authenticated/forum/'
       path: '/forum'
@@ -719,6 +752,13 @@ declare module '@tanstack/react-router' {
       path: '/panic'
       fullPath: '/panic/'
       preLoaderRoute: typeof AuthenticatedPanicIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/patrols/': {
+      id: '/_authenticated/patrols/'
+      path: '/patrols'
+      fullPath: '/patrols/'
+      preLoaderRoute: typeof AuthenticatedPatrolsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/payments/': {
@@ -818,12 +858,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedExpenseCategoriesIndexRoute: typeof AuthenticatedExpenseCategoriesIndexRoute
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
   AuthenticatedFacilitiesIndexRoute: typeof AuthenticatedFacilitiesIndexRoute
+  AuthenticatedFamilyIndexRoute: typeof AuthenticatedFamilyIndexRoute
   AuthenticatedForumIndexRoute: typeof AuthenticatedForumIndexRoute
   AuthenticatedGuestLogsIndexRoute: typeof AuthenticatedGuestLogsIndexRoute
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedPagesIndexRoute: typeof AuthenticatedPagesIndexRoute
   AuthenticatedPanicIndexRoute: typeof AuthenticatedPanicIndexRoute
+  AuthenticatedPatrolsIndexRoute: typeof AuthenticatedPatrolsIndexRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
   AuthenticatedPengumumanIndexRoute: typeof AuthenticatedPengumumanIndexRoute
   AuthenticatedPermissionsIndexRoute: typeof AuthenticatedPermissionsIndexRoute
@@ -855,12 +897,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedExpenseCategoriesIndexRoute,
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,
   AuthenticatedFacilitiesIndexRoute: AuthenticatedFacilitiesIndexRoute,
+  AuthenticatedFamilyIndexRoute: AuthenticatedFamilyIndexRoute,
   AuthenticatedForumIndexRoute: AuthenticatedForumIndexRoute,
   AuthenticatedGuestLogsIndexRoute: AuthenticatedGuestLogsIndexRoute,
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedPagesIndexRoute: AuthenticatedPagesIndexRoute,
   AuthenticatedPanicIndexRoute: AuthenticatedPanicIndexRoute,
+  AuthenticatedPatrolsIndexRoute: AuthenticatedPatrolsIndexRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
   AuthenticatedPengumumanIndexRoute: AuthenticatedPengumumanIndexRoute,
   AuthenticatedPermissionsIndexRoute: AuthenticatedPermissionsIndexRoute,
