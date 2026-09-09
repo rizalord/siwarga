@@ -22,6 +22,8 @@ import {
   Building2,
   Package,
   CalendarDays,
+  BookOpen,
+  Siren,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -143,6 +145,23 @@ export const sidebarData: SidebarData = {
           url: '/events',
           icon: CalendarDays,
           permission: 'events.manage',
+        },
+      ],
+    },
+    {
+      title: 'Keamanan',
+      items: [
+        {
+          title: 'Buku Tamu',
+          url: '/guest-logs',
+          icon: BookOpen,
+          permission: 'guest-logs.view',
+        },
+        {
+          title: 'Panic Button',
+          url: '/panic',
+          icon: Siren,
+          permission: 'panic-alerts.report',
         },
       ],
     },

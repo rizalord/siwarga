@@ -767,3 +767,70 @@ export interface EventFilter {
   sort?: string
   order?: 'asc' | 'desc'
 }
+
+export type GuestLogStatus = 'registered' | 'checked_in' | 'checked_out'
+
+export interface GuestLog {
+  id: number
+  guest_name: string
+  purpose: string | null
+  house_id: number
+  house_number: string | null
+  plate_number: string | null
+  registered_by: number | null
+  registrar_name: string | null
+  qr_token: string | null
+  visit_date: string | null
+  status: GuestLogStatus
+  checked_in_at: string | null
+  checked_out_at: string | null
+  recorded_by: number | null
+  created_at: string
+}
+
+export interface GuestLogFilter {
+  page?: number
+  per_page?: number
+  status?: GuestLogStatus
+  date?: string
+  search?: string
+}
+
+export interface RegisterGuestInput {
+  guest_name: string
+  purpose?: string
+  house_id: number
+  plate_number?: string
+  visit_date?: string
+}
+
+export type PanicStatus = 'active' | 'handled' | 'resolved' | 'cancelled'
+
+export interface PanicAlert {
+  id: number
+  reporter_id: number
+  reporter_name: string | null
+  house_id: number | null
+  house_number: string | null
+  location_note: string | null
+  note: string | null
+  status: PanicStatus
+  handler_id: number | null
+  handler_name: string | null
+  handled_at: string | null
+  resolved_at: string | null
+  created_at: string
+}
+
+export interface PanicFilter {
+  page?: number
+  per_page?: number
+  status?: PanicStatus
+}
+
+export interface EmergencyContact {
+  id: number
+  name: string
+  phone: string
+  sort_order: number
+}

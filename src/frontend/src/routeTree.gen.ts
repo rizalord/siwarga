@@ -31,10 +31,12 @@ import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedFacilitiesIndexRouteImport } from './routes/_authenticated/facilities/index'
 import { Route as AuthenticatedForumIndexRouteImport } from './routes/_authenticated/forum/index'
 import { Route as AuthenticatedForumThreadIdRouteImport } from './routes/_authenticated/forum/$threadId'
+import { Route as AuthenticatedGuestLogsIndexRouteImport } from './routes/_authenticated/guest-logs/index'
 import { Route as AuthenticatedHousesIndexRouteImport } from './routes/_authenticated/houses/index'
 import { Route as AuthenticatedHousesIdRouteImport } from './routes/_authenticated/houses/$id'
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedPagesIndexRouteImport } from './routes/_authenticated/pages/index'
+import { Route as AuthenticatedPanicIndexRouteImport } from './routes/_authenticated/panic/index'
 import { Route as AuthenticatedPaymentsIndexRouteImport } from './routes/_authenticated/payments/index'
 import { Route as AuthenticatedPengumumanIndexRouteImport } from './routes/_authenticated/pengumuman/index'
 import { Route as AuthenticatedPermissionsIndexRouteImport } from './routes/_authenticated/permissions/index'
@@ -168,6 +170,12 @@ const AuthenticatedForumThreadIdRoute =
     path: '/forum/$threadId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedGuestLogsIndexRoute =
+  AuthenticatedGuestLogsIndexRouteImport.update({
+    id: '/guest-logs/',
+    path: '/guest-logs/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHousesIndexRoute =
   AuthenticatedHousesIndexRouteImport.update({
     id: '/houses/',
@@ -188,6 +196,11 @@ const AuthenticatedNotificationsIndexRoute =
 const AuthenticatedPagesIndexRoute = AuthenticatedPagesIndexRouteImport.update({
   id: '/pages/',
   path: '/pages/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPanicIndexRoute = AuthenticatedPanicIndexRouteImport.update({
+  id: '/panic/',
+  path: '/panic/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPaymentsIndexRoute =
@@ -278,9 +291,11 @@ export interface FileRoutesByFullPath {
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/facilities/': typeof AuthenticatedFacilitiesIndexRoute
   '/forum/': typeof AuthenticatedForumIndexRoute
+  '/guest-logs/': typeof AuthenticatedGuestLogsIndexRoute
   '/houses/': typeof AuthenticatedHousesIndexRoute
   '/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/pages/': typeof AuthenticatedPagesIndexRoute
+  '/panic/': typeof AuthenticatedPanicIndexRoute
   '/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/permissions/': typeof AuthenticatedPermissionsIndexRoute
@@ -316,9 +331,11 @@ export interface FileRoutesByTo {
   '/expenses': typeof AuthenticatedExpensesIndexRoute
   '/facilities': typeof AuthenticatedFacilitiesIndexRoute
   '/forum': typeof AuthenticatedForumIndexRoute
+  '/guest-logs': typeof AuthenticatedGuestLogsIndexRoute
   '/houses': typeof AuthenticatedHousesIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/pages': typeof AuthenticatedPagesIndexRoute
+  '/panic': typeof AuthenticatedPanicIndexRoute
   '/payments': typeof AuthenticatedPaymentsIndexRoute
   '/pengumuman': typeof AuthenticatedPengumumanIndexRoute
   '/permissions': typeof AuthenticatedPermissionsIndexRoute
@@ -356,9 +373,11 @@ export interface FileRoutesById {
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/_authenticated/facilities/': typeof AuthenticatedFacilitiesIndexRoute
   '/_authenticated/forum/': typeof AuthenticatedForumIndexRoute
+  '/_authenticated/guest-logs/': typeof AuthenticatedGuestLogsIndexRoute
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/pages/': typeof AuthenticatedPagesIndexRoute
+  '/_authenticated/panic/': typeof AuthenticatedPanicIndexRoute
   '/_authenticated/payments/': typeof AuthenticatedPaymentsIndexRoute
   '/_authenticated/pengumuman/': typeof AuthenticatedPengumumanIndexRoute
   '/_authenticated/permissions/': typeof AuthenticatedPermissionsIndexRoute
@@ -396,9 +415,11 @@ export interface FileRouteTypes {
     | '/expenses/'
     | '/facilities/'
     | '/forum/'
+    | '/guest-logs/'
     | '/houses/'
     | '/notifications/'
     | '/pages/'
+    | '/panic/'
     | '/payments/'
     | '/pengumuman/'
     | '/permissions/'
@@ -434,9 +455,11 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/facilities'
     | '/forum'
+    | '/guest-logs'
     | '/houses'
     | '/notifications'
     | '/pages'
+    | '/panic'
     | '/payments'
     | '/pengumuman'
     | '/permissions'
@@ -473,9 +496,11 @@ export interface FileRouteTypes {
     | '/_authenticated/expenses/'
     | '/_authenticated/facilities/'
     | '/_authenticated/forum/'
+    | '/_authenticated/guest-logs/'
     | '/_authenticated/houses/'
     | '/_authenticated/notifications/'
     | '/_authenticated/pages/'
+    | '/_authenticated/panic/'
     | '/_authenticated/payments/'
     | '/_authenticated/pengumuman/'
     | '/_authenticated/permissions/'
@@ -654,6 +679,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedForumThreadIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/guest-logs/': {
+      id: '/_authenticated/guest-logs/'
+      path: '/guest-logs'
+      fullPath: '/guest-logs/'
+      preLoaderRoute: typeof AuthenticatedGuestLogsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/houses/': {
       id: '/_authenticated/houses/'
       path: '/houses'
@@ -680,6 +712,13 @@ declare module '@tanstack/react-router' {
       path: '/pages'
       fullPath: '/pages/'
       preLoaderRoute: typeof AuthenticatedPagesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/panic/': {
+      id: '/_authenticated/panic/'
+      path: '/panic'
+      fullPath: '/panic/'
+      preLoaderRoute: typeof AuthenticatedPanicIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/payments/': {
@@ -780,9 +819,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
   AuthenticatedFacilitiesIndexRoute: typeof AuthenticatedFacilitiesIndexRoute
   AuthenticatedForumIndexRoute: typeof AuthenticatedForumIndexRoute
+  AuthenticatedGuestLogsIndexRoute: typeof AuthenticatedGuestLogsIndexRoute
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedPagesIndexRoute: typeof AuthenticatedPagesIndexRoute
+  AuthenticatedPanicIndexRoute: typeof AuthenticatedPanicIndexRoute
   AuthenticatedPaymentsIndexRoute: typeof AuthenticatedPaymentsIndexRoute
   AuthenticatedPengumumanIndexRoute: typeof AuthenticatedPengumumanIndexRoute
   AuthenticatedPermissionsIndexRoute: typeof AuthenticatedPermissionsIndexRoute
@@ -815,9 +856,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,
   AuthenticatedFacilitiesIndexRoute: AuthenticatedFacilitiesIndexRoute,
   AuthenticatedForumIndexRoute: AuthenticatedForumIndexRoute,
+  AuthenticatedGuestLogsIndexRoute: AuthenticatedGuestLogsIndexRoute,
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedPagesIndexRoute: AuthenticatedPagesIndexRoute,
+  AuthenticatedPanicIndexRoute: AuthenticatedPanicIndexRoute,
   AuthenticatedPaymentsIndexRoute: AuthenticatedPaymentsIndexRoute,
   AuthenticatedPengumumanIndexRoute: AuthenticatedPengumumanIndexRoute,
   AuthenticatedPermissionsIndexRoute: AuthenticatedPermissionsIndexRoute,
