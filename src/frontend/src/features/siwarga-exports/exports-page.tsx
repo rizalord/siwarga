@@ -40,6 +40,12 @@ function MonthlyPdfCard() {
   const download = useDownloadMonthlyPdf()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
+  const invalid =
+    !Number.isInteger(month) ||
+    !Number.isInteger(year) ||
+    month < 1 ||
+    month > 12 ||
+    year < 2020
 
   if (!canView) return null
 
@@ -75,7 +81,7 @@ function MonthlyPdfCard() {
           </div>
         </div>
         <Button
-          disabled={download.isPending}
+          disabled={download.isPending || invalid}
           onClick={() => download.mutate({ year, month })}
         >
           {download.isPending ? 'Mengunduh...' : 'Unduh PDF Bulanan'}
@@ -89,6 +95,7 @@ function SummaryPdfCard() {
   const canView = useHasPermission('reports.view')
   const download = useDownloadSummaryPdf()
   const [year, setYear] = useState(now.getFullYear())
+  const invalid = !Number.isInteger(year) || year < 2020
 
   if (!canView) return null
 
@@ -111,7 +118,7 @@ function SummaryPdfCard() {
           />
         </div>
         <Button
-          disabled={download.isPending}
+          disabled={download.isPending || invalid}
           onClick={() => download.mutate(year)}
         >
           {download.isPending ? 'Mengunduh...' : 'Unduh PDF Tahunan'}
@@ -127,6 +134,12 @@ function DatasetCard({ dataset }: { dataset: ExportDataset }) {
   const [year, setYear] = useState('')
   const isFinance =
     dataset === 'bills' || dataset === 'payments' || dataset === 'expenses'
+  const monthNum = month === '' ? undefined : Number(month)
+  const yearNum = year === '' ? undefined : Number(year)
+  const invalid =
+    (monthNum !== undefined &&
+      (!Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12)) ||
+    (yearNum !== undefined && (!Number.isInteger(yearNum) || yearNum < 2020))
 
   const handleDownload = () => {
     download.mutate({
@@ -175,7 +188,7 @@ function DatasetCard({ dataset }: { dataset: ExportDataset }) {
         )}
         <Button
           variant='outline'
-          disabled={download.isPending}
+          disabled={download.isPending || invalid}
           onClick={handleDownload}
         >
           {download.isPending

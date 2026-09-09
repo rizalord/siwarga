@@ -402,6 +402,9 @@ function MemberFormDialog({
                 placeholder='16 digit NIK'
                 autoComplete='off'
                 inputMode='numeric'
+                pattern='[0-9]{16}'
+                maxLength={16}
+                title='NIK harus 16 digit angka'
                 value={nik}
                 onChange={(e) => setNik(e.target.value)}
               />

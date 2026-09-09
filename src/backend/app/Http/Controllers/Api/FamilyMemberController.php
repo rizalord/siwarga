@@ -92,9 +92,11 @@ class FamilyMemberController extends Controller
             'relationship' => [$sometimesRule, 'required', Rule::in([
                 'kepala_keluarga', 'pasangan', 'anak', 'orang_tua', 'famili_lain', 'pembantu', 'kontrak',
             ])],
-            'nik' => [$sometimesRule, 'nullable', 'string', 'max:20'],
+            'nik' => [$sometimesRule, 'nullable', 'string', 'regex:/^[0-9]{16}$/'],
             'birth_date' => [$sometimesRule, 'nullable', 'date'],
             'phone' => [$sometimesRule, 'nullable', 'string', 'max:30'],
+        ], [
+            'nik.regex' => 'NIK harus 16 digit angka.',
         ]);
     }
 

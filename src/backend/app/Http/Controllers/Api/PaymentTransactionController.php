@@ -86,12 +86,7 @@ class PaymentTransactionController extends Controller
 
     public function proof(Request $request, PaymentTransaction $paymentTransaction)
     {
-        abort_unless(
-            $request->user()->hasPermission('payments.view.all')
-                || ($request->user()->hasPermission('payments.online')
-                    && $paymentTransaction->user_id === $request->user()->id),
-            403
-        );
+        // Hanya pembayar yang boleh mengunggah bukti.
         abort_unless($paymentTransaction->user_id === $request->user()->id, 403);
 
         $validated = $request->validate([

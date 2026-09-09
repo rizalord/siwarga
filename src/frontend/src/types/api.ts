@@ -612,7 +612,9 @@ export interface AppNotification {
   id: string
   type: string
   data: {
-    ticket_id: number
+    ticket_id?: number
+    transaction_id?: number
+    amount?: number
     title: string
     old_status: string
     new_status: string

@@ -91,4 +91,10 @@ class ExportTest extends TestCase
         $this->actingAs($this->warga)->get('/api/exports/bills/xlsx')->assertStatus(403);
         $this->actingAs($this->warga)->getJson('/api/backup/json')->assertStatus(403);
     }
+
+    public function test_export_rejects_invalid_year()
+    {
+        $this->actingAs($this->admin)->get('/api/reports/monthly/1999/1/pdf')
+            ->assertStatus(422);
+    }
 }

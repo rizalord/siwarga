@@ -69,4 +69,18 @@ class FamilyMemberTest extends TestCase
         $this->actingAs($this->admin)->getJson('/api/family-members')
             ->assertStatus(200)->assertJsonPath('data.0.nik', '999');
     }
+
+    public function test_nik_must_be_16_digits_when_present()
+    {
+        $this->actingAs($this->warga)->postJson('/api/family-members', [
+            'name' => 'Anak',
+            'relationship' => 'anak',
+            'nik' => '12345',
+        ])->assertStatus(422);
+
+        $this->actingAs($this->warga)->postJson('/api/family-members', [
+            'name' => 'Anak',
+            'relationship' => 'anak',
+        ])->assertStatus(201);
+    }
 }

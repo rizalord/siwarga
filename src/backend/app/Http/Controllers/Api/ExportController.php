@@ -36,9 +36,16 @@ class ExportController extends Controller
 
     public function monthlyPdf(int $year, int $month)
     {
+        if ($year < 2020) {
+            abort(422, 'Tahun tidak valid.');
+        }
+
         if ($month < 1 || $month > 12) {
             abort(404);
         }
+
+        $pdf = $this->reportPdfService->monthly($year, $month);
+        $filename = "laporan-bulanan-{$year}-{$month}.pdf";
 
         ActivityLog::create([
             'user_id' => auth()->id(),
@@ -47,9 +54,6 @@ class ExportController extends Controller
             'ip_address' => request()->ip(),
             'url' => request()->fullUrl(),
         ]);
-
-        $pdf = $this->reportPdfService->monthly($year, $month);
-        $filename = "laporan-bulanan-{$year}-{$month}.pdf";
 
         return response()->streamDownload(
             fn () => print ($pdf->output()),
@@ -60,6 +64,13 @@ class ExportController extends Controller
 
     public function summaryPdf(int $year)
     {
+        if ($year < 2020) {
+            abort(422, 'Tahun tidak valid.');
+        }
+
+        $pdf = $this->reportPdfService->summary($year);
+        $filename = "laporan-tahunan-{$year}.pdf";
+
         ActivityLog::create([
             'user_id' => auth()->id(),
             'action' => 'export.laporan',
@@ -67,9 +78,6 @@ class ExportController extends Controller
             'ip_address' => request()->ip(),
             'url' => request()->fullUrl(),
         ]);
-
-        $pdf = $this->reportPdfService->summary($year);
-        $filename = "laporan-tahunan-{$year}.pdf";
 
         return response()->streamDownload(
             fn () => print ($pdf->output()),
@@ -89,6 +97,7 @@ class ExportController extends Controller
         $validated = $request->validate([
             'month' => 'nullable|integer|min:1|max:12',
             'year' => 'nullable|integer|min:2000|max:2100',
+            'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
         $export = match ($dataset) {
@@ -102,6 +111,8 @@ class ExportController extends Controller
             'expenses' => new ExpensesExport,
         };
 
+        $response = Excel::download($export, "export-{$dataset}-".now()->format('Y-m-d').'.xlsx');
+
         ActivityLog::create([
             'user_id' => auth()->id(),
             'action' => 'export.data',
@@ -110,7 +121,7 @@ class ExportController extends Controller
             'url' => $request->fullUrl(),
         ]);
 
-        return Excel::download($export, "export-{$dataset}-".now()->format('Y-m-d').'.xlsx');
+        return $response;
     }
 
     public function backup(Request $request)

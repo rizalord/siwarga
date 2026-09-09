@@ -21,6 +21,10 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  if (event.request.method !== 'GET') {
+    return
+  }
+
   if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request).catch(() => caches.match('/offline.html')))
     return
@@ -29,8 +33,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then(
       (hit) => hit ?? fetch(event.request).then((res) => {
-        const copy = res.clone()
-        caches.open(CACHE).then((cache) => cache.put(event.request, copy))
+        if (res.ok && new URL(event.request.url).origin === self.location.origin) {
+          const copy = res.clone()
+          caches.open(CACHE).then((cache) => cache.put(event.request, copy))
+        }
         return res
       }),
     ),
