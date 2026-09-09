@@ -2385,6 +2385,13 @@ class EventAdminController extends Controller
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
+    public function documentation(Event $event)
+    {
+        return EventDocumentationResource::collection(
+            $event->documentation()->orderBy('id')->get()
+        );
+    }
+
     public function storeDocumentation(Request $request, Event $event)
     {
         $validated = $request->validate([
@@ -2422,6 +2429,7 @@ use App\Http\Controllers\Api\EventAdminController;
     Route::get('events/{event}', [EventAdminController::class, 'show'])->middleware('can:events.manage');
     Route::put('events/{event}', [EventAdminController::class, 'update']);
     Route::delete('events/{event}', [EventAdminController::class, 'destroy']);
+    Route::get('events/{event}/documentation', [EventAdminController::class, 'documentation'])->middleware('can:events.manage');
     Route::post('events/{event}/documentation', [EventAdminController::class, 'storeDocumentation'])->middleware('can:events.manage');
     Route::delete('event-documentation/{documentation}', [EventAdminController::class, 'destroyDocumentation']);
 ```
@@ -2976,6 +2984,8 @@ export const eventsAdminService = {
   },
   deleteDocumentation: (docId: number) =>
     api.delete<ApiResponse<null>>(`/api/event-documentation/${docId}`),
+  getDocumentation: (eventId: number) =>
+    api.get<ApiResponse<EventDocumentation[]>>(`/api/events/${eventId}/documentation`),
 }
 ```
 
@@ -3023,7 +3033,7 @@ export function useDeleteEvent() {
 
 - [ ] **Step 2: Write the page, route, and sidebar**
 
-`events-page.tsx`: admin table (title, dates, status badge + inline status `Select`, public toggle, documentation count) + `Buat Kegiatan` dialog (title, description RichText/plain textarea, starts/ends datetime-local, is_public checkbox, submit `Simpan Kegiatan`); detail expand/dialog with gallery grid (thumbnails + caption + delete) + photo upload (label `Tambah dokumentasi`, max-5 client hint, per-file toast); error + retry states. Sanitization-trust comment above any `dangerouslySetInnerHTML` (descriptions are server-sanitized).
+`events-page.tsx`: admin table (title, dates, status badge + inline status `Select`, public toggle, documentation count) + `Buat Kegiatan` dialog (title, description RichText/plain textarea, starts/ends datetime-local, is_public checkbox, submit `Simpan Kegiatan`); detail expand/dialog with gallery grid: seed the grid from `getDocumentation(eventId)` on open (server history, deletable) plus session uploads; cap computed as server docs + session docs against 5 with `N/5 terpakai` text; thumbnails + caption + delete; photo upload (label `Tambah dokumentasi`, max-5 client hint, per-file toast); `useDeleteDocumentation.onSuccess` invalidates both `['admin-events']` and `['admin-event']`; error + retry states. Sanitization-trust comment above any `dangerouslySetInnerHTML` (descriptions are server-sanitized).
 Route `events/index.tsx` + sidebar entry:
 
 ```ts
