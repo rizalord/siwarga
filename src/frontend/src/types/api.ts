@@ -696,3 +696,42 @@ export interface FacilityFilter {
   sort?: string
   order?: 'asc' | 'desc'
 }
+
+export type AssetCondition = 'baik' | 'rusak_ringan' | 'rusak_berat'
+export type AssetLoanStatus = 'pending' | 'approved' | 'rejected' | 'returned'
+
+export interface Asset {
+  id: number
+  name: string
+  quantity: number
+  condition: AssetCondition
+  available: number | null
+  created_at: string
+}
+
+export interface AssetLoan {
+  id: number
+  asset_id: number
+  asset_name: string | null
+  borrowed_by: number
+  borrower_name: string | null
+  quantity: number
+  status: AssetLoanStatus
+  borrowed_at: string | null
+  returned_at: string | null
+  created_at: string
+}
+
+export interface AssetFilter {
+  search?: string
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+export interface AssetLoanFilter {
+  status?: AssetLoanStatus
+  page?: number
+  per_page?: number
+}

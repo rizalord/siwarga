@@ -20,6 +20,7 @@ import {
   History,
   CalendarCheck,
   Building2,
+  Package,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -129,6 +130,12 @@ export const sidebarData: SidebarData = {
           url: '/facilities',
           icon: Building2,
           permission: 'facilities.manage',
+        },
+        {
+          title: 'Inventaris Aset',
+          url: '/assets',
+          icon: Package,
+          permission: 'assets.view',
         },
       ],
     },

@@ -19,6 +19,7 @@ import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedActivityLogsIndexRouteImport } from './routes/_authenticated/activity-logs/index'
 import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_authenticated/announcements/index'
+import { Route as AuthenticatedAssetsIndexRouteImport } from './routes/_authenticated/assets/index'
 import { Route as AuthenticatedBillsIndexRouteImport } from './routes/_authenticated/bills/index'
 import { Route as AuthenticatedBookingsIndexRouteImport } from './routes/_authenticated/bookings/index'
 import { Route as AuthenticatedContactMessagesIndexRouteImport } from './routes/_authenticated/contact-messages/index'
@@ -94,6 +95,12 @@ const AuthenticatedAnnouncementsIndexRoute =
   AuthenticatedAnnouncementsIndexRouteImport.update({
     id: '/announcements/',
     path: '/announcements/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAssetsIndexRoute =
+  AuthenticatedAssetsIndexRouteImport.update({
+    id: '/assets/',
+    path: '/assets/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBillsIndexRoute = AuthenticatedBillsIndexRouteImport.update({
@@ -254,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/residents/$id': typeof AuthenticatedResidentsIdRoute
   '/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
   '/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
+  '/assets/': typeof AuthenticatedAssetsIndexRoute
   '/bills/': typeof AuthenticatedBillsIndexRoute
   '/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
@@ -290,6 +298,7 @@ export interface FileRoutesByTo {
   '/residents/$id': typeof AuthenticatedResidentsIdRoute
   '/activity-logs': typeof AuthenticatedActivityLogsIndexRoute
   '/announcements': typeof AuthenticatedAnnouncementsIndexRoute
+  '/assets': typeof AuthenticatedAssetsIndexRoute
   '/bills': typeof AuthenticatedBillsIndexRoute
   '/bookings': typeof AuthenticatedBookingsIndexRoute
   '/contact-messages': typeof AuthenticatedContactMessagesIndexRoute
@@ -328,6 +337,7 @@ export interface FileRoutesById {
   '/_authenticated/residents/$id': typeof AuthenticatedResidentsIdRoute
   '/_authenticated/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
   '/_authenticated/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
+  '/_authenticated/assets/': typeof AuthenticatedAssetsIndexRoute
   '/_authenticated/bills/': typeof AuthenticatedBillsIndexRoute
   '/_authenticated/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/_authenticated/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/residents/$id'
     | '/activity-logs/'
     | '/announcements/'
+    | '/assets/'
     | '/bills/'
     | '/bookings/'
     | '/contact-messages/'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/residents/$id'
     | '/activity-logs'
     | '/announcements'
+    | '/assets'
     | '/bills'
     | '/bookings'
     | '/contact-messages'
@@ -439,6 +451,7 @@ export interface FileRouteTypes {
     | '/_authenticated/residents/$id'
     | '/_authenticated/activity-logs/'
     | '/_authenticated/announcements/'
+    | '/_authenticated/assets/'
     | '/_authenticated/bills/'
     | '/_authenticated/bookings/'
     | '/_authenticated/contact-messages/'
@@ -542,6 +555,13 @@ declare module '@tanstack/react-router' {
       path: '/announcements'
       fullPath: '/announcements/'
       preLoaderRoute: typeof AuthenticatedAnnouncementsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assets/': {
+      id: '/_authenticated/assets/'
+      path: '/assets'
+      fullPath: '/assets/'
+      preLoaderRoute: typeof AuthenticatedAssetsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/bills/': {
@@ -730,6 +750,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedResidentsIdRoute: typeof AuthenticatedResidentsIdRoute
   AuthenticatedActivityLogsIndexRoute: typeof AuthenticatedActivityLogsIndexRoute
   AuthenticatedAnnouncementsIndexRoute: typeof AuthenticatedAnnouncementsIndexRoute
+  AuthenticatedAssetsIndexRoute: typeof AuthenticatedAssetsIndexRoute
   AuthenticatedBillsIndexRoute: typeof AuthenticatedBillsIndexRoute
   AuthenticatedBookingsIndexRoute: typeof AuthenticatedBookingsIndexRoute
   AuthenticatedContactMessagesIndexRoute: typeof AuthenticatedContactMessagesIndexRoute
@@ -761,6 +782,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedResidentsIdRoute: AuthenticatedResidentsIdRoute,
   AuthenticatedActivityLogsIndexRoute: AuthenticatedActivityLogsIndexRoute,
   AuthenticatedAnnouncementsIndexRoute: AuthenticatedAnnouncementsIndexRoute,
+  AuthenticatedAssetsIndexRoute: AuthenticatedAssetsIndexRoute,
   AuthenticatedBillsIndexRoute: AuthenticatedBillsIndexRoute,
   AuthenticatedBookingsIndexRoute: AuthenticatedBookingsIndexRoute,
   AuthenticatedContactMessagesIndexRoute:
