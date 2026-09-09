@@ -15,10 +15,12 @@ use App\Http\Controllers\Api\EventAdminController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\FacilityController;
+use App\Http\Controllers\Api\FamilyMemberController;
 use App\Http\Controllers\Api\ForumPostController;
 use App\Http\Controllers\Api\ForumThreadController;
 use App\Http\Controllers\Api\GuestLogController;
 use App\Http\Controllers\Api\HouseController;
+use App\Http\Controllers\Api\HouseholdCardController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PanicAlertController;
@@ -286,6 +288,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('emergency-contacts', [EmergencyContactController::class, 'store'])->middleware('can:emergency-contacts.manage');
     Route::put('emergency-contacts/{emergencyContact}', [EmergencyContactController::class, 'update']);
     Route::delete('emergency-contacts/{emergencyContact}', [EmergencyContactController::class, 'destroy']);
+
+    // Security — family & household card (Fase 4)
+    Route::get('family-members', [FamilyMemberController::class, 'index'])->middleware('can:family-members.view');
+    Route::post('family-members', [FamilyMemberController::class, 'store'])->middleware('can:family-members.view');
+    Route::get('family-members/{familyMember}', [FamilyMemberController::class, 'show'])->middleware('can:family-members.view');
+    Route::put('family-members/{familyMember}', [FamilyMemberController::class, 'update']);
+    Route::delete('family-members/{familyMember}', [FamilyMemberController::class, 'destroy']);
+    Route::get('households/card', [HouseholdCardController::class, 'show'])->middleware('can:family-members.view');
 });
 
 Route::prefix('public')->group(function () {
@@ -295,4 +305,5 @@ Route::prefix('public')->group(function () {
     Route::get('events', [PublicEventController::class, 'index']);
     Route::get('events/{slug}', [PublicEventController::class, 'show']);
     Route::post('contact', [ContactMessageController::class, 'store'])->middleware('throttle:contact');
+    Route::get('households/{token}', [HouseholdCardController::class, 'verify']);
 });
