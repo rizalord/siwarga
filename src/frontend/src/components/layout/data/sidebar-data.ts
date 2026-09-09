@@ -24,6 +24,8 @@ import {
   CalendarDays,
   BookOpen,
   Siren,
+  QrCode,
+  Download,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -193,6 +195,12 @@ export const sidebarData: SidebarData = {
           permission: 'payments.view',
         },
         {
+          title: 'Bayar Online',
+          url: '/payments-online',
+          icon: QrCode,
+          permission: 'payments.online',
+        },
+        {
           title: 'Pengeluaran',
           url: '/expenses',
           icon: ShoppingCart,
@@ -208,6 +216,12 @@ export const sidebarData: SidebarData = {
           title: 'Laporan',
           url: '/reports',
           icon: FileText,
+          permission: 'reports.view',
+        },
+        {
+          title: 'Export & Backup',
+          url: '/exports',
+          icon: Download,
           permission: 'reports.view',
         },
       ],

@@ -910,3 +910,44 @@ export interface HouseholdCard {
   member_count: number
   verify_token: string
 }
+
+export type PaymentProvider = 'simulator' | 'xendit' | 'midtrans' | 'manual'
+export type PaymentChannel = 'qris' | 'va' | 'ewallet' | 'manual_transfer'
+export type PaymentTrxStatus =
+  | 'pending'
+  | 'awaiting_verification'
+  | 'paid'
+  | 'expired'
+  | 'failed'
+  | 'rejected'
+
+export interface PaymentTransaction {
+  id: number
+  bill_id: number
+  bill_label: string | null
+  user_id: number
+  payer_name: string | null
+  provider: string
+  channel: PaymentChannel
+  amount: string
+  status: PaymentTrxStatus
+  reference: string
+  pay_code: string | null
+  qr_payload: string | null
+  expires_at: string | null
+  proof_path: string | null
+  verified_by: number | null
+  rejection_reason: string | null
+  paid_at: string | null
+  created_at: string
+}
+
+export interface PaymentTrxFilter {
+  page?: number
+  per_page?: number
+  status?: PaymentTrxStatus
+  bill_id?: number
+}
+
+export type ExportDataset =
+  'residents' | 'houses' | 'bills' | 'payments' | 'expenses'
