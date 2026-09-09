@@ -125,3 +125,27 @@ enableMocking().then(() => {
     )
   }
 })
+
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        const notify = () =>
+          toast.info('Versi baru tersedia, muat ulang halaman')
+        if (registration.waiting) notify()
+        registration.addEventListener('updatefound', () => {
+          registration.installing?.addEventListener('statechange', (e) => {
+            if (
+              (e.target as ServiceWorker).state === 'installed' &&
+              navigator.serviceWorker.controller
+            )
+              notify()
+          })
+        })
+      })
+      .catch(() => {
+        // Offline support unavailable — app still works online.
+      })
+  })
+}
