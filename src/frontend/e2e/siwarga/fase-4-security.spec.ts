@@ -12,42 +12,54 @@ import {
 
 test.describe('Fase 4 security', () => {
   test('warga reports panic, satpam handles and resolves', async ({
-    wargaPage,
     request,
+    browser,
   }) => {
-    const wargaToken = await apiToken(request, 'warga@siwarga.test', 'password')
-    const satpamToken = await apiToken(
-      request,
-      'satpam@siwarga.test',
-      'password'
-    )
-    // One active alert per reporter is enforced — cancel leftovers from
-    // previous runs so the UI report below never trips the 1-active rule.
-    const existing = (await apiGet(
-      request,
-      wargaToken,
-      '/api/panic-alerts?status=active&per_page=100'
-    )) as { data: { id: number }[] }
-    for (const alert of existing.data ?? []) {
-      await request.post(
-        `${apiBaseURL}/api/panic-alerts/${alert.id}/cancel`,
-        {
-          headers: { Authorization: `Bearer ${wargaToken}` },
-        }
-      )
+    // Per-test users isolate this flow from parallel workers sharing the
+    // seeded demo accounts (1-active-alert rule + panic throttle are per
+    // reporter, so a fresh reporter can never collide or trip them — no
+    // cancel-sweep needed).
+    const adminToken = await apiToken(request, defaultAdmin.email, 'password')
+    const roles = (await apiGet(request, adminToken, '/api/roles?per_page=50')) as {
+      data: { id: number; name: string }[]
     }
+    const roleId = (name: string) =>
+      roles.data.find((r) => r.name === name)!.id
+    const suffix = uid()
+    const wargaEmail = `e2e-panic-warga-${suffix}@siwarga.test`
+    const satpamEmail = `e2e-panic-satpam-${suffix}@siwarga.test`
+    await apiPost(request, adminToken, '/api/users', {
+      name: `E2E Panic Warga ${suffix}`,
+      email: wargaEmail,
+      password: 'password123',
+      role_ids: [roleId('warga')],
+    })
+    await apiPost(request, adminToken, '/api/users', {
+      name: `E2E Panic Satpam ${suffix}`,
+      email: satpamEmail,
+      password: 'password123',
+      role_ids: [roleId('satpam')],
+    })
+    const wargaToken = await apiToken(request, wargaEmail, 'password123')
+    const satpamToken = await apiToken(request, satpamEmail, 'password123')
 
-    const location = `E2E Panic ${uid()}`
-    await wargaPage.goto('/panic')
-    await wargaPage.getByRole('button', { name: 'Lapor Darurat' }).click()
-    await wargaPage.getByLabel('Lokasi kejadian').fill(location)
-    // UI label is "Kirim Laporan Darurat" (adapted to implemented UI).
-    await wargaPage
-      .getByRole('button', { name: 'Kirim Laporan Darurat' })
-      .click()
-    await expect(
-      wargaPage.getByText('Laporan darurat terkirim ke satpam')
-    ).toBeVisible()
+    const location = `E2E Panic ${suffix}`
+    const panicPage = await browser.newPage()
+    try {
+      await login(panicPage, wargaEmail, 'password123')
+      await panicPage.goto('/panic')
+      await panicPage.getByRole('button', { name: 'Lapor Darurat' }).click()
+      await panicPage.getByLabel('Lokasi kejadian').fill(location)
+      // UI label is "Kirim Laporan Darurat" (adapted to implemented UI).
+      await panicPage
+        .getByRole('button', { name: 'Kirim Laporan Darurat' })
+        .click()
+      await expect(
+        panicPage.getByText('Laporan darurat terkirim ke satpam')
+      ).toBeVisible()
+    } finally {
+      await panicPage.close()
+    }
 
     // Satpam handles then resolves via API (status jobs go to the queue —
     // assert API state only, never WA delivery).

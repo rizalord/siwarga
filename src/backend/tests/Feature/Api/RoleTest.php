@@ -31,8 +31,11 @@ class RoleTest extends TestCase
         $response = $this->getJson('/api/roles');
 
         $response->assertStatus(200);
-        // admin, bendahara, satpam, warga from RoleSeeder
-        $this->assertCount(4, $response->json('data'));
+        $data = $response->json('data');
+        // admin, bendahara, satpam, warga from RoleSeeder (count may grow
+        // with future roles, so assert a floor plus the Fase 4 satpam role).
+        $this->assertGreaterThanOrEqual(4, count($data));
+        $this->assertContains('satpam', collect($data)->pluck('name')->all());
     }
 
     public function test_can_create_role_with_permissions()
