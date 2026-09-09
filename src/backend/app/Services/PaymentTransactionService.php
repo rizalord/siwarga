@@ -58,7 +58,12 @@ class PaymentTransactionService
             'idempotency_key' => (string) Str::uuid(),
         ]);
 
-        $invoice = $provider->createInvoice($transaction->fresh());
+        // bank_code is validated at the controller (required_if va) and passed
+        // as an in-memory transient only — never persisted to the transactions table.
+        $freshTransaction = $transaction->fresh();
+        $freshTransaction->setAttribute('bank_code', $data['bank_code'] ?? null);
+
+        $invoice = $provider->createInvoice($freshTransaction);
 
         $transaction->update([
             'reference' => $invoice->reference,
@@ -100,12 +105,7 @@ class PaymentTransactionService
         }
 
         if ($approve) {
-            $transaction->update([
-                'verified_by' => $actor->id,
-                'verified_at' => now(),
-            ]);
-
-            return $this->finalizePaid($transaction->fresh(), $actor->name);
+            return $this->finalizePaid($transaction, $actor->name, $actor);
         }
 
         $transaction->update([
@@ -155,9 +155,9 @@ class PaymentTransactionService
         return $this->finalizePaid($transaction, $actor->name.' (simulasi)');
     }
 
-    private function finalizePaid(PaymentTransaction $transaction, string $actorName): PaymentTransaction
+    private function finalizePaid(PaymentTransaction $transaction, string $actorName, ?User $verifier = null): PaymentTransaction
     {
-        return DB::transaction(function () use ($transaction, $actorName): PaymentTransaction {
+        return DB::transaction(function () use ($transaction, $actorName, $verifier): PaymentTransaction {
             $fresh = PaymentTransaction::whereKey($transaction->id)->lockForUpdate()->firstOrFail();
 
             // Idempotency: replayed webhooks / double taps are a no-op.
@@ -167,6 +167,19 @@ class PaymentTransactionService
 
             if (! in_array($fresh->status, [PaymentTransaction::STATUS_PENDING, PaymentTransaction::STATUS_AWAITING_VERIFICATION], true)) {
                 throw ValidationException::withMessages(['status' => ['Transaksi ini tidak bisa dibayar.']]);
+            }
+
+            $bill = Bill::whereKey($fresh->bill_id)->lockForUpdate()->firstOrFail();
+
+            if ($bill->status === 'lunas') {
+                throw ValidationException::withMessages(['bill_id' => ['Tagihan ini sudah lunas.']]);
+            }
+
+            if ($verifier !== null) {
+                $fresh->update([
+                    'verified_by' => $verifier->id,
+                    'verified_at' => now(),
+                ]);
             }
 
             $old = $fresh->status;

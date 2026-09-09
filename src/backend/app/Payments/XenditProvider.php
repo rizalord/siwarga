@@ -5,6 +5,7 @@ namespace App\Payments;
 use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class XenditProvider implements PaymentProvider
 {
@@ -15,6 +16,10 @@ class XenditProvider implements PaymentProvider
 
     public function createInvoice(PaymentTransaction $transaction): ProviderInvoice
     {
+        if (! in_array($transaction->channel, ['qris', 'va'], true)) {
+            throw ValidationException::withMessages(['channel' => ['Kanal belum didukung provider ini.']]);
+        }
+
         $base = rtrim((string) config('services.xendit.base_url', 'https://api.xendit.co'), '/');
 
         $payload = [
@@ -24,7 +29,7 @@ class XenditProvider implements PaymentProvider
         ];
 
         if ($transaction->channel === 'qris') {
-            $response = Http::withToken((string) config('services.xendit.secret_key'))
+            $response = Http::withBasicAuth((string) config('services.xendit.secret_key'), '')
                 ->post("{$base}/qr_codes", [
                     'external_id' => $transaction->idempotency_key,
                     'type' => 'DYNAMIC',
@@ -39,10 +44,16 @@ class XenditProvider implements PaymentProvider
             );
         }
 
-        $response = Http::withToken((string) config('services.xendit.secret_key'))
+        $bankCode = $transaction->getAttribute('bank_code');
+
+        if (! is_string($bankCode) || $bankCode === '') {
+            throw ValidationException::withMessages(['bank_code' => ['Kode bank wajib diisi untuk kanal VA.']]);
+        }
+
+        $response = Http::withBasicAuth((string) config('services.xendit.secret_key'), '')
             ->post("{$base}/callback_virtual_accounts", [
                 'external_id' => $transaction->idempotency_key,
-                'bank_code' => 'BRI',
+                'bank_code' => $bankCode,
                 'name' => 'SIWarga',
                 ...$payload,
             ])->throw()->json();

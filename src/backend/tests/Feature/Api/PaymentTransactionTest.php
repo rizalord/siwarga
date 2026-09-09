@@ -14,6 +14,7 @@ use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -224,5 +225,67 @@ class PaymentTransactionTest extends TestCase
 
         $this->actingAs($this->warga)->postJson("/api/payment-transactions/{$trx->id}/verify", ['approve' => true])
             ->assertStatus(403);
+    }
+
+    public function test_concurrent_settle_yields_exactly_one_payment()
+    {
+        // Adapted from brief: pin amount to bill amount_due (factory defaults
+        // to 75000 while setUp bill is 50000, which would 422 on first settle
+        // via overpay guard instead of exercising the bill lock).
+        $first = PaymentTransaction::factory()->create([
+            'bill_id' => $this->bill->id,
+            'user_id' => $this->warga->id,
+            'amount' => $this->bill->amount_due,
+            'status' => 'pending',
+            'provider' => 'simulator',
+        ]);
+        $second = PaymentTransaction::factory()->create([
+            'bill_id' => $this->bill->id,
+            'user_id' => $this->warga->id,
+            'amount' => $this->bill->amount_due,
+            'status' => 'pending',
+            'provider' => 'simulator',
+        ]);
+
+        // Sequential simulation of the race: first wins, second must 422.
+        $this->actingAs($this->warga)->postJson("/api/payment-transactions/{$first->id}/simulate-pay")
+            ->assertStatus(200)->assertJsonPath('data.status', 'paid');
+        $this->actingAs($this->warga)->postJson("/api/payment-transactions/{$second->id}/simulate-pay")
+            ->assertStatus(422);
+
+        $this->assertEquals(1, Payment::where('bill_id', $this->bill->id)->count());
+        $this->assertEquals('lunas', $this->bill->fresh()->status);
+    }
+
+    public function test_unknown_channel_is_rejected()
+    {
+        $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
+            'bill_id' => $this->bill->id,
+            'channel' => 'ewallet',
+        ])->assertStatus(422);
+    }
+
+    public function test_xendit_invoice_uses_basic_auth()
+    {
+        config()->set('services.xendit.secret_key', 'test-secret-key');
+        Http::fake([
+            '*/qr_codes' => Http::response([
+                'id' => 'qr_123',
+                'qr_string' => 'QRTESTPAYLOAD',
+                'expires_at' => now()->addMinutes(30)->toIso8601String(),
+            ], 200),
+        ]);
+
+        $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
+            'bill_id' => $this->bill->id,
+            'channel' => 'qris',
+            'provider' => 'xendit',
+        ])->assertStatus(201);
+
+        Http::assertSent(function ($request) {
+            $header = $request->header('Authorization')[0] ?? '';
+
+            return $header === 'Basic '.base64_encode('test-secret-key:');
+        });
     }
 }

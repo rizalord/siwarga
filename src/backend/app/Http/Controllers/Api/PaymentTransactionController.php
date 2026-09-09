@@ -47,7 +47,8 @@ class PaymentTransactionController extends Controller
     {
         $validated = $request->validate([
             'bill_id' => 'required|exists:bills,id',
-            'channel' => ['required', Rule::in(['qris', 'va', 'ewallet', 'manual_transfer'])],
+            'channel' => ['required', Rule::in(['qris', 'va', 'manual_transfer'])],
+            'bank_code' => ['required_if:channel,va', 'nullable', 'string', 'max:20'],
             'provider' => ['nullable', Rule::in(['simulator', 'xendit', 'midtrans'])],
             'proof' => 'required_if:channel,manual_transfer|nullable|image|max:2048',
         ]);
