@@ -735,3 +735,35 @@ export interface AssetLoanFilter {
   page?: number
   per_page?: number
 }
+
+export type EventStatus = 'upcoming' | 'ongoing' | 'completed'
+
+export interface AdminEvent {
+  id: number
+  title: string
+  slug: string
+  description: string | null
+  starts_at: string
+  ends_at: string | null
+  status: EventStatus
+  is_public: boolean
+  documentation_count: number
+  created_at: string
+}
+
+export interface EventDocumentation {
+  id: number
+  media_type: 'foto' | 'video'
+  url: string
+  caption: string | null
+  created_at: string | null
+}
+
+export interface EventFilter {
+  search?: string
+  status?: EventStatus
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}

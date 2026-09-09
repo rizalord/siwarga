@@ -25,6 +25,7 @@ import { Route as AuthenticatedBookingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedContactMessagesIndexRouteImport } from './routes/_authenticated/contact-messages/index'
 import { Route as AuthenticatedDueTypesIndexRouteImport } from './routes/_authenticated/due-types/index'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
+import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events/index'
 import { Route as AuthenticatedExpenseCategoriesIndexRouteImport } from './routes/_authenticated/expense-categories/index'
 import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authenticated/expenses/index'
 import { Route as AuthenticatedFacilitiesIndexRouteImport } from './routes/_authenticated/facilities/index'
@@ -130,6 +131,12 @@ const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
     path: '/errors/$error',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEventsIndexRoute =
+  AuthenticatedEventsIndexRouteImport.update({
+    id: '/events/',
+    path: '/events/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedExpenseCategoriesIndexRoute =
@@ -266,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
+  '/events/': typeof AuthenticatedEventsIndexRoute
   '/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/facilities/': typeof AuthenticatedFacilitiesIndexRoute
@@ -303,6 +311,7 @@ export interface FileRoutesByTo {
   '/bookings': typeof AuthenticatedBookingsIndexRoute
   '/contact-messages': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
+  '/events': typeof AuthenticatedEventsIndexRoute
   '/expense-categories': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses': typeof AuthenticatedExpensesIndexRoute
   '/facilities': typeof AuthenticatedFacilitiesIndexRoute
@@ -342,6 +351,7 @@ export interface FileRoutesById {
   '/_authenticated/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/_authenticated/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
+  '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
   '/_authenticated/facilities/': typeof AuthenticatedFacilitiesIndexRoute
@@ -381,6 +391,7 @@ export interface FileRouteTypes {
     | '/bookings/'
     | '/contact-messages/'
     | '/due-types/'
+    | '/events/'
     | '/expense-categories/'
     | '/expenses/'
     | '/facilities/'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/contact-messages'
     | '/due-types'
+    | '/events'
     | '/expense-categories'
     | '/expenses'
     | '/facilities'
@@ -456,6 +468,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bookings/'
     | '/_authenticated/contact-messages/'
     | '/_authenticated/due-types/'
+    | '/_authenticated/events/'
     | '/_authenticated/expense-categories/'
     | '/_authenticated/expenses/'
     | '/_authenticated/facilities/'
@@ -597,6 +610,13 @@ declare module '@tanstack/react-router' {
       path: '/errors/$error'
       fullPath: '/errors/$error'
       preLoaderRoute: typeof AuthenticatedErrorsErrorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/events/': {
+      id: '/_authenticated/events/'
+      path: '/events'
+      fullPath: '/events/'
+      preLoaderRoute: typeof AuthenticatedEventsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/expense-categories/': {
@@ -755,6 +775,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookingsIndexRoute: typeof AuthenticatedBookingsIndexRoute
   AuthenticatedContactMessagesIndexRoute: typeof AuthenticatedContactMessagesIndexRoute
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
+  AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
   AuthenticatedExpenseCategoriesIndexRoute: typeof AuthenticatedExpenseCategoriesIndexRoute
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
   AuthenticatedFacilitiesIndexRoute: typeof AuthenticatedFacilitiesIndexRoute
@@ -788,6 +809,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedContactMessagesIndexRoute:
     AuthenticatedContactMessagesIndexRoute,
   AuthenticatedDueTypesIndexRoute: AuthenticatedDueTypesIndexRoute,
+  AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
   AuthenticatedExpenseCategoriesIndexRoute:
     AuthenticatedExpenseCategoriesIndexRoute,
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,

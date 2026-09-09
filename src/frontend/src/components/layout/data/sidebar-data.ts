@@ -21,6 +21,7 @@ import {
   CalendarCheck,
   Building2,
   Package,
+  CalendarDays,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -136,6 +137,12 @@ export const sidebarData: SidebarData = {
           url: '/assets',
           icon: Package,
           permission: 'assets.view',
+        },
+        {
+          title: 'Kegiatan',
+          url: '/events',
+          icon: CalendarDays,
+          permission: 'events.manage',
         },
       ],
     },
