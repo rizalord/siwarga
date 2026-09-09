@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\PublicPageController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SuggestionController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WargaAnnouncementController;
@@ -209,6 +210,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::post('notifications/{id}/read', [NotificationController::class, 'markRead']);
+
+    // Suggestions (anonymous submit, admin inbox)
+    Route::post('suggestions', [SuggestionController::class, 'store'])->middleware(['can:suggestions.create', 'throttle:suggestions']);
+    Route::get('suggestions', [SuggestionController::class, 'index'])->middleware('can:suggestions.view');
+    Route::post('suggestions/{suggestion}/mark-reviewed', [SuggestionController::class, 'markReviewed'])->middleware('can:suggestions.view');
 });
 
 Route::prefix('public')->group(function () {
