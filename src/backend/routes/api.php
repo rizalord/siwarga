@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\EmergencyContactController;
 use App\Http\Controllers\Api\EventAdminController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\FamilyMemberController;
 use App\Http\Controllers\Api\ForumPostController;
@@ -176,6 +177,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reports
     Route::get('reports/summary/{year}', [ReportController::class, 'summary'])->middleware('can:reports.view');
     Route::get('reports/monthly/{year}/{month}', [ReportController::class, 'monthly'])->middleware('can:reports.view');
+
+    // Exports & backup (Fase 5)
+    Route::get('reports/monthly/{year}/{month}/pdf', [ExportController::class, 'monthlyPdf'])->middleware(['can:reports.view', 'throttle:exports']);
+    Route::get('reports/summary/{year}/pdf', [ExportController::class, 'summaryPdf'])->middleware(['can:reports.view', 'throttle:exports']);
+    Route::get('exports/{dataset}/xlsx', [ExportController::class, 'dataset'])->middleware('throttle:exports');
+    Route::get('backup/json', [ExportController::class, 'backup'])->middleware(['can:users.manage', 'throttle:exports']);
 
     // Users
     Route::get('users', [UserController::class, 'index'])->middleware('can:users.view');
