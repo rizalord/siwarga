@@ -131,6 +131,26 @@ class PaymentTransactionTest extends TestCase
         $this->postJson('/api/public/payments/webhook/nope', [])->assertStatus(404);
     }
 
+    public function test_non_paid_webhook_after_settlement_is_noop()
+    {
+        $created = $this->actingAs($this->warga)->postJson('/api/payment-transactions', [
+            'bill_id' => $this->bill->id,
+            'channel' => 'qris',
+        ])->json('data');
+
+        $this->actingAs($this->warga)->postJson("/api/payment-transactions/{$created['id']}/simulate-pay")
+            ->assertStatus(200)->assertJsonPath('data.status', 'paid');
+
+        $this->postJson('/api/public/payments/webhook/simulator', [
+            'reference' => $created['reference'],
+            'status' => 'failed',
+        ])->assertStatus(200)->assertJsonPath('data.status', 'paid');
+
+        $this->assertEquals('paid', PaymentTransaction::find($created['id'])->status);
+        $this->assertEquals(1, Payment::where('bill_id', $this->bill->id)->count());
+        $this->assertEquals('lunas', $this->bill->fresh()->status);
+    }
+
     public function test_warga_cannot_pay_others_bill_or_verify()
     {
         $other = Bill::factory()->create(['status' => 'belum_lunas', 'amount_due' => 10000]);

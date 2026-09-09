@@ -132,6 +132,11 @@ class PaymentTransactionService
 
         $transaction = PaymentTransaction::where('reference', $webhook->reference)->firstOrFail();
 
+        // Settled transactions are immutable: late non-paid webhooks are a no-op.
+        if ($transaction->status === PaymentTransaction::STATUS_PAID) {
+            return $transaction->fresh(['bill', 'payer']);
+        }
+
         if ($webhook->status !== 'paid') {
             $transaction->update(['status' => $webhook->status === 'expired' ? PaymentTransaction::STATUS_EXPIRED : PaymentTransaction::STATUS_FAILED]);
 
