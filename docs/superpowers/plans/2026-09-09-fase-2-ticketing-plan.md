@@ -714,8 +714,8 @@ class TicketService
     {
         $order = self::STATUS_ORDER;
 
-        if (! isset($order[$newStatus]) || $order[$newStatus] <= $order[$ticket->status]) {
-            throw ValidationException::withMessages(['status' => ['Transisi status tidak valid. Tiket hanya bergerak maju: open → in_progress → resolved.']]);
+        if (! isset($order[$newStatus]) || $order[$newStatus] !== $order[$ticket->status] + 1) {
+            throw ValidationException::withMessages(['status' => ['Transisi status tidak valid. Tiket hanya bergerak maju satu langkah: open → in_progress → resolved.']]);
         }
 
         $oldStatus = $ticket->status;
