@@ -20,11 +20,13 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedActivityLogsIndexRouteImport } from './routes/_authenticated/activity-logs/index'
 import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_authenticated/announcements/index'
 import { Route as AuthenticatedBillsIndexRouteImport } from './routes/_authenticated/bills/index'
+import { Route as AuthenticatedBookingsIndexRouteImport } from './routes/_authenticated/bookings/index'
 import { Route as AuthenticatedContactMessagesIndexRouteImport } from './routes/_authenticated/contact-messages/index'
 import { Route as AuthenticatedDueTypesIndexRouteImport } from './routes/_authenticated/due-types/index'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedExpenseCategoriesIndexRouteImport } from './routes/_authenticated/expense-categories/index'
 import { Route as AuthenticatedExpensesIndexRouteImport } from './routes/_authenticated/expenses/index'
+import { Route as AuthenticatedFacilitiesIndexRouteImport } from './routes/_authenticated/facilities/index'
 import { Route as AuthenticatedForumIndexRouteImport } from './routes/_authenticated/forum/index'
 import { Route as AuthenticatedForumThreadIdRouteImport } from './routes/_authenticated/forum/$threadId'
 import { Route as AuthenticatedHousesIndexRouteImport } from './routes/_authenticated/houses/index'
@@ -99,6 +101,12 @@ const AuthenticatedBillsIndexRoute = AuthenticatedBillsIndexRouteImport.update({
   path: '/bills/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBookingsIndexRoute =
+  AuthenticatedBookingsIndexRouteImport.update({
+    id: '/bookings/',
+    path: '/bookings/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedContactMessagesIndexRoute =
   AuthenticatedContactMessagesIndexRouteImport.update({
     id: '/contact-messages/',
@@ -127,6 +135,12 @@ const AuthenticatedExpensesIndexRoute =
   AuthenticatedExpensesIndexRouteImport.update({
     id: '/expenses/',
     path: '/expenses/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFacilitiesIndexRoute =
+  AuthenticatedFacilitiesIndexRouteImport.update({
+    id: '/facilities/',
+    path: '/facilities/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedForumIndexRoute = AuthenticatedForumIndexRouteImport.update({
@@ -241,10 +255,12 @@ export interface FileRoutesByFullPath {
   '/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
   '/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/bills/': typeof AuthenticatedBillsIndexRoute
+  '/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses/': typeof AuthenticatedExpensesIndexRoute
+  '/facilities/': typeof AuthenticatedFacilitiesIndexRoute
   '/forum/': typeof AuthenticatedForumIndexRoute
   '/houses/': typeof AuthenticatedHousesIndexRoute
   '/notifications/': typeof AuthenticatedNotificationsIndexRoute
@@ -275,10 +291,12 @@ export interface FileRoutesByTo {
   '/activity-logs': typeof AuthenticatedActivityLogsIndexRoute
   '/announcements': typeof AuthenticatedAnnouncementsIndexRoute
   '/bills': typeof AuthenticatedBillsIndexRoute
+  '/bookings': typeof AuthenticatedBookingsIndexRoute
   '/contact-messages': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
   '/expense-categories': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/expenses': typeof AuthenticatedExpensesIndexRoute
+  '/facilities': typeof AuthenticatedFacilitiesIndexRoute
   '/forum': typeof AuthenticatedForumIndexRoute
   '/houses': typeof AuthenticatedHousesIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
@@ -311,10 +329,12 @@ export interface FileRoutesById {
   '/_authenticated/activity-logs/': typeof AuthenticatedActivityLogsIndexRoute
   '/_authenticated/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/_authenticated/bills/': typeof AuthenticatedBillsIndexRoute
+  '/_authenticated/bookings/': typeof AuthenticatedBookingsIndexRoute
   '/_authenticated/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/_authenticated/expense-categories/': typeof AuthenticatedExpenseCategoriesIndexRoute
   '/_authenticated/expenses/': typeof AuthenticatedExpensesIndexRoute
+  '/_authenticated/facilities/': typeof AuthenticatedFacilitiesIndexRoute
   '/_authenticated/forum/': typeof AuthenticatedForumIndexRoute
   '/_authenticated/houses/': typeof AuthenticatedHousesIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
@@ -347,10 +367,12 @@ export interface FileRouteTypes {
     | '/activity-logs/'
     | '/announcements/'
     | '/bills/'
+    | '/bookings/'
     | '/contact-messages/'
     | '/due-types/'
     | '/expense-categories/'
     | '/expenses/'
+    | '/facilities/'
     | '/forum/'
     | '/houses/'
     | '/notifications/'
@@ -381,10 +403,12 @@ export interface FileRouteTypes {
     | '/activity-logs'
     | '/announcements'
     | '/bills'
+    | '/bookings'
     | '/contact-messages'
     | '/due-types'
     | '/expense-categories'
     | '/expenses'
+    | '/facilities'
     | '/forum'
     | '/houses'
     | '/notifications'
@@ -416,10 +440,12 @@ export interface FileRouteTypes {
     | '/_authenticated/activity-logs/'
     | '/_authenticated/announcements/'
     | '/_authenticated/bills/'
+    | '/_authenticated/bookings/'
     | '/_authenticated/contact-messages/'
     | '/_authenticated/due-types/'
     | '/_authenticated/expense-categories/'
     | '/_authenticated/expenses/'
+    | '/_authenticated/facilities/'
     | '/_authenticated/forum/'
     | '/_authenticated/houses/'
     | '/_authenticated/notifications/'
@@ -525,6 +551,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBillsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bookings/': {
+      id: '/_authenticated/bookings/'
+      path: '/bookings'
+      fullPath: '/bookings/'
+      preLoaderRoute: typeof AuthenticatedBookingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/contact-messages/': {
       id: '/_authenticated/contact-messages/'
       path: '/contact-messages'
@@ -558,6 +591,13 @@ declare module '@tanstack/react-router' {
       path: '/expenses'
       fullPath: '/expenses/'
       preLoaderRoute: typeof AuthenticatedExpensesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/facilities/': {
+      id: '/_authenticated/facilities/'
+      path: '/facilities'
+      fullPath: '/facilities/'
+      preLoaderRoute: typeof AuthenticatedFacilitiesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/forum/': {
@@ -691,10 +731,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityLogsIndexRoute: typeof AuthenticatedActivityLogsIndexRoute
   AuthenticatedAnnouncementsIndexRoute: typeof AuthenticatedAnnouncementsIndexRoute
   AuthenticatedBillsIndexRoute: typeof AuthenticatedBillsIndexRoute
+  AuthenticatedBookingsIndexRoute: typeof AuthenticatedBookingsIndexRoute
   AuthenticatedContactMessagesIndexRoute: typeof AuthenticatedContactMessagesIndexRoute
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
   AuthenticatedExpenseCategoriesIndexRoute: typeof AuthenticatedExpenseCategoriesIndexRoute
   AuthenticatedExpensesIndexRoute: typeof AuthenticatedExpensesIndexRoute
+  AuthenticatedFacilitiesIndexRoute: typeof AuthenticatedFacilitiesIndexRoute
   AuthenticatedForumIndexRoute: typeof AuthenticatedForumIndexRoute
   AuthenticatedHousesIndexRoute: typeof AuthenticatedHousesIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
@@ -720,12 +762,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityLogsIndexRoute: AuthenticatedActivityLogsIndexRoute,
   AuthenticatedAnnouncementsIndexRoute: AuthenticatedAnnouncementsIndexRoute,
   AuthenticatedBillsIndexRoute: AuthenticatedBillsIndexRoute,
+  AuthenticatedBookingsIndexRoute: AuthenticatedBookingsIndexRoute,
   AuthenticatedContactMessagesIndexRoute:
     AuthenticatedContactMessagesIndexRoute,
   AuthenticatedDueTypesIndexRoute: AuthenticatedDueTypesIndexRoute,
   AuthenticatedExpenseCategoriesIndexRoute:
     AuthenticatedExpenseCategoriesIndexRoute,
   AuthenticatedExpensesIndexRoute: AuthenticatedExpensesIndexRoute,
+  AuthenticatedFacilitiesIndexRoute: AuthenticatedFacilitiesIndexRoute,
   AuthenticatedForumIndexRoute: AuthenticatedForumIndexRoute,
   AuthenticatedHousesIndexRoute: AuthenticatedHousesIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,

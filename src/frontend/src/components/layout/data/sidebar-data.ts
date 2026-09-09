@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   KeyRound,
   History,
+  CalendarCheck,
+  Building2,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -110,6 +112,23 @@ export const sidebarData: SidebarData = {
           url: '/suggestions',
           icon: MessageSquare,
           permission: 'suggestions.create',
+        },
+      ],
+    },
+    {
+      title: 'Fasilitas',
+      items: [
+        {
+          title: 'Booking',
+          url: '/bookings',
+          icon: CalendarCheck,
+          permission: 'bookings.view',
+        },
+        {
+          title: 'Kelola Fasilitas',
+          url: '/facilities',
+          icon: Building2,
+          permission: 'facilities.manage',
         },
       ],
     },

@@ -634,3 +634,65 @@ export interface SuggestionFilter {
   page?: number
   per_page?: number
 }
+
+export type BookingStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
+
+export interface Facility {
+  id: number
+  name: string
+  description: string | null
+  rental_fee: string | null
+  due_type_id: number | null
+  due_type_name: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Booking {
+  id: number
+  facility_id: number
+  facility_name: string | null
+  booked_by: number
+  booker_name: string | null
+  event_id: number | null
+  start_at: string
+  end_at: string
+  status: BookingStatus
+  approved_by: number | null
+  created_at: string
+}
+
+export interface CreateBookingRequest {
+  facility_id: number
+  event_id?: number
+  start_at: string
+  end_at: string
+}
+
+export interface CreateFacilityRequest {
+  name: string
+  description?: string
+  rental_fee?: number | null
+  due_type_id?: number | null
+  is_active?: boolean
+}
+
+export interface BookingFilter {
+  facility_id?: number
+  status?: BookingStatus
+  from?: string
+  to?: string
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+export interface FacilityFilter {
+  search?: string
+  page?: number
+  per_page?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
