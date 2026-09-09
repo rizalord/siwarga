@@ -621,3 +621,16 @@ export interface AppNotification {
   read_at: string | null
   created_at: string
 }
+
+export interface Suggestion {
+  id: number
+  content: string
+  status: 'new' | 'reviewed'
+  created_at: string
+}
+
+export interface SuggestionFilter {
+  status?: 'new' | 'reviewed'
+  page?: number
+  per_page?: number
+}
