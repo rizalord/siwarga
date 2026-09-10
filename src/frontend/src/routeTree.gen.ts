@@ -23,6 +23,7 @@ import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedAssetsIndexRouteImport } from './routes/_authenticated/assets/index'
 import { Route as AuthenticatedBillsIndexRouteImport } from './routes/_authenticated/bills/index'
 import { Route as AuthenticatedBookingsIndexRouteImport } from './routes/_authenticated/bookings/index'
+import { Route as AuthenticatedCctvIndexRouteImport } from './routes/_authenticated/cctv/index'
 import { Route as AuthenticatedContactMessagesIndexRouteImport } from './routes/_authenticated/contact-messages/index'
 import { Route as AuthenticatedDueTypesIndexRouteImport } from './routes/_authenticated/due-types/index'
 import { Route as AuthenticatedEmergencyContactsIndexRouteImport } from './routes/_authenticated/emergency-contacts/index'
@@ -128,6 +129,11 @@ const AuthenticatedBookingsIndexRoute =
     path: '/bookings/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCctvIndexRoute = AuthenticatedCctvIndexRouteImport.update({
+  id: '/cctv/',
+  path: '/cctv/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedContactMessagesIndexRoute =
   AuthenticatedContactMessagesIndexRouteImport.update({
     id: '/contact-messages/',
@@ -326,6 +332,7 @@ export interface FileRoutesByFullPath {
   '/assets/': typeof AuthenticatedAssetsIndexRoute
   '/bills/': typeof AuthenticatedBillsIndexRoute
   '/bookings/': typeof AuthenticatedBookingsIndexRoute
+  '/cctv/': typeof AuthenticatedCctvIndexRoute
   '/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/emergency-contacts/': typeof AuthenticatedEmergencyContactsIndexRoute
@@ -372,6 +379,7 @@ export interface FileRoutesByTo {
   '/assets': typeof AuthenticatedAssetsIndexRoute
   '/bills': typeof AuthenticatedBillsIndexRoute
   '/bookings': typeof AuthenticatedBookingsIndexRoute
+  '/cctv': typeof AuthenticatedCctvIndexRoute
   '/contact-messages': typeof AuthenticatedContactMessagesIndexRoute
   '/due-types': typeof AuthenticatedDueTypesIndexRoute
   '/emergency-contacts': typeof AuthenticatedEmergencyContactsIndexRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/_authenticated/assets/': typeof AuthenticatedAssetsIndexRoute
   '/_authenticated/bills/': typeof AuthenticatedBillsIndexRoute
   '/_authenticated/bookings/': typeof AuthenticatedBookingsIndexRoute
+  '/_authenticated/cctv/': typeof AuthenticatedCctvIndexRoute
   '/_authenticated/contact-messages/': typeof AuthenticatedContactMessagesIndexRoute
   '/_authenticated/due-types/': typeof AuthenticatedDueTypesIndexRoute
   '/_authenticated/emergency-contacts/': typeof AuthenticatedEmergencyContactsIndexRoute
@@ -468,6 +477,7 @@ export interface FileRouteTypes {
     | '/assets/'
     | '/bills/'
     | '/bookings/'
+    | '/cctv/'
     | '/contact-messages/'
     | '/due-types/'
     | '/emergency-contacts/'
@@ -514,6 +524,7 @@ export interface FileRouteTypes {
     | '/assets'
     | '/bills'
     | '/bookings'
+    | '/cctv'
     | '/contact-messages'
     | '/due-types'
     | '/emergency-contacts'
@@ -561,6 +572,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assets/'
     | '/_authenticated/bills/'
     | '/_authenticated/bookings/'
+    | '/_authenticated/cctv/'
     | '/_authenticated/contact-messages/'
     | '/_authenticated/due-types/'
     | '/_authenticated/emergency-contacts/'
@@ -699,6 +711,13 @@ declare module '@tanstack/react-router' {
       path: '/bookings'
       fullPath: '/bookings/'
       preLoaderRoute: typeof AuthenticatedBookingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cctv/': {
+      id: '/_authenticated/cctv/'
+      path: '/cctv'
+      fullPath: '/cctv/'
+      preLoaderRoute: typeof AuthenticatedCctvIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/contact-messages/': {
@@ -932,6 +951,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssetsIndexRoute: typeof AuthenticatedAssetsIndexRoute
   AuthenticatedBillsIndexRoute: typeof AuthenticatedBillsIndexRoute
   AuthenticatedBookingsIndexRoute: typeof AuthenticatedBookingsIndexRoute
+  AuthenticatedCctvIndexRoute: typeof AuthenticatedCctvIndexRoute
   AuthenticatedContactMessagesIndexRoute: typeof AuthenticatedContactMessagesIndexRoute
   AuthenticatedDueTypesIndexRoute: typeof AuthenticatedDueTypesIndexRoute
   AuthenticatedEmergencyContactsIndexRoute: typeof AuthenticatedEmergencyContactsIndexRoute
@@ -972,6 +992,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssetsIndexRoute: AuthenticatedAssetsIndexRoute,
   AuthenticatedBillsIndexRoute: AuthenticatedBillsIndexRoute,
   AuthenticatedBookingsIndexRoute: AuthenticatedBookingsIndexRoute,
+  AuthenticatedCctvIndexRoute: AuthenticatedCctvIndexRoute,
   AuthenticatedContactMessagesIndexRoute:
     AuthenticatedContactMessagesIndexRoute,
   AuthenticatedDueTypesIndexRoute: AuthenticatedDueTypesIndexRoute,

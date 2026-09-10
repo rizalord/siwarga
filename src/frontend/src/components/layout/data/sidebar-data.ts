@@ -25,6 +25,7 @@ import {
   CalendarDays,
   BookOpen,
   Siren,
+  Cctv,
   QrCode,
   Download,
 } from 'lucide-react'
@@ -183,6 +184,12 @@ export const sidebarData: SidebarData = {
           url: '/emergency-contacts',
           icon: Phone,
           permission: 'emergency-contacts.manage',
+        },
+        {
+          title: 'CCTV',
+          url: '/cctv',
+          icon: Cctv,
+          permission: 'snapshots.view',
         },
       ],
     },
