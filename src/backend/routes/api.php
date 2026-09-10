@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AssetLoanController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\CameraController;
 use App\Http\Controllers\Api\CameraSnapshotController;
 use App\Http\Controllers\Api\ContactMessageAdminController;
 use App\Http\Controllers\Api\ContactMessageController;
@@ -315,6 +316,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('households/card', [HouseholdCardController::class, 'show'])->middleware('can:family-members.view');
 
     // CCTV (Fase 6)
+    Route::get('cameras', [CameraController::class, 'index'])->middleware('can:cameras.view');
+    Route::post('cameras', [CameraController::class, 'store'])->middleware('can:cameras.manage');
+    Route::get('cameras/{camera}', [CameraController::class, 'show'])->middleware('can:cameras.view');
+    Route::put('cameras/{camera}', [CameraController::class, 'update']);
+    Route::delete('cameras/{camera}', [CameraController::class, 'destroy']);
+    Route::post('cameras/{camera}/simulate', [CameraController::class, 'simulate']);
     Route::get('camera-snapshots', [CameraSnapshotController::class, 'index'])->middleware('can:snapshots.view');
     Route::get('camera-snapshots/{cameraSnapshot}', [CameraSnapshotController::class, 'show'])->middleware('can:snapshots.view');
     Route::delete('camera-snapshots/{cameraSnapshot}', [CameraSnapshotController::class, 'destroy']);

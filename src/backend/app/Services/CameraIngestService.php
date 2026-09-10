@@ -26,7 +26,7 @@ class CameraIngestService
     /**
      * @return array{processed: int, skipped: int, quarantined: int}
      */
-    public function ingest(?int $cameraId = null): array
+    public function ingest(?int $cameraId = null, ?string $forceEvent = null): array
     {
         $summary = ['processed' => 0, 'skipped' => 0, 'quarantined' => 0];
         $disk = Storage::disk('public');
@@ -38,11 +38,23 @@ class CameraIngestService
 
         foreach ($cameras as $camera) {
             foreach ($this->pendingFiles($disk, $inbox, $camera) as $path) {
-                $summary[$this->ingestFile($disk, $inbox, $camera, $path)]++;
+                $summary[$this->ingestFile($disk, $inbox, $camera, $path, $forceEvent)]++;
             }
         }
 
         return $summary;
+    }
+
+    public function writeSimulatedFiles(Camera $camera, int $count): void
+    {
+        $disk = Storage::disk('public');
+        $inbox = trim((string) config('cctv.inbox_path', 'ftp-inbox'), '/');
+        $dir = "{$inbox}/{$camera->ftp_user}";
+        $disk->makeDirectory($dir);
+
+        for ($i = 0; $i < $count; $i++) {
+            $disk->put("{$dir}/sim-".now()->format('YmdHis')."-{$i}-".uniqid().'.jpg', 'simulated-bytes');
+        }
     }
 
     /**
@@ -61,7 +73,7 @@ class CameraIngestService
             ->values()->all();
     }
 
-    private function ingestFile(FilesystemAdapter $disk, string $inbox, Camera $camera, string $path): string
+    private function ingestFile(FilesystemAdapter $disk, string $inbox, Camera $camera, string $path, ?string $forceEvent = null): string
     {
         $hash = hash('sha256', $path.'|'.$disk->size($path));
 
@@ -89,7 +101,7 @@ class CameraIngestService
             'file_path' => $stored,
             'mime' => self::ALLOWED_MIMES[$extension],
             'size_bytes' => $disk->size($stored),
-            'event_type' => $this->resolveEventType(),
+            'event_type' => $forceEvent ?? $this->resolveEventType(),
             'captured_at' => now(),
             'source_hash' => $hash,
         ]);
