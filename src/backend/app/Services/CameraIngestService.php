@@ -81,7 +81,7 @@ class CameraIngestService
         }
 
         // Copy first (source stays until success), then archive the original.
-        $stored = "camera-snapshots/{$camera->id}/".basename($path);
+        $stored = "camera-snapshots/{$camera->id}/{$hash}-".basename($path);
         $disk->copy($path, $stored);
 
         $snapshot = CameraSnapshot::create([

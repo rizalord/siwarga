@@ -75,6 +75,22 @@ class CameraIngestTest extends TestCase
         $this->assertEquals(1, CameraSnapshot::count());
     }
 
+    public function test_reuploaded_file_is_skipped_by_hash()
+    {
+        config()->set('cctv.inbox_path', 'inbox');
+        $camera = Camera::factory()->create();
+        Storage::disk('public')->put("{$this->inboxFor($camera)}/motion-001.jpg", 'fake-image-bytes');
+
+        $service = app(CameraIngestService::class);
+        $service->ingest($camera->id);
+
+        Storage::disk('public')->put("{$this->inboxFor($camera)}/motion-001.jpg", 'fake-image-bytes');
+        $summary = $service->ingest($camera->id);
+
+        $this->assertSame(1, $summary['skipped']);
+        $this->assertEquals(1, CameraSnapshot::count());
+    }
+
     public function test_invalid_files_go_to_quarantine()
     {
         config()->set('cctv.inbox_path', 'inbox');
