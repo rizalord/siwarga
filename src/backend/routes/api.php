@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AssetLoanController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\CameraSnapshotController;
 use App\Http\Controllers\Api\ContactMessageAdminController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DueTypeController;
@@ -312,6 +313,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('family-members/{familyMember}', [FamilyMemberController::class, 'update']);
     Route::delete('family-members/{familyMember}', [FamilyMemberController::class, 'destroy']);
     Route::get('households/card', [HouseholdCardController::class, 'show'])->middleware('can:family-members.view');
+
+    // CCTV (Fase 6)
+    Route::get('camera-snapshots', [CameraSnapshotController::class, 'index'])->middleware('can:snapshots.view');
+    Route::get('camera-snapshots/{cameraSnapshot}', [CameraSnapshotController::class, 'show'])->middleware('can:snapshots.view');
+    Route::delete('camera-snapshots/{cameraSnapshot}', [CameraSnapshotController::class, 'destroy']);
 });
 
 Route::prefix('public')->group(function () {
