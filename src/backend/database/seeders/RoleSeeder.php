@@ -64,6 +64,7 @@ class RoleSeeder extends Seeder
             'guest-logs.view', 'guest-logs.register', 'guest-logs.manage',
             'panic-alerts.report', 'panic-alerts.handle',
             'patrol-schedules.view',
+            'cameras.view', 'snapshots.view',
         ])->pluck('id'));
     }
 }
