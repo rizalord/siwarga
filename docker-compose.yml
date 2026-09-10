@@ -50,12 +50,14 @@ services:
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: local
       LOG_CHANNEL: stack
+      FTP_INBOX_PATH: ${FTP_INBOX_PATH:-ftp-inbox}
       WAHA_BASE_URL: ${WAHA_BASE_URL:-http://waha:3000}
       WAHA_SESSION: ${WAHA_SESSION:-default}
       WAHA_API_KEY: ${WAHA_API_KEY:-}
     volumes:
       - ./src/backend:/var/www/html
       - siwarga_backend_vendor:/var/www/html/vendor
+      - siwarga_ftp_data:/var/www/html/storage/app/public/ftp-inbox:ro
     depends_on:
       db:
         condition: service_healthy
@@ -90,6 +92,39 @@ services:
     volumes:
       - ./src/backend:/var/www/html
       - siwarga_backend_vendor:/var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+
+  scheduler:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    image: siwarga-backend:dev
+    restart: unless-stopped
+    command: ['php', 'artisan', 'schedule:work']
+    environment:
+      APP_NAME: ${APP_NAME:-SIWarga}
+      APP_ENV: ${APP_ENV:-local}
+      APP_KEY: ${APP_KEY:-}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-siwarga}
+      DB_USERNAME: ${DB_USERNAME:-siwarga}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: local
+      LOG_CHANNEL: stack
+      FTP_INBOX_PATH: ${FTP_INBOX_PATH:-ftp-inbox}
+    volumes:
+      - ./src/backend:/var/www/html
+      - siwarga_backend_vendor:/var/www/html/vendor
+      - siwarga_ftp_data:/var/www/html/storage/app/public/ftp-inbox:ro
     depends_on:
       db:
         condition: service_healthy
@@ -129,9 +164,25 @@ services:
       - siwarga_waha_sessions:/app/.sessions
       - siwarga_waha_media:/app/.media
 
+  ftp:
+    image: stilliard/pure-ftpd:hardened
+    restart: unless-stopped
+    # Firewall host: buka 21 + FTP_PASV_RANGE. FTPS bila didukung kamera.
+    ports:
+      - '${FTP_PORT:-21}:21'
+      - '${FTP_PASV_RANGE:-30000-30009}:30000-30009'
+    environment:
+      PUBLICHOST: ${FTP_PUBLICHOST:-localhost}
+      FTP_USER_NAME: ${FTP_USER:-cctv-gerbang}
+      FTP_USER_PASS: ${FTP_PASS:-change-me}
+      FTP_USER_HOME: /home/ftpusers/cctv-gerbang
+    volumes:
+      - siwarga_ftp_data:/home/ftpusers/
+
 volumes:
   siwarga_db_data:
   siwarga_backend_vendor:
+  siwarga_ftp_data:
   siwarga_frontend_node_modules:
   siwarga_waha_sessions:
   siwarga_waha_media:
