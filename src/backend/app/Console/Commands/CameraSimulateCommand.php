@@ -18,7 +18,22 @@ class CameraSimulateCommand extends Command
         abort_unless(app()->environment('local', 'testing'), 403, 'Simulasi hanya di non-production.');
 
         $camera = Camera::findOrFail($this->argument('camera'));
-        $count = min((int) $this->option('count'), 5);
+
+        if (! $camera->is_active) {
+            $this->error('Kamera nonaktif.');
+
+            return self::FAILURE;
+        }
+
+        $count = (int) $this->option('count');
+
+        if ($count < 1) {
+            $this->error('Count minimal 1.');
+
+            return self::FAILURE;
+        }
+
+        $count = min($count, 5);
 
         $ingest->writeSimulatedFiles($camera, $count);
         $summary = $ingest->ingest($camera->id, CameraSnapshot::EVENT_SIMULATED);

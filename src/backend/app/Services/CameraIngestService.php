@@ -38,7 +38,16 @@ class CameraIngestService
 
         foreach ($cameras as $camera) {
             foreach ($this->pendingFiles($disk, $inbox, $camera) as $path) {
-                $summary[$this->ingestFile($disk, $inbox, $camera, $path, $forceEvent)]++;
+                try {
+                    $summary[$this->ingestFile($disk, $inbox, $camera, $path, $forceEvent)]++;
+                } catch (\Throwable $exception) {
+                    Log::warning('CameraIngestService: failed to ingest file', [
+                        'path' => $path,
+                        'camera_id' => $camera->id,
+                        'error' => $exception->getMessage(),
+                    ]);
+                    $summary['quarantined']++;
+                }
             }
         }
 
@@ -96,15 +105,21 @@ class CameraIngestService
         $stored = "camera-snapshots/{$camera->id}/{$hash}-".basename($path);
         $disk->copy($path, $stored);
 
-        $snapshot = CameraSnapshot::create([
-            'camera_id' => $camera->id,
-            'file_path' => $stored,
-            'mime' => self::ALLOWED_MIMES[$extension],
-            'size_bytes' => $disk->size($stored),
-            'event_type' => $forceEvent ?? $this->resolveEventType(),
-            'captured_at' => now(),
-            'source_hash' => $hash,
-        ]);
+        try {
+            $snapshot = CameraSnapshot::create([
+                'camera_id' => $camera->id,
+                'file_path' => $stored,
+                'mime' => self::ALLOWED_MIMES[$extension],
+                'size_bytes' => $disk->size($stored),
+                'event_type' => $forceEvent ?? $this->resolveEventType(),
+                'captured_at' => now(),
+                'source_hash' => $hash,
+            ]);
+        } catch (\Throwable $exception) {
+            $disk->delete($stored);
+
+            throw $exception;
+        }
 
         $this->moveTo($disk, $path, "{$inbox}/{$camera->ftp_user}/.done/".basename($path));
         $this->notifyStaff($snapshot->fresh('camera'));
@@ -137,7 +152,7 @@ class CameraIngestService
             try {
                 $member->notify(new CameraSnapshotStored(
                     $snapshot->id,
-                    $snapshot->camera->name,
+                    $snapshot->camera?->name ?? 'CCTV',
                     $snapshot->event_type,
                 ));
             } catch (\Throwable $exception) {

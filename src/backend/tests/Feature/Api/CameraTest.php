@@ -82,6 +82,25 @@ class CameraTest extends TestCase
         $this->assertEquals(0, CameraSnapshot::where('event_type', '!=', CameraSnapshot::EVENT_SIMULATED)->count());
     }
 
+    public function test_simulate_count_zero_is_rejected()
+    {
+        $camera = Camera::factory()->create(['camera_type' => 'simulator']);
+
+        $this->actingAs($this->admin)->postJson("/api/cameras/{$camera->id}/simulate", [
+            'count' => 0,
+        ])->assertStatus(422);
+        $this->assertDatabaseCount('camera_snapshots', 0);
+    }
+
+    public function test_simulate_inactive_camera_is_rejected()
+    {
+        $camera = Camera::factory()->create(['camera_type' => 'simulator', 'is_active' => false]);
+
+        $this->actingAs($this->admin)->postJson("/api/cameras/{$camera->id}/simulate")
+            ->assertStatus(422);
+        $this->assertDatabaseCount('camera_snapshots', 0);
+    }
+
     public function test_simulate_blocked_in_production()
     {
         $camera = Camera::factory()->create(['camera_type' => 'simulator']);

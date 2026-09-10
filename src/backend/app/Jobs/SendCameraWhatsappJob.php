@@ -41,9 +41,10 @@ class SendCameraWhatsappJob implements ShouldQueue
             }
 
             try {
+                $cameraName = $snapshot->camera?->name ?? 'CCTV';
                 $wahaService->sendMessage(
                     $phone,
-                    "[SIWarga] Snapshot PANIC dari {$snapshot->camera->name} ({$snapshot->captured_at?->format('d M Y H:i')}). Cek galeri CCTV."
+                    "[SIWarga] Snapshot PANIC dari {$cameraName} ({$snapshot->captured_at?->format('d M Y H:i')}). Cek galeri CCTV."
                 );
             } catch (\Throwable $exception) {
                 Log::warning('SendCameraWhatsappJob: send failed', [

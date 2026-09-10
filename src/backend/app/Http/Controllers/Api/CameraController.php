@@ -51,7 +51,7 @@ class CameraController extends Controller
         ]);
 
         foreach (['name', 'location'] as $field) {
-            if (isset($validated[$field]) && $validated[$field] !== null) {
+            if (array_key_exists($field, $validated) && $validated[$field] !== null) {
                 $validated[$field] = $this->htmlSanitizer->sanitize($validated[$field]);
             }
         }
@@ -101,7 +101,15 @@ class CameraController extends Controller
         abort_unless(app()->environment('local', 'testing'), 403, 'Simulasi hanya di non-production.');
         $this->authorize('update', $camera);
 
-        $count = min((int) $request->input('count', 1), 5);
+        if (! $camera->is_active) {
+            abort(422, 'Kamera nonaktif.');
+        }
+
+        $validated = $request->validate([
+            'count' => ['sometimes', 'integer', 'min:1', 'max:5'],
+        ]);
+
+        $count = $validated['count'] ?? 1;
 
         $this->ingest->writeSimulatedFiles($camera, $count);
         $this->ingest->ingest($camera->id, CameraSnapshot::EVENT_SIMULATED);

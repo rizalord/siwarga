@@ -59,6 +59,38 @@ services:
       db:
         condition: service_healthy
 
+  queue:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile.prd
+    image: siwarga-backend:prd
+    restart: unless-stopped
+    command: ['php', 'artisan', 'queue:work', '--tries=3', '--sleep=3']
+    environment:
+      APP_NAME: ${APP_NAME:-SIWarga}
+      APP_ENV: production
+      APP_KEY: ${APP_KEY:?APP_KEY must be set in .env for production}
+      APP_DEBUG: 'false'
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-siwarga}
+      DB_USERNAME: ${DB_USERNAME:-siwarga}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      FILESYSTEM_DISK: local
+      LOG_CHANNEL: stack
+      FTP_INBOX_PATH: ${FTP_INBOX_PATH:-ftp-inbox}
+      WAHA_BASE_URL: ${WAHA_BASE_URL:-http://waha:3000}
+      WAHA_SESSION: ${WAHA_SESSION:-default}
+      WAHA_API_KEY: ${WAHA_API_KEY:?WAHA_API_KEY must be set in .env for production}
+    depends_on:
+      db:
+        condition: service_healthy
+
   scheduler:
     build:
       context: ./src/backend

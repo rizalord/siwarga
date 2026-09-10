@@ -29,6 +29,8 @@ export const cctvService = {
     api.get<PaginatedResponse<CameraSnapshot>>('/api/camera-snapshots', {
       params,
     }),
+  snapshot: (id: number) =>
+    api.get<ApiResponse<CameraSnapshot>>(`/api/camera-snapshots/${id}`),
   deleteSnapshot: (id: number) =>
     api.delete<ApiResponse<null>>(`/api/camera-snapshots/${id}`),
   simulate: (id: number, count = 1) =>

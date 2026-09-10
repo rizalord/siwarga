@@ -2,15 +2,19 @@
 
 namespace Tests\Feature\Api;
 
+use App\Jobs\SendCameraWhatsappJob;
 use App\Models\Camera;
 use App\Models\CameraSnapshot;
 use App\Models\PanicAlert;
+use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\CameraIngestService;
+use App\Services\WahaService;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -129,6 +133,58 @@ class CameraIngestTest extends TestCase
             'snapshot_id' => $snapshot->id,
             'user_id' => $this->satpam->id,
         ]);
+    }
+
+    public function test_batch_continues_past_duplicate_file()
+    {
+        config()->set('cctv.inbox_path', 'inbox');
+        $camera = Camera::factory()->create();
+        Storage::disk('public')->put("{$this->inboxFor($camera)}/motion-001.jpg", 'fake-image-bytes');
+
+        $service = app(CameraIngestService::class);
+        $service->ingest($camera->id);
+
+        Storage::disk('public')->put("{$this->inboxFor($camera)}/motion-001.jpg", 'fake-image-bytes');
+        Storage::disk('public')->put("{$this->inboxFor($camera)}/motion-002.jpg", 'other-bytes');
+        $summary = $service->ingest($camera->id);
+
+        $this->assertSame(1, $summary['processed']);
+        $this->assertSame(1, $summary['skipped']);
+        $this->assertEquals(2, CameraSnapshot::count());
+    }
+
+    public function test_whatsapp_job_survives_deleted_camera()
+    {
+        Http::fake(['*/api/sendText' => Http::response(['id' => 'x'], 200)]);
+        $resident = Resident::factory()->create(['phone_number' => '081234567890']);
+        $this->satpam->update(['resident_id' => $resident->id]);
+
+        $snapshot = CameraSnapshot::factory()->create();
+        $snapshot->camera->delete();
+
+        (new SendCameraWhatsappJob($snapshot->id))->handle(app(WahaService::class));
+
+        Http::assertSent(fn ($request) => str_contains((string) $request['text'], 'CCTV'));
+    }
+
+    public function test_delete_removes_done_original()
+    {
+        config()->set('cctv.inbox_path', 'inbox');
+        $camera = Camera::factory()->create();
+        Storage::disk('public')->put("{$this->inboxFor($camera)}/motion-009.jpg", 'fake-image-bytes');
+
+        app(CameraIngestService::class)->ingest($camera->id);
+        $snapshot = CameraSnapshot::firstOrFail();
+        $stored = $snapshot->file_path;
+
+        Storage::disk('public')->assertExists($stored);
+        Storage::disk('public')->assertExists("inbox/{$camera->ftp_user}/.done/motion-009.jpg");
+
+        $this->actingAs($this->admin)->deleteJson("/api/camera-snapshots/{$snapshot->id}")
+            ->assertStatus(200);
+
+        Storage::disk('public')->assertMissing($stored);
+        Storage::disk('public')->assertMissing("inbox/{$camera->ftp_user}/.done/motion-009.jpg");
     }
 
     public function test_delete_removes_row_and_file()

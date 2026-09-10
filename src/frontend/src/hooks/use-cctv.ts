@@ -66,6 +66,15 @@ export function useSnapshots(
   })
 }
 
+export function useSnapshot(id: number | null) {
+  return useQuery({
+    queryKey: ['snapshot', id],
+    queryFn: () => cctvService.snapshot(id as number),
+    select: (res) => res.data,
+    enabled: id != null,
+  })
+}
+
 export function useDeleteSnapshot() {
   const qc = useQueryClient()
   return useMutation({

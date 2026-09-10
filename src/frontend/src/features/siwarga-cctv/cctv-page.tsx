@@ -9,6 +9,7 @@ import {
   useDeleteCamera,
   useDeleteSnapshot,
   useSimulateCamera,
+  useSnapshot,
   useSnapshots,
   useUpdateCamera,
 } from '@/hooks/use-cctv'
@@ -88,63 +89,70 @@ function SnapshotDetailDialog({
   snapshot: CameraSnapshot | null
   onOpenChange: (open: boolean) => void
 }) {
+  const detailQuery = useSnapshot(snapshot?.id ?? null)
+  const detail = detailQuery.data?.data ?? null
+  const shown = detail ?? snapshot
   return (
     <Dialog open={snapshot !== null} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-2xl'>
         <DialogHeader className='text-start'>
           <DialogTitle>
-            {snapshot ? (snapshot.camera_name ?? 'Snapshot') : 'Snapshot'}
+            {shown ? (shown.camera_name ?? 'Snapshot') : 'Snapshot'}
           </DialogTitle>
           <DialogDescription>
             Pratinjau gambar beserta informasi akses snapshot.
           </DialogDescription>
         </DialogHeader>
-        {snapshot && (
-          <div className='space-y-4'>
-            {snapshot.file_url ? (
-              <img
-                src={snapshot.file_url}
-                alt={`Snapshot ${snapshot.camera_name ?? ''}`}
-                className='max-h-[50vh] w-full rounded-md border object-contain'
-              />
-            ) : (
-              <p className='text-muted-foreground'>Tidak ada pratinjau.</p>
-            )}
-            <dl className='grid gap-2 text-sm sm:grid-cols-2'>
-              <div>
-                <dt className='text-muted-foreground'>Kamera</dt>
-                <dd className='font-medium'>{snapshot.camera_name ?? '—'}</dd>
-              </div>
-              <div>
-                <dt className='text-muted-foreground'>Jenis kejadian</dt>
-                <dd className='font-medium'>
-                  {EVENT_LABELS[snapshot.event_type]}
-                </dd>
-              </div>
-              <div>
-                <dt className='text-muted-foreground'>Waktu tangkap</dt>
-                <dd className='font-medium'>
-                  {formatSnapshotDate(snapshot.captured_at)}
-                </dd>
-              </div>
-              <div>
-                <dt className='text-muted-foreground'>Diunggah</dt>
-                <dd className='font-medium'>
-                  {formatSnapshotDate(snapshot.created_at)}
-                </dd>
-              </div>
-              <div>
-                <dt className='text-muted-foreground'>Tipe berkas</dt>
-                <dd className='font-medium'>{snapshot.mime}</dd>
-              </div>
-              <div>
-                <dt className='text-muted-foreground'>Ukuran</dt>
-                <dd className='font-medium'>
-                  {formatBytes(snapshot.size_bytes)}
-                </dd>
-              </div>
-            </dl>
-          </div>
+        {detailQuery.isPending ? (
+          <p className='text-muted-foreground'>Memuat...</p>
+        ) : (
+          shown && (
+            <div className='space-y-4'>
+              {shown.file_url ? (
+                <img
+                  src={shown.file_url}
+                  alt={`Snapshot ${shown.camera_name ?? ''}`}
+                  className='max-h-[50vh] w-full rounded-md border object-contain'
+                />
+              ) : (
+                <p className='text-muted-foreground'>Tidak ada pratinjau.</p>
+              )}
+              <dl className='grid gap-2 text-sm sm:grid-cols-2'>
+                <div>
+                  <dt className='text-muted-foreground'>Kamera</dt>
+                  <dd className='font-medium'>{shown.camera_name ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className='text-muted-foreground'>Jenis kejadian</dt>
+                  <dd className='font-medium'>
+                    {EVENT_LABELS[shown.event_type]}
+                  </dd>
+                </div>
+                <div>
+                  <dt className='text-muted-foreground'>Waktu tangkap</dt>
+                  <dd className='font-medium'>
+                    {formatSnapshotDate(shown.captured_at)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className='text-muted-foreground'>Diunggah</dt>
+                  <dd className='font-medium'>
+                    {formatSnapshotDate(shown.created_at)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className='text-muted-foreground'>Tipe berkas</dt>
+                  <dd className='font-medium'>{shown.mime}</dd>
+                </div>
+                <div>
+                  <dt className='text-muted-foreground'>Ukuran</dt>
+                  <dd className='font-medium'>
+                    {formatBytes(shown.size_bytes)}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          )
         )}
       </DialogContent>
     </Dialog>
