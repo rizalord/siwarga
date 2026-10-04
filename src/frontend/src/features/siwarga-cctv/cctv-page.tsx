@@ -171,23 +171,16 @@ function CameraFormDialog({
   const createCamera = useCreateCamera()
   const updateCamera = useUpdateCamera()
 
-  const [name, setName] = useState('')
-  const [location, setLocation] = useState('')
-  const [ftpUser, setFtpUser] = useState('')
-  const [cameraType, setCameraType] = useState<'tapo' | 'simulator'>('tapo')
-  const [streamUrl, setStreamUrl] = useState('')
-  const [isActive, setIsActive] = useState(true)
-
-  useEffect(() => {
-    if (open) {
-      setName(editing?.name ?? '')
-      setLocation(editing?.location ?? '')
-      setFtpUser(editing?.ftp_user ?? '')
-      setCameraType(editing?.camera_type ?? 'tapo')
-      setStreamUrl(editing?.stream_url ?? '')
-      setIsActive(editing?.is_active ?? true)
-    }
-  }, [open, editing])
+  // Form state is seeded from `editing` on mount; the parent remounts this
+  // dialog (via `key`) each time it opens so the fields reset.
+  const [name, setName] = useState(editing?.name ?? '')
+  const [location, setLocation] = useState(editing?.location ?? '')
+  const [ftpUser, setFtpUser] = useState(editing?.ftp_user ?? '')
+  const [cameraType, setCameraType] = useState<'tapo' | 'simulator'>(
+    editing?.camera_type ?? 'tapo'
+  )
+  const [streamUrl, setStreamUrl] = useState(editing?.stream_url ?? '')
+  const [isActive, setIsActive] = useState(editing?.is_active ?? true)
 
   const isPending = createCamera.isPending || updateCamera.isPending
   const canSubmit =
@@ -313,6 +306,7 @@ function CctvPageInner() {
   const [selected, setSelected] = useState<CameraSnapshot | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Camera | null>(null)
+  const [formKey, setFormKey] = useState(0)
 
   const {
     columnFilters,
@@ -413,6 +407,7 @@ function CctvPageInner() {
             <Button
               onClick={() => {
                 setEditing(null)
+                setFormKey((k) => k + 1)
                 setDialogOpen(true)
               }}
             >
@@ -679,6 +674,7 @@ function CctvPageInner() {
                                       size='sm'
                                       onClick={() => {
                                         setEditing(camera)
+                                        setFormKey((k) => k + 1)
                                         setDialogOpen(true)
                                       }}
                                     >
@@ -723,6 +719,7 @@ function CctvPageInner() {
         }}
       />
       <CameraFormDialog
+        key={formKey}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         editing={editing}
