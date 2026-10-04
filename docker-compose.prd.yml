@@ -5,6 +5,10 @@
 # Usage:
 #   cp .env.example .env   # set APP_KEY dan kredensial production
 #   docker compose -f docker-compose.prd.yml up --build -d
+#
+# HOST_BIND_IP: alamat host untuk port backend/frontend/WAHA. Di server
+# yang memakai Cloudflare Tunnel diset ke 172.17.0.1 (gateway docker0)
+# agar port hanya terjangkau oleh container cloudflared, bukan publik.
 
 services:
   db:
@@ -30,7 +34,7 @@ services:
     image: siwarga-backend:prd
     restart: unless-stopped
     ports:
-      - '${BACKEND_PORT:-8000}:80'
+      - '${HOST_BIND_IP:-0.0.0.0}:${BACKEND_PORT:-8000}:80'
     environment:
       APP_NAME: ${APP_NAME:-SIWarga}
       APP_ENV: production
@@ -48,6 +52,7 @@ services:
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: local
       LOG_CHANNEL: stack
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
       FTP_INBOX_PATH: ${FTP_INBOX_PATH:-ftp-inbox}
       WAHA_BASE_URL: ${WAHA_BASE_URL:-http://waha:3000}
       WAHA_SESSION: ${WAHA_SESSION:-default}
@@ -67,6 +72,7 @@ services:
     restart: unless-stopped
     command: ['php', 'artisan', 'queue:work', '--tries=3', '--sleep=3']
     environment:
+      RUN_MIGRATIONS: 'false'
       APP_NAME: ${APP_NAME:-SIWarga}
       APP_ENV: production
       APP_KEY: ${APP_KEY:?APP_KEY must be set in .env for production}
@@ -83,6 +89,7 @@ services:
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: local
       LOG_CHANNEL: stack
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
       FTP_INBOX_PATH: ${FTP_INBOX_PATH:-ftp-inbox}
       WAHA_BASE_URL: ${WAHA_BASE_URL:-http://waha:3000}
       WAHA_SESSION: ${WAHA_SESSION:-default}
@@ -99,6 +106,7 @@ services:
     restart: unless-stopped
     command: ['php', 'artisan', 'schedule:work']
     environment:
+      RUN_MIGRATIONS: 'false'
       APP_NAME: ${APP_NAME:-SIWarga}
       APP_ENV: production
       APP_KEY: ${APP_KEY:?APP_KEY must be set in .env for production}
@@ -115,6 +123,7 @@ services:
       QUEUE_CONNECTION: database
       FILESYSTEM_DISK: local
       LOG_CHANNEL: stack
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
       FTP_INBOX_PATH: ${FTP_INBOX_PATH:-ftp-inbox}
     volumes:
       - siwarga_backend_storage_prd:/var/www/html/storage/app
@@ -133,7 +142,7 @@ services:
     image: siwarga-frontend:prd
     restart: unless-stopped
     ports:
-      - '${FRONTEND_PROD_PORT:-8080}:80'
+      - '${HOST_BIND_IP:-0.0.0.0}:${FRONTEND_PROD_PORT:-8080}:80'
     depends_on:
       - backend
 
@@ -141,7 +150,7 @@ services:
     image: devlikeapro/waha:latest
     restart: unless-stopped
     ports:
-      - '${WAHA_PORT:-3000}:3000'
+      - '${HOST_BIND_IP:-0.0.0.0}:${WAHA_PORT:-3000}:3000'
     environment:
       WHATSAPP_API_KEY: ${WAHA_API_KEY:?WAHA_API_KEY must be set in .env for production}
       WAHA_DASHBOARD_ENABLED: 'true'

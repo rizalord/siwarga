@@ -14,7 +14,11 @@ until php -r "new PDO('mysql:host=${DB_HOST:-db};port=${DB_PORT:-3306}', '${DB_U
 done
 echo ">> Database siap."
 
-php artisan migrate --force
+# Hanya service backend yang menjalankan migrasi; queue/scheduler start
+# bersamaan dan migrasi paralel di database baru bisa saling balapan.
+if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
+    php artisan migrate --force
+fi
 
 if [ ! -L public/storage ]; then
     php artisan storage:link
