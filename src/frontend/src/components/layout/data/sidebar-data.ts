@@ -230,7 +230,7 @@ export const sidebarData: SidebarData = {
           title: 'Laporan',
           url: '/reports',
           icon: FileText,
-          permission: 'reports.view',
+          permission: 'reports.view.summary',
         },
         {
           title: 'Export & Backup',

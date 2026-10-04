@@ -210,6 +210,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Reports
         Gate::define('reports.view', fn (User $user) => $user->hasPermission('reports.view'));
+        Gate::define('reports.view.summary', fn (User $user) => $user->hasPermission('reports.view') || $user->hasPermission('reports.view.summary'));
 
         // Users
         Gate::define('users.view', [UserPolicy::class, 'viewAny']);

@@ -96,6 +96,7 @@ class Permission extends Model
         'expense-categories.manage' => 'Kelola kategori pengeluaran',
         'expense-categories.trash' => 'Kelola data kategori pengeluaran terhapus',
         'reports.view' => 'Lihat laporan',
+        'reports.view.summary' => 'Lihat ringkasan laporan kas (tanpa data pembayar)',
         'users.view' => 'Lihat data user',
         'users.manage' => 'Kelola user',
         'users.trash' => 'Kelola data user terhapus',

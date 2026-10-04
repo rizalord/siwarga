@@ -177,8 +177,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->middleware('can:expenses.delete');
 
     // Reports
-    Route::get('reports/summary/{year}', [ReportController::class, 'summary'])->middleware('can:reports.view');
-    Route::get('reports/monthly/{year}/{month}', [ReportController::class, 'monthly'])->middleware('can:reports.view');
+    Route::get('reports/summary/{year}', [ReportController::class, 'summary'])->middleware('can:reports.view.summary');
+    Route::get('reports/monthly/{year}/{month}', [ReportController::class, 'monthly'])->middleware('can:reports.view.summary');
 
     // Exports & backup (Fase 5)
     Route::get('reports/monthly/{year}/{month}/pdf', [ExportController::class, 'monthlyPdf'])->middleware(['can:reports.view', 'throttle:exports']);

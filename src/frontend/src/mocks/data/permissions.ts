@@ -185,6 +185,12 @@ export const mockPermissions: Permission[] = [
     is_system: true,
   },
   {
+    id: 34,
+    name: 'reports.view.summary',
+    description: 'Lihat ringkasan laporan kas (tanpa data pembayar)',
+    is_system: true,
+  },
+  {
     id: 30,
     name: 'users.view',
     description: 'Lihat data user',
