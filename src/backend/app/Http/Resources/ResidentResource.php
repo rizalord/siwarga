@@ -2,12 +2,19 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Resident;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @mixin Resident
+ */
 class ResidentResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [

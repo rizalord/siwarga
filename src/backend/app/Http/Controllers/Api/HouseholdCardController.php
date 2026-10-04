@@ -6,19 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\FamilyMember;
 use App\Models\House;
 use App\Models\HouseResident;
+use App\Services\ConfigValue;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class HouseholdCardController extends Controller
 {
-    public function show(Request $request)
+    public function show(Request $request): JsonResponse
     {
-        $houseId = HouseResident::where('resident_id', $request->user()->resident_id)
+        $houseId = HouseResident::where('resident_id', $this->authUser($request)->resident_id)
             ->whereNull('end_date')
-            ->value('house_id');
+            ->first()
+            ?->house_id;
 
         abort_if($houseId === null, 422, 'Akun Anda tidak terhubung ke rumah mana pun.');
 
-        $house = House::findOrFail($houseId);
+        $house = House::query()->findOrFail($houseId);
 
         return response()->json([
             'data' => [
@@ -32,7 +35,7 @@ class HouseholdCardController extends Controller
         ]);
     }
 
-    public function verify(string $token)
+    public function verify(string $token): JsonResponse
     {
         $parts = explode('.', $token, 2);
 
@@ -57,7 +60,7 @@ class HouseholdCardController extends Controller
 
     private function sign(int $houseId): string
     {
-        return $houseId.'.'.hash_hmac('sha256', "household:{$houseId}", config('app.key'));
+        return $houseId.'.'.hash_hmac('sha256', "household:{$houseId}", ConfigValue::string('app.key'));
     }
 
     private function headName(int $houseId): string
@@ -65,6 +68,7 @@ class HouseholdCardController extends Controller
         return FamilyMember::where('house_id', $houseId)
             ->orderByRaw("relationship = 'kepala_keluarga' DESC")
             ->orderBy('id')
-            ->value('name') ?? '—';
+            ->first()
+            ->name ?? '—';
     }
 }

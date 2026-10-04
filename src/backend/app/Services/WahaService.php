@@ -10,7 +10,7 @@ class WahaService
     {
         $response = Http::withHeaders([
             'X-Api-Key' => config('services.waha.api_key'),
-        ])->post(rtrim(config('services.waha.base_url'), '/').'/api/sendText', [
+        ])->post(rtrim(ConfigValue::string('services.waha.base_url'), '/').'/api/sendText', [
             'session' => config('services.waha.session'),
             'chatId' => $this->toChatId($phoneNumber),
             'text' => $message,
@@ -21,7 +21,7 @@ class WahaService
 
     private function toChatId(string $phoneNumber): string
     {
-        $digits = preg_replace('/\D/', '', $phoneNumber);
+        $digits = preg_replace('/\D/', '', $phoneNumber) ?? '';
 
         if (str_starts_with($digits, '0')) {
             $digits = '62'.substr($digits, 1);

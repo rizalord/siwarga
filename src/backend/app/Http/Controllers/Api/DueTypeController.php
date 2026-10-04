@@ -13,21 +13,21 @@ class DueTypeController extends Controller
 {
     public function __construct(private DueTypeService $dueTypeService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = DueType::query();
 
         if ($request->search) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $query->where('name', 'like', "%{$request->string('search')}%");
         }
 
         $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['name', 'amount', 'billing_cycle', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), DueTypeResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), DueTypeResource::class);
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): JsonResponse
     {
         return $this->bulkDelete($request, DueType::class);
     }
@@ -37,14 +37,14 @@ class DueTypeController extends Controller
         return parent::bulkRestore($request, $modelClass);
     }
 
-    public function bulkForceDestroy(Request $request)
+    public function bulkForceDestroy(Request $request): JsonResponse
     {
         return $this->bulkForceDelete($request, DueType::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): DueTypeResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => 'required|string|max:50',
             'amount' => 'required|numeric|min:0',
             'billing_cycle' => 'sometimes|in:bulanan,fleksibel',
@@ -55,14 +55,14 @@ class DueTypeController extends Controller
         return new DueTypeResource($dueType);
     }
 
-    public function show(DueType $dueType)
+    public function show(DueType $dueType): DueTypeResource
     {
         return new DueTypeResource($dueType);
     }
 
-    public function update(Request $request, DueType $dueType)
+    public function update(Request $request, DueType $dueType): DueTypeResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => 'sometimes|string|max:50',
             'amount' => 'sometimes|numeric|min:0',
             'billing_cycle' => 'sometimes|in:bulanan,fleksibel',
@@ -73,21 +73,21 @@ class DueTypeController extends Controller
         return new DueTypeResource($dueType);
     }
 
-    public function destroy(DueType $dueType)
+    public function destroy(DueType $dueType): JsonResponse
     {
         $this->dueTypeService->delete($dueType);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function restore(DueType $dueType)
+    public function restore(DueType $dueType): DueTypeResource
     {
         $this->restoreModel($dueType);
 
         return new DueTypeResource($dueType);
     }
 
-    public function forceDestroy(DueType $dueType)
+    public function forceDestroy(DueType $dueType): JsonResponse
     {
         $this->forceDeleteModel($dueType);
 

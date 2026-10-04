@@ -8,6 +8,7 @@ use App\Models\Bill;
 use App\Services\BillGenerationService;
 use App\Services\BillService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -20,7 +21,7 @@ class BillController extends Controller
         private BillGenerationService $billGenerationService,
     ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Bill::with(['house', 'resident', 'dueType'])
             ->withSum('payments as total_paid', 'amount_paid');
@@ -28,11 +29,11 @@ class BillController extends Controller
         $this->applyBillViewScope($request, $query);
 
         if ($request->month) {
-            $query->whereMonth('period_start', $request->month);
+            $query->whereMonth('period_start', $request->integer('month'));
         }
 
         if ($request->year) {
-            $query->whereYear('period_start', $request->year);
+            $query->whereYear('period_start', $request->integer('year'));
         }
 
         if ($request->filled('status')) {
@@ -50,9 +51,9 @@ class BillController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->whereHas('resident', function ($r) use ($request) {
-                    $r->where('full_name', 'like', "%{$request->search}%");
+                    $r->where('full_name', 'like', "%{$request->string('search')}%");
                 })->orWhereHas('house', function ($h) use ($request) {
-                    $h->where('house_number', 'like', "%{$request->search}%");
+                    $h->where('house_number', 'like', "%{$request->string('search')}%");
                 });
             });
         }
@@ -60,20 +61,17 @@ class BillController extends Controller
         $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['period_start', 'period_end', 'amount_due', 'status', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), BillResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), BillResource::class);
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer',
-        ]);
+        $ids = $this->validatedIds($request);
 
-        $deletableIds = $this->billService->deletableIds($validated['ids']);
+        $deletableIds = $this->billService->deletableIds($ids);
         $deleted = Bill::destroy($deletableIds);
 
-        if ($deleted < count($validated['ids'])) {
+        if ($deleted < count($ids)) {
             return response()->json([
                 'data' => null,
                 'message' => "{$deleted} tagihan berhasil dihapus. Sisanya tidak bisa dihapus karena sudah memiliki pembayaran.",
@@ -88,18 +86,18 @@ class BillController extends Controller
         return parent::bulkRestore($request, $modelClass);
     }
 
-    public function bulkForceDestroy(Request $request)
+    public function bulkForceDestroy(Request $request): JsonResponse
     {
         return $this->bulkForceDelete($request, Bill::class);
     }
 
-    public function show(Request $request, Bill $bill)
+    public function show(Request $request, Bill $bill): BillResource
     {
         abort_unless(
-            $request->user()->hasPermission('bills.view.all')
-                || ($request->user()->hasPermission('bills.view.own')
-                    && $request->user()->resident_id !== null
-                    && $bill->resident_id === $request->user()->resident_id),
+            $this->authUser($request)->hasPermission('bills.view.all')
+                || ($this->authUser($request)->hasPermission('bills.view.own')
+                    && $this->authUser($request)->resident_id !== null
+                    && $bill->resident_id === $this->authUser($request)->resident_id),
             403
         );
 
@@ -109,17 +107,17 @@ class BillController extends Controller
         return new BillResource($bill);
     }
 
-    public function generate(Request $request)
+    public function generate(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $this->validate($request, [
             'month' => 'required|integer|between:1,12',
             'year' => 'required|integer|min:2020',
         ]);
 
         $bills = $this->billGenerationService->generate(
-            $validated['month'],
-            $validated['year'],
-            $request->user()->id
+            $request->integer('month'),
+            $request->integer('year'),
+            $this->authUser($request)->id
         );
 
         return response()->json([
@@ -128,9 +126,9 @@ class BillController extends Controller
         ], 201);
     }
 
-    public function generateFlexible(Request $request)
+    public function generateFlexible(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $this->validate($request, [
             'due_type_id' => [
                 'required',
                 'integer',
@@ -142,11 +140,11 @@ class BillController extends Controller
         ]);
 
         $bills = $this->billGenerationService->generateFlexible(
-            $validated['due_type_id'],
-            Carbon::parse($validated['period_start']),
-            Carbon::parse($validated['period_end']),
-            (float) $validated['amount_due'],
-            $request->user()->id,
+            $request->integer('due_type_id'),
+            Carbon::parse($request->string('period_start')->toString()),
+            Carbon::parse($request->string('period_end')->toString()),
+            $request->float('amount_due'),
+            $this->authUser($request)->id,
         );
 
         return response()->json([
@@ -155,20 +153,20 @@ class BillController extends Controller
         ], 201);
     }
 
-    public function destroy(Bill $bill)
+    public function destroy(Bill $bill): JsonResponse
     {
         try {
             $this->billService->delete($bill);
         } catch (ValidationException $exception) {
             return response()->json([
-                'message' => $exception->errors()['bill'][0],
+                'message' => $exception->validator->errors()->first('bill'),
             ], 422);
         }
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function restore(Bill $bill)
+    public function restore(Bill $bill): BillResource
     {
         $this->restoreModel($bill);
         $bill->load(['house', 'resident', 'dueType', 'payments'])
@@ -177,16 +175,19 @@ class BillController extends Controller
         return new BillResource($bill);
     }
 
-    public function forceDestroy(Bill $bill)
+    public function forceDestroy(Bill $bill): JsonResponse
     {
         $this->forceDeleteModel($bill);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 
-    private function applyBillViewScope(Request $request, $query): void
+    /**
+     * @param  Builder<Bill>  $query
+     */
+    private function applyBillViewScope(Request $request, Builder $query): void
     {
-        $user = $request->user();
+        $user = $this->authUser($request);
 
         if ($user->hasPermission('bills.view.all')) {
             return;

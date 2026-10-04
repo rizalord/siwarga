@@ -54,6 +54,8 @@ class ResidentService
     {
         return Resident::whereIn('id', $ids)
             ->whereDoesntHave('activeHouse')
-            ->pluck('id');
+            ->pluck('id')
+            ->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)
+            ->values();
     }
 }

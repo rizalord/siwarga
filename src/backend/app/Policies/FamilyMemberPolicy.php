@@ -45,6 +45,7 @@ class FamilyMemberPolicy
 
         return HouseResident::where('resident_id', $user->resident_id)
             ->whereNull('end_date')
-            ->value('house_id');
+            ->first()
+            ?->house_id;
     }
 }

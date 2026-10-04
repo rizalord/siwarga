@@ -2,6 +2,8 @@
 
 namespace App\Payments;
 
+use App\Services\ConfigValue;
+
 class PaymentProviderRegistry
 {
     /**
@@ -18,13 +20,19 @@ class PaymentProviderRegistry
 
     public static function for(?string $key = null): PaymentProvider
     {
-        $key ??= (string) config('services.payments.provider', 'simulator');
+        $key ??= ConfigValue::string('services.payments.provider', 'simulator');
         $map = self::map();
 
         if (! isset($map[$key])) {
             throw new \InvalidArgumentException("Unknown payment provider [{$key}].");
         }
 
-        return app($map[$key]);
+        $provider = app($map[$key]);
+
+        if (! $provider instanceof PaymentProvider) {
+            throw new \LogicException("Payment provider [{$key}] must implement ".PaymentProvider::class.'.');
+        }
+
+        return $provider;
     }
 }

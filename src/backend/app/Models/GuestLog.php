@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\GuestLogFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GuestLog extends Model
 {
+    /** @use HasFactory<GuestLogFactory> */
     use HasFactory, SoftDeletes;
 
     public const STATUS_REGISTERED = 'registered';
@@ -32,16 +34,25 @@ class GuestLog extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<House, $this>
+     */
     public function house(): BelongsTo
     {
         return $this->belongsTo(House::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function registrar(): BelongsTo
     {
         return $this->belongsTo(User::class, 'registered_by');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function recorder(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');

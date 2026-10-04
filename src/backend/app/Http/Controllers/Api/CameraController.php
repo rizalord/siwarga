@@ -10,6 +10,7 @@ use App\Models\CameraSnapshot;
 use App\Services\CameraIngestService;
 use App\Services\HtmlSanitizer;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -22,7 +23,7 @@ class CameraController extends Controller
         private CameraIngestService $ingest,
     ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Camera::query()->withCount('snapshots');
 
@@ -31,17 +32,17 @@ class CameraController extends Controller
         }
 
         if ($request->search) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $query->where('name', 'like', "%{$request->string('search')}%");
         }
 
         $this->applySorting($query, $request, ['name', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), CameraResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), CameraResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => ['required', 'string', 'max:100'],
             'location' => ['nullable', 'string', 'max:255'],
             'ftp_user' => ['required', 'string', 'max:64', 'unique:cameras,ftp_user'],
@@ -51,7 +52,7 @@ class CameraController extends Controller
         ]);
 
         foreach (['name', 'location'] as $field) {
-            if (array_key_exists($field, $validated) && $validated[$field] !== null) {
+            if (isset($validated[$field]) && is_string($validated[$field])) {
                 $validated[$field] = $this->htmlSanitizer->sanitize($validated[$field]);
             }
         }
@@ -59,16 +60,16 @@ class CameraController extends Controller
         return (new CameraResource(Camera::create($validated)))->response()->setStatusCode(201);
     }
 
-    public function show(Camera $camera)
+    public function show(Camera $camera): CameraResource
     {
         return new CameraResource($camera->loadCount('snapshots'));
     }
 
-    public function update(Request $request, Camera $camera)
+    public function update(Request $request, Camera $camera): CameraResource
     {
         $this->authorize('update', $camera);
 
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => ['sometimes', 'string', 'max:100'],
             'location' => ['sometimes', 'nullable', 'string', 'max:255'],
             'ftp_user' => ['sometimes', 'string', 'max:64', Rule::unique('cameras', 'ftp_user')->ignore($camera->id)],
@@ -78,17 +79,17 @@ class CameraController extends Controller
         ]);
 
         foreach (['name', 'location'] as $field) {
-            if (array_key_exists($field, $validated) && $validated[$field] !== null) {
+            if (isset($validated[$field]) && is_string($validated[$field])) {
                 $validated[$field] = $this->htmlSanitizer->sanitize($validated[$field]);
             }
         }
 
         $camera->update($validated);
 
-        return new CameraResource($camera->fresh()->loadCount('snapshots'));
+        return new CameraResource($camera->refresh()->loadCount('snapshots'));
     }
 
-    public function destroy(Camera $camera)
+    public function destroy(Camera $camera): JsonResponse
     {
         $this->authorize('delete', $camera);
         $camera->delete();
@@ -96,7 +97,7 @@ class CameraController extends Controller
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function simulate(Request $request, Camera $camera)
+    public function simulate(Request $request, Camera $camera): JsonResponse
     {
         abort_unless(app()->environment('local', 'testing'), 403, 'Simulasi hanya di non-production.');
         $this->authorize('update', $camera);
@@ -105,11 +106,11 @@ class CameraController extends Controller
             abort(422, 'Kamera nonaktif.');
         }
 
-        $validated = $request->validate([
+        $this->validate($request, [
             'count' => ['sometimes', 'integer', 'min:1', 'max:5'],
         ]);
 
-        $count = $validated['count'] ?? 1;
+        $count = $request->integer('count', 1);
 
         $this->ingest->writeSimulatedFiles($camera, $count);
         $this->ingest->ingest($camera->id, CameraSnapshot::EVENT_SIMULATED);

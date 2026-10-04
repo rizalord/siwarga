@@ -27,7 +27,7 @@ class PermissionService
 
     public function delete(Permission $permission): void
     {
-        if ($permission->isSystem()) {
+        if ($permission->is_system) {
             throw ValidationException::withMessages([
                 'name' => ['Permission ini adalah permission inti sistem dan tidak bisa dihapus.'],
             ]);

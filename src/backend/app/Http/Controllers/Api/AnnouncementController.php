@@ -9,6 +9,7 @@ use App\Models\Announcement;
 use App\Policies\AnnouncementPolicy;
 use App\Services\AnnouncementService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -21,12 +22,12 @@ class AnnouncementController extends Controller
         private AnnouncementPolicy $announcementPolicy,
     ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Announcement::query()->with('targets');
 
         if ($request->search) {
-            $query->where('title', 'like', "%{$request->search}%");
+            $query->where('title', 'like', "%{$request->string('search')}%");
         }
 
         if ($request->filled('category')) {
@@ -37,12 +38,12 @@ class AnnouncementController extends Controller
 
         $this->applySorting($query, $request, ['title', 'category', 'published_at', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), AnnouncementResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), AnnouncementResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'title' => ['required', 'string', 'max:200'],
             'content' => ['required', 'string'],
             'category' => ['required', 'in:darurat,umum,kegiatan,keuangan'],
@@ -52,25 +53,25 @@ class AnnouncementController extends Controller
             'target_house_ids.*' => ['integer', 'exists:houses,id'],
         ]);
 
-        $this->ensureCanManageCategory($request, $validated['category']);
+        $this->ensureCanManageCategory($request, $request->string('category')->toString());
 
-        $announcement = $this->announcementService->create($validated, $request->user());
+        $announcement = $this->announcementService->create($validated, $this->authUser($request));
 
         return (new AnnouncementResource($announcement))->response()->setStatusCode(201);
     }
 
-    public function show(Announcement $announcement)
+    public function show(Announcement $announcement): AnnouncementResource
     {
         $announcement->load('targets');
 
         return new AnnouncementResource($announcement);
     }
 
-    public function update(Request $request, Announcement $announcement)
+    public function update(Request $request, Announcement $announcement): AnnouncementResource
     {
         $this->authorize('update', $announcement);
 
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'title' => ['sometimes', 'string', 'min:1', 'max:200'],
             'content' => ['sometimes', 'nullable', 'string'],
             'category' => ['sometimes', 'in:darurat,umum,kegiatan,keuangan'],
@@ -81,7 +82,7 @@ class AnnouncementController extends Controller
         ]);
 
         if (array_key_exists('category', $validated)) {
-            $this->ensureCanManageCategory($request, $validated['category']);
+            $this->ensureCanManageCategory($request, $request->string('category')->toString());
         }
 
         $announcement = $this->announcementService->update($announcement, $validated);
@@ -89,7 +90,7 @@ class AnnouncementController extends Controller
         return new AnnouncementResource($announcement);
     }
 
-    public function destroy(Request $request, Announcement $announcement)
+    public function destroy(Request $request, Announcement $announcement): JsonResponse
     {
         $this->authorize('delete', $announcement);
 
@@ -98,7 +99,7 @@ class AnnouncementController extends Controller
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function publish(Announcement $announcement)
+    public function publish(Announcement $announcement): JsonResponse
     {
         $this->authorize('publish', $announcement);
 
@@ -117,7 +118,7 @@ class AnnouncementController extends Controller
      */
     private function ensureCanManageCategory(Request $request, string $category): void
     {
-        if (! $this->announcementPolicy->canManageCategory($request->user(), $category)) {
+        if (! $this->announcementPolicy->canManageCategory($this->authUser($request), $category)) {
             throw ValidationException::withMessages([
                 'category' => ['Bendahara hanya dapat mengelola pengumuman kategori keuangan.'],
             ]);

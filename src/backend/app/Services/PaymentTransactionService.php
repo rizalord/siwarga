@@ -41,11 +41,10 @@ class PaymentTransactionService
                 'status' => PaymentTransaction::STATUS_PENDING,
                 'reference' => 'MAN-'.Str::upper(Str::random(10)),
                 'idempotency_key' => (string) Str::uuid(),
-            ])->fresh(['bill', 'payer']);
+            ])->refresh()->load(['bill', 'payer']);
         }
 
-        $providerKey = $data['provider'] ?? (string) config('services.payments.provider', 'simulator');
-        $provider = PaymentProviderRegistry::for($providerKey);
+        $provider = PaymentProviderRegistry::for(is_string($data['provider'] ?? null) ? $data['provider'] : null);
 
         $transaction = PaymentTransaction::create([
             'bill_id' => $bill->id,
@@ -60,7 +59,7 @@ class PaymentTransactionService
 
         // bank_code is validated at the controller (required_if va) and passed
         // as an in-memory transient only — never persisted to the transactions table.
-        $freshTransaction = $transaction->fresh();
+        $freshTransaction = PaymentTransaction::query()->findOrFail($transaction->id);
         $freshTransaction->setAttribute('bank_code', $data['bank_code'] ?? null);
 
         $invoice = $provider->createInvoice($freshTransaction);
@@ -71,7 +70,7 @@ class PaymentTransactionService
             'expires_at' => $invoice->expiresAt,
         ]);
 
-        return $transaction->fresh(['bill', 'payer']);
+        return $transaction->refresh()->load(['bill', 'payer']);
     }
 
     public function uploadProof(PaymentTransaction $transaction, UploadedFile $file, User $user): PaymentTransaction
@@ -91,7 +90,7 @@ class PaymentTransactionService
             'status' => PaymentTransaction::STATUS_AWAITING_VERIFICATION,
         ]);
 
-        return $transaction->fresh(['bill', 'payer']);
+        return $transaction->refresh()->load(['bill', 'payer']);
     }
 
     public function verify(PaymentTransaction $transaction, bool $approve, ?string $reason, User $actor): PaymentTransaction
@@ -115,9 +114,9 @@ class PaymentTransactionService
             'rejection_reason' => $this->htmlSanitizer->sanitize($reason),
         ]);
 
-        $this->notify($transaction->fresh('payer'), PaymentTransaction::STATUS_AWAITING_VERIFICATION, PaymentTransaction::STATUS_REJECTED, $actor->name);
+        $this->notify($transaction->refresh()->load('payer'), PaymentTransaction::STATUS_AWAITING_VERIFICATION, PaymentTransaction::STATUS_REJECTED, $actor->name);
 
-        return $transaction->fresh(['bill', 'payer', 'verifier']);
+        return $transaction->refresh()->load(['bill', 'payer', 'verifier']);
     }
 
     public function handleWebhook(string $providerKey, Request $request): PaymentTransaction
@@ -136,13 +135,13 @@ class PaymentTransactionService
 
         // Settled transactions are immutable: late non-paid webhooks are a no-op.
         if ($transaction->status === PaymentTransaction::STATUS_PAID) {
-            return $transaction->fresh(['bill', 'payer']);
+            return $transaction->refresh()->load(['bill', 'payer']);
         }
 
         if ($webhook->status !== 'paid') {
             $transaction->update(['status' => $webhook->status === 'expired' ? PaymentTransaction::STATUS_EXPIRED : PaymentTransaction::STATUS_FAILED]);
 
-            return $transaction->fresh(['bill', 'payer']);
+            return $transaction->refresh()->load(['bill', 'payer']);
         }
 
         return $this->finalizePaid($transaction, $provider->key());
@@ -193,7 +192,7 @@ class PaymentTransactionService
 
             $fresh->update(['status' => PaymentTransaction::STATUS_PAID, 'paid_at' => now()]);
 
-            $result = $fresh->fresh(['bill', 'payer', 'verifier']);
+            $result = $fresh->refresh()->load(['bill', 'payer', 'verifier']);
 
             try {
                 $result->payer?->notify(new PaymentSettled(

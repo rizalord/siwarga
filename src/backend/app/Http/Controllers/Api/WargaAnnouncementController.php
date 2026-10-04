@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\WargaAnnouncementResource;
 use App\Models\Announcement;
 use App\Models\AnnouncementRead;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -14,15 +16,15 @@ class WargaAnnouncementController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->authUser($request);
         $query = Announcement::query()
             ->visibleToWarga($user)
-            ->with(['reads' => fn ($q) => $q->where('user_id', $user->id)]);
+            ->with(['reads' => fn (Relation $q) => $q->where('user_id', $user->id)]);
 
         if ($request->search) {
-            $query->where('title', 'like', "%{$request->search}%");
+            $query->where('title', 'like', "%{$request->string('search')}%");
         }
 
         if ($request->filled('category')) {
@@ -33,14 +35,14 @@ class WargaAnnouncementController extends Controller
 
         $this->applySorting($query, $request, ['title', 'category', 'published_at', 'created_at'], 'published_at');
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), WargaAnnouncementResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), WargaAnnouncementResource::class);
     }
 
-    public function show(Request $request, Announcement $announcement)
+    public function show(Request $request, Announcement $announcement): WargaAnnouncementResource
     {
         $this->authorize('viewForWarga', $announcement);
 
-        $user = $request->user();
+        $user = $this->authUser($request);
 
         if (! $user->hasPermission('announcements.manage')) {
             try {
@@ -57,7 +59,7 @@ class WargaAnnouncementController extends Controller
             }
         }
 
-        $announcement->load(['reads' => fn ($q) => $q->where('user_id', $user->id)]);
+        $announcement->load(['reads' => fn (Relation $q) => $q->where('user_id', $user->id)]);
 
         return new WargaAnnouncementResource($announcement);
     }

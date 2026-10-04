@@ -14,9 +14,9 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminRoleId = Role::where('name', 'admin')->first()->id;
-        $bendaharaRoleId = Role::where('name', 'bendahara')->first()->id;
-        $wargaRoleId = Role::where('name', 'warga')->first()->id;
+        $adminRoleId = Role::where('name', 'admin')->firstOrFail()->id;
+        $bendaharaRoleId = Role::where('name', 'bendahara')->firstOrFail()->id;
+        $wargaRoleId = Role::where('name', 'warga')->firstOrFail()->id;
 
         $admin = User::updateOrCreate(
             ['email' => 'admin@siwarga.test'],
@@ -38,7 +38,7 @@ class UserSeeder extends Seeder
         );
         $bendahara->roles()->syncWithoutDetaching([$bendaharaRoleId]);
 
-        $satpamRoleId = Role::where('name', 'satpam')->first()->id;
+        $satpamRoleId = Role::where('name', 'satpam')->firstOrFail()->id;
 
         $satpam = User::updateOrCreate(
             ['email' => 'satpam@siwarga.test'],
@@ -56,7 +56,7 @@ class UserSeeder extends Seeder
             $warga = User::updateOrCreate(
                 ['email' => 'warga@siwarga.test'],
                 [
-                    'name' => $firstHouseResident->resident->full_name,
+                    'name' => $firstHouseResident->resident->full_name ?? 'Warga Demo',
                     'password' => bcrypt('password'),
                     'resident_id' => $firstHouseResident->resident_id,
                     'is_active' => true,

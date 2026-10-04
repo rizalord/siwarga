@@ -54,7 +54,7 @@ class SendPanicWhatsappJob implements ShouldQueue
             'cancelled' => 'DIBATALKAN',
         ][$this->newStatus] ?? strtoupper($this->newStatus);
 
-        $where = $alert->house?->house_number ?? $alert->location_note ?? '-';
+        $where = $alert->house->house_number ?? $alert->location_note ?? '-';
         $message = "[SIWarga] Panic alert #{$alert->id} ({$where}): {$label}.";
 
         try {

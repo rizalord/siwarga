@@ -27,6 +27,8 @@ class BillService
     {
         return Bill::whereIn('id', $ids)
             ->whereDoesntHave('payments')
-            ->pluck('id');
+            ->pluck('id')
+            ->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)
+            ->values();
     }
 }

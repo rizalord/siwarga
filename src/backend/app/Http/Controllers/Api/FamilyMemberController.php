@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\FamilyMemberResource;
 use App\Models\FamilyMember;
 use App\Models\HouseResident;
+use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,9 +16,9 @@ class FamilyMemberController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->authUser($request);
         $query = FamilyMember::query()->with('house:id,house_number');
 
         if (! $user->hasPermission('family-members.manage')) {
@@ -30,17 +32,17 @@ class FamilyMemberController extends Controller
         }
 
         if ($request->search) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $query->where('name', 'like', "%{$request->string('search')}%");
         }
 
         $this->applySorting($query, $request, ['name', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), FamilyMemberResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), FamilyMemberResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->authUser($request);
         $validated = $this->validateMember($request);
 
         // Non-managers can only add to their own house — ignore forged house_id.
@@ -53,14 +55,14 @@ class FamilyMemberController extends Controller
         return (new FamilyMemberResource(FamilyMember::create($validated)->load('house')))->response()->setStatusCode(201);
     }
 
-    public function show(FamilyMember $familyMember)
+    public function show(FamilyMember $familyMember): FamilyMemberResource
     {
         $this->authorize('view', $familyMember);
 
         return new FamilyMemberResource($familyMember->load('house'));
     }
 
-    public function update(Request $request, FamilyMember $familyMember)
+    public function update(Request $request, FamilyMember $familyMember): FamilyMemberResource
     {
         $this->authorize('update', $familyMember);
 
@@ -68,10 +70,10 @@ class FamilyMemberController extends Controller
         unset($validated['house_id']);
         $familyMember->update($validated);
 
-        return new FamilyMemberResource($familyMember->fresh('house'));
+        return new FamilyMemberResource($familyMember->refresh()->load('house'));
     }
 
-    public function destroy(FamilyMember $familyMember)
+    public function destroy(FamilyMember $familyMember): JsonResponse
     {
         $this->authorize('delete', $familyMember);
         $familyMember->delete();
@@ -86,7 +88,7 @@ class FamilyMemberController extends Controller
     {
         $sometimesRule = $sometimes ? 'sometimes' : '';
 
-        return $request->validate([
+        return $this->validate($request, [
             'house_id' => [$sometimesRule, 'nullable', 'integer', 'exists:houses,id'],
             'name' => [$sometimesRule, 'required', 'string', 'max:100'],
             'relationship' => [$sometimesRule, 'required', Rule::in([
@@ -100,7 +102,7 @@ class FamilyMemberController extends Controller
         ]);
     }
 
-    private function ownHouseId($user): ?int
+    private function ownHouseId(User $user): ?int
     {
         if ($user->resident_id === null) {
             return null;
@@ -108,6 +110,7 @@ class FamilyMemberController extends Controller
 
         return HouseResident::where('resident_id', $user->resident_id)
             ->whereNull('end_date')
-            ->value('house_id');
+            ->first()
+            ?->house_id;
     }
 }

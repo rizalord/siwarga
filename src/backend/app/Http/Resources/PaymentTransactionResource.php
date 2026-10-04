@@ -2,18 +2,25 @@
 
 namespace App\Http\Resources;
 
+use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @mixin PaymentTransaction
+ */
 class PaymentTransactionResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
             'bill_id' => $this->bill_id,
-            'bill_label' => trim(($this->bill?->dueType?->name ?? '').' '.($this->bill?->period_start?->format('M Y') ?? '')),
+            'bill_label' => trim(($this->bill?->dueType->name ?? '').' '.($this->bill?->period_start?->format('M Y') ?? '')),
             'user_id' => $this->user_id,
             'payer_name' => $this->payer?->name,
             'provider' => $this->provider,

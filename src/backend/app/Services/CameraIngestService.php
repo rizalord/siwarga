@@ -30,7 +30,7 @@ class CameraIngestService
     {
         $summary = ['processed' => 0, 'skipped' => 0, 'quarantined' => 0];
         $disk = Storage::disk('public');
-        $inbox = trim((string) config('cctv.inbox_path', 'ftp-inbox'), '/');
+        $inbox = trim(ConfigValue::string('cctv.inbox_path', 'ftp-inbox'), '/');
 
         $cameras = Camera::where('is_active', true)
             ->when($cameraId, fn ($query) => $query->whereKey($cameraId))
@@ -57,7 +57,7 @@ class CameraIngestService
     public function writeSimulatedFiles(Camera $camera, int $count): void
     {
         $disk = Storage::disk('public');
-        $inbox = trim((string) config('cctv.inbox_path', 'ftp-inbox'), '/');
+        $inbox = trim(ConfigValue::string('cctv.inbox_path', 'ftp-inbox'), '/');
         $dir = "{$inbox}/{$camera->ftp_user}";
         $disk->makeDirectory($dir);
 
@@ -77,11 +77,20 @@ class CameraIngestService
             return [];
         }
 
-        return collect($disk->files($dir))
-            ->reject(fn ($path) => str_contains($path, '/.done/') || str_contains($path, '/.quarantine/'))
-            ->values()->all();
+        $files = [];
+
+        foreach ($disk->files($dir) as $path) {
+            if (is_string($path) && ! str_contains($path, '/.done/') && ! str_contains($path, '/.quarantine/')) {
+                $files[] = $path;
+            }
+        }
+
+        return $files;
     }
 
+    /**
+     * @return 'processed'|'skipped'|'quarantined'
+     */
     private function ingestFile(FilesystemAdapter $disk, string $inbox, Camera $camera, string $path, ?string $forceEvent = null): string
     {
         $hash = hash('sha256', $path.'|'.$disk->size($path));
@@ -122,7 +131,7 @@ class CameraIngestService
         }
 
         $this->moveTo($disk, $path, "{$inbox}/{$camera->ftp_user}/.done/".basename($path));
-        $this->notifyStaff($snapshot->fresh('camera'));
+        $this->notifyStaff($snapshot->refresh()->load('camera'));
 
         return 'processed';
     }
@@ -152,7 +161,7 @@ class CameraIngestService
             try {
                 $member->notify(new CameraSnapshotStored(
                     $snapshot->id,
-                    $snapshot->camera?->name ?? 'CCTV',
+                    $snapshot->camera->name ?? 'CCTV',
                     $snapshot->event_type,
                 ));
             } catch (\Throwable $exception) {

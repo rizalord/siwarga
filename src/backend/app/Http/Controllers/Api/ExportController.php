@@ -11,10 +11,12 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Services\BackupService;
 use App\Services\ReportPdfService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportController extends Controller
 {
@@ -34,7 +36,7 @@ class ExportController extends Controller
         private BackupService $backupService,
     ) {}
 
-    public function monthlyPdf(int $year, int $month)
+    public function monthlyPdf(int $year, int $month): StreamedResponse
     {
         if ($year < 2020) {
             abort(422, 'Tahun tidak valid.');
@@ -62,7 +64,7 @@ class ExportController extends Controller
         );
     }
 
-    public function summaryPdf(int $year)
+    public function summaryPdf(int $year): StreamedResponse
     {
         if ($year < 2020) {
             abort(422, 'Tahun tidak valid.');
@@ -94,7 +96,7 @@ class ExportController extends Controller
 
         Gate::authorize(self::DATASET_GATES[$dataset]);
 
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'month' => 'nullable|integer|min:1|max:12',
             'year' => 'nullable|integer|min:2000|max:2100',
             'per_page' => 'nullable|integer|min:1|max:100',
@@ -104,8 +106,8 @@ class ExportController extends Controller
             'residents' => new ResidentsExport,
             'houses' => new HousesExport,
             'bills' => new BillsExport(
-                isset($validated['month']) ? (int) $validated['month'] : null,
-                isset($validated['year']) ? (int) $validated['year'] : null,
+                $request->filled('month') ? $request->integer('month') : null,
+                $request->filled('year') ? $request->integer('year') : null,
             ),
             'payments' => new PaymentsExport,
             'expenses' => new ExpensesExport,
@@ -124,7 +126,7 @@ class ExportController extends Controller
         return $response;
     }
 
-    public function backup(Request $request)
+    public function backup(Request $request): JsonResponse
     {
         ActivityLog::create([
             'user_id' => auth()->id(),

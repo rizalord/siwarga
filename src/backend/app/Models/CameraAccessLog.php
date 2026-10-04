@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CameraAccessLog extends Model
 {
-    use HasFactory;
-
     public $timestamps = false;
 
     protected $fillable = ['snapshot_id', 'user_id', 'viewed_at'];
@@ -19,11 +16,17 @@ class CameraAccessLog extends Model
         return ['viewed_at' => 'datetime'];
     }
 
+    /**
+     * @return BelongsTo<CameraSnapshot, $this>
+     */
     public function snapshot(): BelongsTo
     {
         return $this->belongsTo(CameraSnapshot::class, 'snapshot_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -14,27 +14,27 @@ class PaymentController extends Controller
 {
     public function __construct(private PaymentService $paymentService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Payment::with(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
-        if (! $request->user()->hasPermission('payments.view.all')) {
+        if (! $this->authUser($request)->hasPermission('payments.view.all')) {
             abort_unless(
-                $request->user()->hasPermission('payments.view.own')
-                    && $request->user()->resident_id !== null,
+                $this->authUser($request)->hasPermission('payments.view.own')
+                    && $this->authUser($request)->resident_id !== null,
                 403
             );
             $query->whereHas('bill', function ($q) use ($request) {
-                $q->where('resident_id', $request->user()->resident_id);
+                $q->where('resident_id', $this->authUser($request)->resident_id);
             });
         }
 
         if ($request->month) {
-            $query->whereMonth('payment_date', $request->month);
+            $query->whereMonth('payment_date', $request->integer('month'));
         }
 
         if ($request->year) {
-            $query->whereYear('payment_date', $request->year);
+            $query->whereYear('payment_date', $request->integer('year'));
         }
 
         if ($request->bill_id) {
@@ -44,11 +44,11 @@ class PaymentController extends Controller
         if ($request->search) {
             $query->whereHas('bill', function ($q) use ($request) {
                 $q->whereHas('resident', function ($r) use ($request) {
-                    $r->where('full_name', 'like', "%{$request->search}%");
+                    $r->where('full_name', 'like', "%{$request->string('search')}%");
                 })->orWhereHas('house', function ($h) use ($request) {
-                    $h->where('house_number', 'like', "%{$request->search}%");
+                    $h->where('house_number', 'like', "%{$request->string('search')}%");
                 })->orWhereHas('dueType', function ($d) use ($request) {
-                    $d->where('name', 'like', "%{$request->search}%");
+                    $d->where('name', 'like', "%{$request->string('search')}%");
                 });
             });
         }
@@ -56,17 +56,14 @@ class PaymentController extends Controller
         $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['amount_paid', 'payment_date', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), PaymentResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), PaymentResource::class);
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer',
-        ]);
+        $ids = $this->validatedIds($request);
 
-        $deleted = $this->paymentService->bulkDelete($validated['ids']);
+        $deleted = $this->paymentService->bulkDelete($ids);
 
         return response()->json(['data' => null, 'message' => "{$deleted} pembayaran berhasil dihapus"]);
     }
@@ -78,43 +75,43 @@ class PaymentController extends Controller
         });
     }
 
-    public function bulkForceDestroy(Request $request)
+    public function bulkForceDestroy(Request $request): JsonResponse
     {
         return $this->bulkForceDelete($request, Payment::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): PaymentResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'bill_id' => 'required|exists:bills,id',
             'amount_paid' => 'required|numeric|min:0',
             'payment_date' => 'required|date',
             'notes' => 'nullable|string|max:255',
         ]);
 
-        $payment = $this->paymentService->create($validated, $request->user()->id);
+        $payment = $this->paymentService->create($validated, $this->authUser($request)->id);
 
         return new PaymentResource($payment);
     }
 
-    public function show(Request $request, Payment $payment)
+    public function show(Request $request, Payment $payment): PaymentResource
     {
         $payment->load(['bill.house', 'bill.resident', 'bill.dueType', 'creator']);
 
         abort_unless(
-            $request->user()->hasPermission('payments.view.all')
-                || ($request->user()->hasPermission('payments.view.own')
-                    && $request->user()->resident_id !== null
-                    && $payment->bill?->resident_id === $request->user()->resident_id),
+            $this->authUser($request)->hasPermission('payments.view.all')
+                || ($this->authUser($request)->hasPermission('payments.view.own')
+                    && $this->authUser($request)->resident_id !== null
+                    && $payment->bill?->resident_id === $this->authUser($request)->resident_id),
             403
         );
 
         return new PaymentResource($payment);
     }
 
-    public function update(Request $request, Payment $payment)
+    public function update(Request $request, Payment $payment): PaymentResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'bill_id' => 'sometimes|exists:bills,id',
             'amount_paid' => 'sometimes|numeric|min:0',
             'payment_date' => 'sometimes|date',
@@ -126,14 +123,14 @@ class PaymentController extends Controller
         return new PaymentResource($payment);
     }
 
-    public function destroy(Payment $payment)
+    public function destroy(Payment $payment): JsonResponse
     {
         $this->paymentService->delete($payment);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function restore(Payment $payment)
+    public function restore(Payment $payment): PaymentResource
     {
         $this->restoreModel($payment, function (Payment $restoredPayment): void {
             $this->paymentService->afterRestore($restoredPayment);
@@ -143,7 +140,7 @@ class PaymentController extends Controller
         return new PaymentResource($payment);
     }
 
-    public function forceDestroy(Payment $payment)
+    public function forceDestroy(Payment $payment): JsonResponse
     {
         $this->forceDeleteModel($payment);
 

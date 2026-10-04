@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PaymentTransactionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentTransaction extends Model
 {
+    /** @use HasFactory<PaymentTransactionFactory> */
     use HasFactory, SoftDeletes;
 
     public const STATUS_PENDING = 'pending';
@@ -40,16 +42,25 @@ class PaymentTransaction extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Bill, $this>
+     */
     public function bill(): BelongsTo
     {
         return $this->belongsTo(Bill::class)->withTrashed();
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function payer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');

@@ -14,21 +14,21 @@ class ExpenseCategoryController extends Controller
 {
     public function __construct(private ExpenseCategoryService $expenseCategoryService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = ExpenseCategory::query();
         $this->applyTrashedFilter($query, $request);
 
         if ($request->search) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $query->where('name', 'like', "%{$request->string('search')}%");
         }
 
         $this->applySorting($query, $request, ['name', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), ExpenseCategoryResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), ExpenseCategoryResource::class);
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): JsonResponse
     {
         return $this->bulkDelete($request, ExpenseCategory::class);
     }
@@ -43,9 +43,9 @@ class ExpenseCategoryController extends Controller
         return $this->bulkForceDelete($request, ExpenseCategory::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): ExpenseCategoryResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => ['required', 'string', 'max:100', Rule::unique('expense_categories', 'name')],
         ]);
 
@@ -54,14 +54,14 @@ class ExpenseCategoryController extends Controller
         return new ExpenseCategoryResource($expenseCategory);
     }
 
-    public function show(ExpenseCategory $expenseCategory)
+    public function show(ExpenseCategory $expenseCategory): ExpenseCategoryResource
     {
         return new ExpenseCategoryResource($expenseCategory);
     }
 
-    public function update(Request $request, ExpenseCategory $expenseCategory)
+    public function update(Request $request, ExpenseCategory $expenseCategory): ExpenseCategoryResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => ['sometimes', 'string', 'max:100', Rule::unique('expense_categories', 'name')->ignore($expenseCategory->id)],
         ]);
 
@@ -70,21 +70,21 @@ class ExpenseCategoryController extends Controller
         return new ExpenseCategoryResource($expenseCategory);
     }
 
-    public function destroy(ExpenseCategory $expenseCategory)
+    public function destroy(ExpenseCategory $expenseCategory): JsonResponse
     {
         $this->expenseCategoryService->delete($expenseCategory);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function restore(ExpenseCategory $expenseCategory)
+    public function restore(ExpenseCategory $expenseCategory): ExpenseCategoryResource
     {
         $this->restoreModel($expenseCategory);
 
         return new ExpenseCategoryResource($expenseCategory);
     }
 
-    public function forceDestroy(ExpenseCategory $expenseCategory)
+    public function forceDestroy(ExpenseCategory $expenseCategory): JsonResponse
     {
         $this->forceDeleteModel($expenseCategory);
 

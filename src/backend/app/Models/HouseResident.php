@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\HouseResidentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class HouseResident extends Model
 {
+    /** @use HasFactory<HouseResidentFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['house_id', 'resident_id', 'start_date', 'end_date'];
@@ -23,19 +26,25 @@ class HouseResident extends Model
     protected static function booted(): void
     {
         static::saved(function (HouseResident $houseResident) {
-            $houseResident->house->save();
+            $houseResident->house?->save();
         });
         static::deleted(function (HouseResident $houseResident) {
-            $houseResident->house->save();
+            $houseResident->house?->save();
         });
     }
 
-    public function house()
+    /**
+     * @return BelongsTo<House, $this>
+     */
+    public function house(): BelongsTo
     {
         return $this->belongsTo(House::class);
     }
 
-    public function resident()
+    /**
+     * @return BelongsTo<Resident, $this>
+     */
+    public function resident(): BelongsTo
     {
         return $this->belongsTo(Resident::class)->withTrashed();
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PollFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Poll extends Model
 {
+    /** @use HasFactory<PollFactory> */
     use HasFactory;
 
     public $timestamps = false;
@@ -20,16 +22,25 @@ class Poll extends Model
         'ends_at' => 'datetime',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * @return HasMany<PollOption, $this>
+     */
     public function options(): HasMany
     {
         return $this->hasMany(PollOption::class);
     }
 
+    /**
+     * @return HasMany<PollVote, $this>
+     */
     public function votes(): HasMany
     {
         return $this->hasMany(PollVote::class);

@@ -9,7 +9,9 @@ use App\Http\Resources\TicketResource;
 use App\Models\Ticket;
 use App\Services\TicketService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TicketController extends Controller
 {
@@ -17,9 +19,9 @@ class TicketController extends Controller
 
     public function __construct(private TicketService $ticketService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->authUser($request);
         $query = Ticket::query()->with(['reporter:id,name', 'assignee:id,name', 'attachments'])
             ->withCount(['comments', 'attachments']);
 
@@ -28,7 +30,7 @@ class TicketController extends Controller
         }
 
         if ($request->search) {
-            $query->where('title', 'like', "%{$request->search}%");
+            $query->where('title', 'like', "%{$request->string('search')}%");
         }
 
         if ($request->filled('status')) {
@@ -37,49 +39,49 @@ class TicketController extends Controller
 
         $this->applySorting($query, $request, ['title', 'status', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), TicketResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), TicketResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'title' => ['required', 'string', 'max:200'],
             'description' => ['required', 'string'],
             'category' => ['nullable', 'string', 'max:100'],
             'house_id' => ['nullable', 'integer', 'exists:houses,id'],
         ]);
 
-        $ticket = $this->ticketService->create($validated, $request->user());
+        $ticket = $this->ticketService->create($validated, $this->authUser($request));
 
         return (new TicketResource($ticket->load(['reporter', 'assignee', 'attachments'])->loadCount(['comments', 'attachments'])))->response()->setStatusCode(201);
     }
 
-    public function show(Ticket $ticket)
+    public function show(Ticket $ticket): TicketResource
     {
         $this->authorize('view', $ticket);
 
         return new TicketResource($ticket->load(['reporter', 'assignee', 'attachments'])->loadCount(['comments', 'attachments']));
     }
 
-    public function changeStatus(Request $request, Ticket $ticket)
+    public function changeStatus(Request $request, Ticket $ticket): TicketResource
     {
-        $validated = $request->validate([
+        $this->validate($request, [
             'status' => ['required', 'in:open,in_progress,resolved'],
         ]);
 
-        return new TicketResource($this->ticketService->changeStatus($ticket, $validated['status'], $request->user()));
+        return new TicketResource($this->ticketService->changeStatus($ticket, $request->string('status')->toString(), $this->authUser($request)));
     }
 
-    public function assign(Request $request, Ticket $ticket)
+    public function assign(Request $request, Ticket $ticket): TicketResource
     {
-        $validated = $request->validate([
+        $this->validate($request, [
             'assigned_to' => ['required', 'integer', 'exists:users,id'],
         ]);
 
-        return new TicketResource($this->ticketService->assign($ticket, $validated['assigned_to']));
+        return new TicketResource($this->ticketService->assign($ticket, $request->integer('assigned_to')));
     }
 
-    public function comments(Ticket $ticket)
+    public function comments(Ticket $ticket): AnonymousResourceCollection
     {
         $this->authorize('view', $ticket);
 
@@ -88,28 +90,28 @@ class TicketController extends Controller
         return TicketCommentResource::collection($comments);
     }
 
-    public function storeComment(Request $request, Ticket $ticket)
+    public function storeComment(Request $request, Ticket $ticket): JsonResponse
     {
         $this->authorize('comment', $ticket);
 
-        $validated = $request->validate([
+        $this->validate($request, [
             'comment' => ['required', 'string', 'max:5000'],
         ]);
 
-        $comment = $this->ticketService->addComment($ticket, $validated['comment'], $request->user());
+        $comment = $this->ticketService->addComment($ticket, $request->string('comment')->toString(), $this->authUser($request));
 
         return (new TicketCommentResource($comment->load('user')))->response()->setStatusCode(201);
     }
 
-    public function storeAttachment(Request $request, Ticket $ticket)
+    public function storeAttachment(Request $request, Ticket $ticket): JsonResponse
     {
         $this->authorize('attach', $ticket);
 
-        $validated = $request->validate([
+        $this->validate($request, [
             'photo' => ['required', 'image', 'max:2048'],
         ]);
 
-        $attachment = $this->ticketService->addAttachment($ticket, $validated['photo']);
+        $attachment = $this->ticketService->addAttachment($ticket, $this->uploadedFile($request, 'photo'));
 
         return (new TicketAttachmentResource($attachment))->response()->setStatusCode(201);
     }

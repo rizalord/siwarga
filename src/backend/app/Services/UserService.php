@@ -14,13 +14,13 @@ class UserService
      */
     public function create(array $data): User
     {
-        if (array_key_exists('role_ids', $data) && $this->assignsAdminRole($data['role_ids']) && $this->otherAdminExists()) {
+        if (array_key_exists('role_ids', $data) && $this->assignsAdminRole(IdList::from($data['role_ids'])) && $this->otherAdminExists()) {
             throw ValidationException::withMessages([
                 'role_ids' => ['Sudah ada user dengan role admin. Hanya diperbolehkan satu admin untuk menghindari konflik kepentingan.'],
             ]);
         }
 
-        $data['password'] = Hash::make($data['password']);
+        $data['password'] = Hash::make(is_string($data['password']) ? $data['password'] : '');
         $roleIds = $data['role_ids'] ?? null;
         unset($data['role_ids']);
 
@@ -40,7 +40,7 @@ class UserService
     {
         if (array_key_exists('role_ids', $data)) {
             $userIsAdmin = $this->isAdmin($user);
-            $willBeAdmin = $this->assignsAdminRole($data['role_ids']);
+            $willBeAdmin = $this->assignsAdminRole(IdList::from($data['role_ids']));
 
             if ($userIsAdmin && ! $willBeAdmin) {
                 throw ValidationException::withMessages([
@@ -56,7 +56,7 @@ class UserService
         }
 
         if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+            $data['password'] = Hash::make(is_string($data['password']) ? $data['password'] : '');
         }
 
         $roleIds = $data['role_ids'] ?? null;
@@ -65,7 +65,7 @@ class UserService
         $user->update($data);
 
         if ($roleIds !== null) {
-            $user->roles()->sync($roleIds);
+            $user->roles()->sync(IdList::from($roleIds));
         }
 
         return $user->load(['roles', 'resident']);

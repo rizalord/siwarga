@@ -26,8 +26,8 @@ class SimulatorProvider implements PaymentProvider
     public function parseWebhook(Request $request): ProviderWebhook
     {
         return new ProviderWebhook(
-            reference: (string) $request->input('reference'),
-            status: (string) $request->input('status', ''),
+            reference: $request->string('reference')->toString(),
+            status: $request->string('status')->toString(),
             raw: $request->all(),
         );
     }

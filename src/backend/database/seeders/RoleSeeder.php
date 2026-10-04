@@ -31,7 +31,7 @@ class RoleSeeder extends Seeder
         );
 
         // Admin gets all permissions
-        $admin->permissions()->sync(Permission::all()->pluck('id'));
+        $admin->permissions()->sync(Permission::query()->pluck('id'));
 
         // Bendahara manages finance, but cannot change master data rumah/penghuni.
         $bendahara->permissions()->sync(Permission::whereIn('name', [

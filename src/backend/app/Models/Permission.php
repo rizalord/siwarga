@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -103,18 +104,19 @@ class Permission extends Model
         'activity-logs.view' => 'Lihat log aktivitas',
     ];
 
+    /**
+     * @return BelongsToMany<Role, $this>
+     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_permissions');
     }
 
-    public function isSystem(): bool
+    /**
+     * @return Attribute<bool, never>
+     */
+    protected function isSystem(): Attribute
     {
-        return array_key_exists($this->name, self::SYSTEM_PERMISSIONS);
-    }
-
-    protected function getIsSystemAttribute(): bool
-    {
-        return $this->isSystem();
+        return Attribute::get(fn (): bool => array_key_exists($this->name, self::SYSTEM_PERMISSIONS));
     }
 }

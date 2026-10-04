@@ -8,8 +8,15 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
+/**
+ * @implements FromCollection<int, Expense>
+ * @implements WithMapping<Expense>
+ */
 class ExpensesExport implements FromCollection, WithHeadings, WithMapping
 {
+    /**
+     * @return Collection<int, Expense>
+     */
     public function collection(): Collection
     {
         return Expense::with('category')->get();
@@ -24,16 +31,16 @@ class ExpensesExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-     * @param  mixed  $expense
+     * @param  Expense  $expense
      * @return array<int, mixed>
      */
-    public function map($expense): array
+    public function map(mixed $expense): array
     {
         return [
             $expense->category?->name,
             $expense->description,
             $expense->amount,
-            optional($expense->expense_date)->format('Y-m-d'),
+            $expense->expense_date->format('Y-m-d'),
         ];
     }
 }

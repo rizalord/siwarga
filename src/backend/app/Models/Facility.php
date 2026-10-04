@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\FacilityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Facility extends Model
 {
+    /** @use HasFactory<FacilityFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['name', 'description', 'rental_fee', 'due_type_id', 'is_active'];
@@ -22,11 +24,17 @@ class Facility extends Model
         ];
     }
 
+    /**
+     * @return HasMany<FacilityBooking, $this>
+     */
     public function bookings(): HasMany
     {
         return $this->hasMany(FacilityBooking::class);
     }
 
+    /**
+     * @return BelongsTo<DueType, $this>
+     */
     public function dueType(): BelongsTo
     {
         return $this->belongsTo(DueType::class);

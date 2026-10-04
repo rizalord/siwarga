@@ -7,6 +7,7 @@ use App\Http\Resources\FacilityResource;
 use App\Models\Facility;
 use App\Services\HtmlSanitizer;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FacilityController extends Controller
@@ -15,26 +16,26 @@ class FacilityController extends Controller
 
     public function __construct(private HtmlSanitizer $htmlSanitizer) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Facility::query()->with('dueType:id,name');
 
-        if (! $request->user()->hasPermission('facilities.manage')) {
+        if (! $this->authUser($request)->hasPermission('facilities.manage')) {
             $query->where('is_active', true);
         }
 
         if ($request->search) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $query->where('name', 'like', "%{$request->string('search')}%");
         }
 
         $this->applySorting($query, $request, ['name', 'rental_fee', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), FacilityResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), FacilityResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'rental_fee' => ['nullable', 'numeric', 'min:0'],
@@ -42,23 +43,23 @@ class FacilityController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
-        if (array_key_exists('description', $validated) && $validated['description'] !== null) {
+        if (isset($validated['description']) && is_string($validated['description'])) {
             $validated['description'] = $this->htmlSanitizer->sanitize($validated['description']);
         }
 
         return (new FacilityResource(Facility::create($validated)))->response()->setStatusCode(201);
     }
 
-    public function show(Facility $facility)
+    public function show(Facility $facility): FacilityResource
     {
         return new FacilityResource($facility->load('dueType'));
     }
 
-    public function update(Request $request, Facility $facility)
+    public function update(Request $request, Facility $facility): FacilityResource
     {
         $this->authorize('update', $facility);
 
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => ['sometimes', 'string', 'max:100'],
             'description' => ['sometimes', 'nullable', 'string'],
             'rental_fee' => ['sometimes', 'nullable', 'numeric', 'min:0'],
@@ -66,16 +67,16 @@ class FacilityController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
-        if (array_key_exists('description', $validated) && $validated['description'] !== null) {
+        if (isset($validated['description']) && is_string($validated['description'])) {
             $validated['description'] = $this->htmlSanitizer->sanitize($validated['description']);
         }
 
         $facility->update($validated);
 
-        return new FacilityResource($facility->fresh('dueType'));
+        return new FacilityResource($facility->refresh()->load('dueType'));
     }
 
-    public function destroy(Facility $facility)
+    public function destroy(Facility $facility): JsonResponse
     {
         $this->authorize('delete', $facility);
         $facility->delete();

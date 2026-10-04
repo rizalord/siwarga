@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\HouseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class House extends Model
 {
+    /** @use HasFactory<HouseFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['house_number', 'address', 'status'];
@@ -17,7 +21,10 @@ class House extends Model
         return ['status' => 'string'];
     }
 
-    public function residents()
+    /**
+     * @return BelongsToMany<Resident, $this>
+     */
+    public function residents(): BelongsToMany
     {
         return $this->belongsToMany(Resident::class, 'house_residents')
             ->withPivot(['start_date', 'end_date'])
@@ -25,7 +32,10 @@ class House extends Model
             ->withTrashed();
     }
 
-    public function currentResident()
+    /**
+     * @return BelongsToMany<Resident, $this>
+     */
+    public function currentResident(): BelongsToMany
     {
         return $this->belongsToMany(Resident::class, 'house_residents')
             ->withPivot(['start_date', 'end_date'])
@@ -33,12 +43,18 @@ class House extends Model
             ->withTrashed();
     }
 
-    public function houseResidents()
+    /**
+     * @return HasMany<HouseResident, $this>
+     */
+    public function houseResidents(): HasMany
     {
         return $this->hasMany(HouseResident::class);
     }
 
-    public function bills()
+    /**
+     * @return HasMany<Bill, $this>
+     */
+    public function bills(): HasMany
     {
         return $this->hasMany(Bill::class);
     }

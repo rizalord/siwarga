@@ -8,6 +8,7 @@ use App\Models\ForumPost;
 use App\Models\ForumThread;
 use App\Services\ForumService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ForumPostController extends Controller
@@ -16,25 +17,25 @@ class ForumPostController extends Controller
 
     public function __construct(private ForumService $forumService) {}
 
-    public function index(Request $request, ForumThread $thread)
+    public function index(Request $request, ForumThread $thread): JsonResponse
     {
         $query = $thread->posts()->with('user:id,name')->orderBy('id');
 
-        return $this->paginated($query->paginate($request->per_page ?? 20), ForumPostResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 20), ForumPostResource::class);
     }
 
-    public function store(Request $request, ForumThread $thread)
+    public function store(Request $request, ForumThread $thread): JsonResponse
     {
-        $validated = $request->validate([
+        $this->validate($request, [
             'content' => ['required', 'string', 'max:5000'],
         ]);
 
-        $post = $this->forumService->createPost($thread, $validated['content'], $request->user());
+        $post = $this->forumService->createPost($thread, $request->string('content')->toString(), $this->authUser($request));
 
         return (new ForumPostResource($post->load('user')))->response()->setStatusCode(201);
     }
 
-    public function destroy(ForumPost $post)
+    public function destroy(ForumPost $post): JsonResponse
     {
         $this->authorize('delete', $post);
 

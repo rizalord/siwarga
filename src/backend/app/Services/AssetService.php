@@ -16,7 +16,7 @@ class AssetService
             ->where('status', 'approved')
             ->sum('quantity');
 
-        return max(0, $asset->quantity - $borrowed);
+        return max(0, $asset->quantity - (int) $borrowed);
     }
 
     /**
@@ -43,13 +43,13 @@ class AssetService
 
                 $loan->update(['status' => 'approved', 'borrowed_at' => now()]);
 
-                return $loan->fresh(['asset', 'borrower']);
+                return $loan->refresh()->load(['asset', 'borrower']);
             });
         }
 
         $loan->update(['status' => 'rejected']);
 
-        return $loan->fresh(['asset', 'borrower']);
+        return $loan->refresh()->load(['asset', 'borrower']);
     }
 
     public function markReturned(AssetLoan $loan): AssetLoan
@@ -60,6 +60,6 @@ class AssetService
 
         $loan->update(['status' => 'returned', 'returned_at' => now()]);
 
-        return $loan->fresh(['asset', 'borrower']);
+        return $loan->refresh()->load(['asset', 'borrower']);
     }
 }

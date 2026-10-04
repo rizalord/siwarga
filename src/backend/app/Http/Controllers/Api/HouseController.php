@@ -14,14 +14,14 @@ class HouseController extends Controller
 {
     public function __construct(private HouseService $houseService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = House::query()->with('currentResident');
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('house_number', 'like', "%{$request->search}%")
-                    ->orWhere('address', 'like', "%{$request->search}%");
+                $q->where('house_number', 'like', "%{$request->string('search')}%")
+                    ->orWhere('address', 'like', "%{$request->string('search')}%");
             });
         }
 
@@ -34,20 +34,17 @@ class HouseController extends Controller
         $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['house_number', 'address', 'status', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), HouseResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), HouseResource::class);
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer',
-        ]);
+        $ids = $this->validatedIds($request);
 
-        $deletableIds = $this->houseService->deletableIds($validated['ids']);
+        $deletableIds = $this->houseService->deletableIds($ids);
         $deleted = House::destroy($deletableIds);
 
-        if ($deleted < count($validated['ids'])) {
+        if ($deleted < count($ids)) {
             return response()->json([
                 'data' => null,
                 'message' => "{$deleted} rumah berhasil dihapus. Sisanya tidak bisa dihapus karena masih berpenghuni aktif atau memiliki histori transaksi.",
@@ -62,14 +59,14 @@ class HouseController extends Controller
         return parent::bulkRestore($request, $modelClass);
     }
 
-    public function bulkForceDestroy(Request $request)
+    public function bulkForceDestroy(Request $request): JsonResponse
     {
         return $this->bulkForceDelete($request, House::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): HouseResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'house_number' => 'required|string|max:20|unique:houses,house_number',
             'address' => 'nullable|string|max:255',
             'status' => 'sometimes|in:dihuni,kosong',
@@ -77,19 +74,19 @@ class HouseController extends Controller
 
         $house = House::create($validated);
 
-        return new HouseResource($house, 201);
+        return new HouseResource($house);
     }
 
-    public function show(House $house)
+    public function show(House $house): HouseResource
     {
         $house->load('currentResident');
 
         return new HouseResource($house);
     }
 
-    public function update(Request $request, House $house)
+    public function update(Request $request, House $house): HouseResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'house_number' => 'sometimes|string|max:20|unique:houses,house_number,'.$house->id,
             'address' => 'nullable|string|max:255',
             'status' => 'sometimes|in:dihuni,kosong',
@@ -100,20 +97,20 @@ class HouseController extends Controller
         return new HouseResource($house);
     }
 
-    public function destroy(House $house)
+    public function destroy(House $house): JsonResponse
     {
         try {
             $this->houseService->delete($house);
         } catch (ValidationException $exception) {
             return response()->json([
-                'message' => $exception->errors()['house'][0],
+                'message' => $exception->validator->errors()->first('house'),
             ], 422);
         }
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function restore(House $house)
+    public function restore(House $house): HouseResource
     {
         $this->restoreModel($house);
         $house->load('currentResident');
@@ -121,14 +118,14 @@ class HouseController extends Controller
         return new HouseResource($house);
     }
 
-    public function forceDestroy(House $house)
+    public function forceDestroy(House $house): JsonResponse
     {
         $this->forceDeleteModel($house);
 
         return response()->json(['data' => null, 'message' => 'Deleted permanently']);
     }
 
-    public function history(House $house)
+    public function history(House $house): JsonResponse
     {
         $history = $house->houseResidents()
             ->with('resident')
@@ -138,9 +135,9 @@ class HouseController extends Controller
         return response()->json(['data' => $history]);
     }
 
-    public function assignResident(Request $request, House $house)
+    public function assignResident(Request $request, House $house): JsonResponse
     {
-        $validated = $request->validate([
+        $this->validate($request, [
             'resident_id' => 'required|exists:residents,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
@@ -148,25 +145,25 @@ class HouseController extends Controller
 
         $houseResident = $this->houseService->assignResident(
             $house,
-            $validated['resident_id'],
-            $validated['start_date'],
-            $validated['end_date'] ?? null
+            $request->integer('resident_id'),
+            $request->string('start_date')->toString(),
+            $this->optionalString($request, 'end_date'),
         );
 
         return response()->json(['data' => $houseResident], 201);
     }
 
-    public function vacateResident(Request $request, House $house)
+    public function vacateResident(Request $request, House $house): JsonResponse
     {
-        $validated = $request->validate([
+        $this->validate($request, [
             'end_date' => 'nullable|date',
         ]);
 
         try {
-            $this->houseService->vacateResident($house, $validated['end_date'] ?? null);
+            $this->houseService->vacateResident($house, $this->optionalString($request, 'end_date'));
         } catch (ValidationException $exception) {
             return response()->json([
-                'message' => $exception->errors()['house'][0],
+                'message' => $exception->validator->errors()->first('house'),
             ], 422);
         }
 

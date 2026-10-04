@@ -25,7 +25,7 @@ class PollService
                 $poll->options()->create(['label' => $label]);
             }
 
-            return $poll->fresh(['options']);
+            return $poll->refresh()->load(['options']);
         });
     }
 
@@ -36,7 +36,7 @@ class PollService
     {
         $poll->update($data);
 
-        return $poll->fresh(['options']);
+        return $poll->refresh()->load(['options']);
     }
 
     public function delete(Poll $poll): void

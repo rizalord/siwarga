@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\AnnouncementFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Announcement extends Model
 {
+    /** @use HasFactory<AnnouncementFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['title', 'slug', 'content', 'category', 'is_public', 'published_at', 'created_by'];
@@ -20,16 +22,25 @@ class Announcement extends Model
         'published_at' => 'datetime',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * @return HasMany<AnnouncementTarget, $this>
+     */
     public function targets(): HasMany
     {
         return $this->hasMany(AnnouncementTarget::class);
     }
 
+    /**
+     * @return HasMany<AnnouncementRead, $this>
+     */
     public function reads(): HasMany
     {
         return $this->hasMany(AnnouncementRead::class);
@@ -39,6 +50,10 @@ class Announcement extends Model
      * Published announcements visible to the given user: broadcasts plus
      * those targeted at the user's current houses. Holders of
      * announcements.manage (admin) bypass the target filter.
+     */
+    /**
+     * @param  Builder<Announcement>  $query
+     * @return Builder<Announcement>
      */
     public function scopeVisibleToWarga(Builder $query, User $user): Builder
     {

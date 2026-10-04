@@ -11,7 +11,7 @@ class PaymentWebhookController extends Controller
 {
     public function __construct(private PaymentTransactionService $service) {}
 
-    public function handle(string $provider, Request $request)
+    public function handle(string $provider, Request $request): PaymentTransactionResource
     {
         try {
             $transaction = $this->service->handleWebhook($provider, $request);

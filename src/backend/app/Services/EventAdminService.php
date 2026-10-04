@@ -20,10 +20,10 @@ class EventAdminService
     public function create(array $data, User $user): Event
     {
         if (array_key_exists('description', $data) && $data['description'] !== null) {
-            $data['description'] = $this->htmlSanitizer->sanitize($data['description']);
+            $data['description'] = $this->htmlSanitizer->sanitizeValue($data['description']);
         }
 
-        $data['slug'] = $this->uniqueSlug($data['title']);
+        $data['slug'] = $this->uniqueSlug(is_string($data['title']) ? $data['title'] : '');
         $data['created_by'] = $user->id;
 
         return Event::create($data);
@@ -35,16 +35,16 @@ class EventAdminService
     public function update(Event $event, array $data): Event
     {
         if (array_key_exists('description', $data) && $data['description'] !== null) {
-            $data['description'] = $this->htmlSanitizer->sanitize($data['description']);
+            $data['description'] = $this->htmlSanitizer->sanitizeValue($data['description']);
         }
 
         if (array_key_exists('title', $data) && $data['title'] !== $event->title) {
-            $data['slug'] = $this->uniqueSlug($data['title'], $event->id);
+            $data['slug'] = $this->uniqueSlug(is_string($data['title']) ? $data['title'] : '', $event->id);
         }
 
         $event->update($data);
 
-        return $event->fresh('documentation');
+        return $event->refresh()->load('documentation');
     }
 
     public function addDocumentation(Event $event, UploadedFile $file, string $mediaType, ?string $caption): EventDocumentation

@@ -12,18 +12,18 @@ class PageController extends Controller
 {
     public function __construct(private PageService $pageService) {}
 
-    public function show(string $slug)
+    public function show(string $slug): PageResource
     {
         $page = Page::where('slug', $slug)->firstOrFail();
 
         return new PageResource($page);
     }
 
-    public function update(Request $request, string $slug)
+    public function update(Request $request, string $slug): PageResource
     {
         $page = Page::where('slug', $slug)->firstOrFail();
 
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'title' => ['sometimes', 'string', 'max:200'],
             'content' => ['sometimes', 'nullable', 'string'],
             'hero_image' => ['sometimes', 'nullable', 'image', 'max:2048'],
@@ -31,7 +31,7 @@ class PageController extends Controller
 
         unset($validated['hero_image']);
 
-        $page = $this->pageService->update($page, $validated, $request->file('hero_image'), $request->user()->id);
+        $page = $this->pageService->update($page, $validated, $request->file('hero_image'), $this->authUser($request)->id);
 
         return new PageResource($page);
     }

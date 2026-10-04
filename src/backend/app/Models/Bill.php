@@ -2,14 +2,19 @@
 
 namespace App\Models;
 
+use Database\Factories\BillFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property-read string|float|null $total_paid Aggregate from withSum/loadSum('payments as total_paid', 'amount_paid').
+ */
 class Bill extends Model
 {
+    /** @use HasFactory<BillFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
@@ -29,26 +34,41 @@ class Bill extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<House, $this>
+     */
     public function house(): BelongsTo
     {
         return $this->belongsTo(House::class)->withTrashed();
     }
 
+    /**
+     * @return BelongsTo<Resident, $this>
+     */
     public function resident(): BelongsTo
     {
         return $this->belongsTo(Resident::class)->withTrashed();
     }
 
+    /**
+     * @return BelongsTo<DueType, $this>
+     */
     public function dueType(): BelongsTo
     {
         return $this->belongsTo(DueType::class)->withTrashed();
     }
 
+    /**
+     * @return HasMany<Payment, $this>
+     */
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function generator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'generated_by')->withTrashed();

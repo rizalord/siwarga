@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CameraSnapshotResource;
 use App\Models\CameraAccessLog;
 use App\Models\CameraSnapshot;
+use App\Services\ConfigValue;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,7 +16,7 @@ class CameraSnapshotController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = CameraSnapshot::query()->with('camera:id,name');
 
@@ -27,28 +29,28 @@ class CameraSnapshotController extends Controller
         }
 
         if ($request->filled('date')) {
-            $query->whereDate('captured_at', $request->date);
+            $query->whereDate('captured_at', $request->string('date')->toString());
         }
 
         $this->applySorting($query, $request, ['captured_at', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), CameraSnapshotResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), CameraSnapshotResource::class);
     }
 
-    public function show(Request $request, CameraSnapshot $cameraSnapshot)
+    public function show(Request $request, CameraSnapshot $cameraSnapshot): CameraSnapshotResource
     {
         $this->authorize('view', $cameraSnapshot);
 
         CameraAccessLog::create([
             'snapshot_id' => $cameraSnapshot->id,
-            'user_id' => $request->user()->id,
+            'user_id' => $this->authUser($request)->id,
             'viewed_at' => now(),
         ]);
 
         return new CameraSnapshotResource($cameraSnapshot->load('camera'));
     }
 
-    public function destroy(CameraSnapshot $cameraSnapshot)
+    public function destroy(CameraSnapshot $cameraSnapshot): JsonResponse
     {
         $this->authorize('delete', $cameraSnapshot);
 
@@ -62,10 +64,10 @@ class CameraSnapshotController extends Controller
             }
 
             $disk = Storage::disk('public');
-            $inbox = trim((string) config('cctv.inbox_path', 'ftp-inbox'), '/');
+            $inbox = trim(ConfigValue::string('cctv.inbox_path', 'ftp-inbox'), '/');
 
             foreach ($disk->allFiles($inbox) as $file) {
-                if (str_ends_with($file, '/.done/'.$basename)) {
+                if (is_string($file) && str_ends_with($file, '/.done/'.$basename)) {
                     $disk->delete($file);
                 }
             }
