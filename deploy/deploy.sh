@@ -17,8 +17,15 @@ echo ">> Checkout ${DEPLOY_SHA:-origin/main}"
 git fetch --quiet origin main
 git reset --hard "${DEPLOY_SHA:-origin/main}"
 
+# FTP_ENABLED=false di .env mematikan service ftp (image pure-ftpd hanya
+# tersedia untuk amd64, jadi tidak jalan di server ARM64).
+UP_ARGS=(up -d --build --remove-orphans)
+if grep -qE '^FTP_ENABLED=false$' .env; then
+    UP_ARGS+=(--scale ftp=0)
+fi
+
 echo ">> Build & start stack"
-"${COMPOSE[@]}" up -d --build --remove-orphans
+"${COMPOSE[@]}" "${UP_ARGS[@]}"
 
 echo ">> Menunggu backend sehat"
 for _ in $(seq 1 60); do
