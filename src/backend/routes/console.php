@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('camera:ingest')->everyMinute()->withoutOverlapping();
+Schedule::command('bills:remind-due')->dailyAt('08:00')->withoutOverlapping();
