@@ -239,6 +239,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('facilities', [FacilityController::class, 'index'])->middleware('can:facilities.view');
     Route::post('facilities', [FacilityController::class, 'store'])->middleware('can:facilities.manage');
     Route::get('facilities/{facility}', [FacilityController::class, 'show'])->middleware('can:facilities.view');
+    Route::get('facilities/{facility}/bookings', [BookingController::class, 'indexByFacility'])->middleware('can:bookings.view');
     Route::put('facilities/{facility}', [FacilityController::class, 'update']);
     Route::delete('facilities/{facility}', [FacilityController::class, 'destroy']);
     Route::get('bookings', [BookingController::class, 'index'])->middleware('can:bookings.view');

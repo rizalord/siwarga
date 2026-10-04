@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BookingResource;
+use App\Models\Facility;
 use App\Models\FacilityBooking;
 use App\Services\BookingService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -43,6 +44,13 @@ class BookingController extends Controller
         $this->applySorting($query, $request, ['start_at', 'created_at', 'status'], 'start_at');
 
         return $this->paginated($query->paginate($request->per_page ?? 10), BookingResource::class);
+    }
+
+    public function indexByFacility(Request $request, Facility $facility)
+    {
+        $request->merge(['facility_id' => $facility->id]);
+
+        return $this->index($request);
     }
 
     public function store(Request $request)

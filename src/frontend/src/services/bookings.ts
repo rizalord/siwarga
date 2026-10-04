@@ -14,6 +14,8 @@ export const facilitiesService = {
   getAll: (params?: FacilityFilter) =>
     api.get<PaginatedResponse<Facility>>('/api/facilities', { params }),
   getById: (id: number) => api.get<ApiResponse<Facility>>(`/api/facilities/${id}`),
+  getBookings: (id: number, params?: BookingFilter) =>
+    api.get<PaginatedResponse<Booking>>(`/api/facilities/${id}/bookings`, { params }),
   create: (data: CreateFacilityRequest) =>
     api.post<ApiResponse<Facility>>('/api/facilities', data),
   update: (id: number, data: Partial<CreateFacilityRequest>) =>
