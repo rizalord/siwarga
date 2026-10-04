@@ -147,7 +147,8 @@ services:
       - backend
 
   waha:
-    image: devlikeapro/waha:latest
+    # Server ARM64 (mis. Oracle Ampere): set WAHA_IMAGE=devlikeapro/waha:arm
+    image: ${WAHA_IMAGE:-devlikeapro/waha:latest}
     restart: unless-stopped
     ports:
       - '${HOST_BIND_IP:-0.0.0.0}:${WAHA_PORT:-3000}:3000'
