@@ -7,6 +7,7 @@ use App\Http\Resources\BillResource;
 use App\Models\Bill;
 use App\Services\BillGenerationService;
 use App\Services\BillService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -142,8 +143,8 @@ class BillController extends Controller
 
         $bills = $this->billGenerationService->generateFlexible(
             $validated['due_type_id'],
-            \Carbon\Carbon::parse($validated['period_start']),
-            \Carbon\Carbon::parse($validated['period_end']),
+            Carbon::parse($validated['period_start']),
+            Carbon::parse($validated['period_end']),
             (float) $validated['amount_due'],
             $request->user()->id,
         );
