@@ -6,7 +6,10 @@ FROM composer:2 AS vendor
 
 WORKDIR /app
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --optimize-autoloader
+# The composer image lacks extensions such as gd; they are installed in the
+# runtime stage and verified there with check-platform-reqs.
+RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --optimize-autoloader \
+        --ignore-platform-req='ext-*'
 
 FROM php:8.5-fpm-alpine AS app
 
@@ -28,6 +31,8 @@ WORKDIR /var/www/html
 
 COPY . .
 COPY --from=vendor /app/vendor ./vendor
+COPY --from=vendor /usr/bin/composer /usr/bin/composer
+RUN composer check-platform-reqs --no-dev
 
 RUN mkdir -p /run/nginx \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
