@@ -10,4 +10,7 @@ parameters:
         - database/
         - routes/
 
-    level: 7
+    level: max
+
+    # Read casts from the casts() method body so date/decimal casts resolve correctly.
+    parseModelCastsMethod: true

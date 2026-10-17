@@ -954,3 +954,39 @@ export interface PaymentTrxFilter {
 
 export type ExportDataset =
   'residents' | 'houses' | 'bills' | 'payments' | 'expenses'
+
+export type CameraType = 'tapo' | 'simulator'
+export type SnapshotEvent = 'motion' | 'panic' | 'manual' | 'simulated'
+
+export interface Camera {
+  id: number
+  name: string
+  location: string | null
+  ftp_user: string
+  camera_type: CameraType
+  stream_url: string | null
+  is_active: boolean
+  snapshots_count?: number
+  created_at: string
+}
+
+export interface CameraSnapshot {
+  id: number
+  camera_id: number
+  camera_name: string | null
+  file_path: string
+  file_url: string | null
+  mime: string
+  size_bytes: number
+  event_type: SnapshotEvent
+  captured_at: string | null
+  created_at: string
+}
+
+export interface SnapshotFilter {
+  page?: number
+  per_page?: number
+  camera_id?: number
+  event_type?: SnapshotEvent
+  date?: string
+}

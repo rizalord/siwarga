@@ -2,13 +2,20 @@
 
 namespace App\Http\Resources;
 
+use App\Models\FamilyMember;
 use App\Models\HouseResident;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin FamilyMember
+ */
 class FamilyMemberResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         $user = $request->user();

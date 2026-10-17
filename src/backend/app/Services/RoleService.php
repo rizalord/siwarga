@@ -13,7 +13,7 @@ class RoleService
     public function create(array $data): Role
     {
         $role = Role::create($data);
-        $role->permissions()->sync($data['permission_ids'] ?? []);
+        $role->permissions()->sync(IdList::from($data['permission_ids'] ?? []));
 
         return $role->load('permissions')->loadCount('users');
     }
@@ -23,7 +23,7 @@ class RoleService
      */
     public function update(Role $role, array $data): Role
     {
-        if ($role->isAdmin() && array_key_exists('name', $data) && $data['name'] !== Role::ADMIN_ROLE_NAME) {
+        if ($role->is_admin && array_key_exists('name', $data) && $data['name'] !== Role::ADMIN_ROLE_NAME) {
             throw ValidationException::withMessages([
                 'name' => ['Role admin tidak bisa diganti namanya karena merupakan role khusus sistem.'],
             ]);
@@ -32,7 +32,7 @@ class RoleService
         $role->update($data);
 
         if (array_key_exists('permission_ids', $data)) {
-            $role->permissions()->sync($data['permission_ids']);
+            $role->permissions()->sync(IdList::from($data['permission_ids']));
         }
 
         return $role->load('permissions')->loadCount('users');
@@ -40,7 +40,7 @@ class RoleService
 
     public function delete(Role $role): void
     {
-        if ($role->isAdmin()) {
+        if ($role->is_admin) {
             throw ValidationException::withMessages([
                 'role' => ['Role admin tidak bisa dihapus karena merupakan role khusus sistem.'],
             ]);

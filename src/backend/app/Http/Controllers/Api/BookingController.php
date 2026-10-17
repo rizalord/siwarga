@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BookingResource;
+use App\Models\Facility;
 use App\Models\FacilityBooking;
 use App\Services\BookingService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
@@ -15,9 +17,9 @@ class BookingController extends Controller
 
     public function __construct(private BookingService $bookingService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->authUser($request);
         $query = FacilityBooking::query()->with(['facility:id,name', 'booker:id,name']);
 
         if (! $user->hasPermission('bookings.review')) {
@@ -42,49 +44,56 @@ class BookingController extends Controller
 
         $this->applySorting($query, $request, ['start_at', 'created_at', 'status'], 'start_at');
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), BookingResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), BookingResource::class);
     }
 
-    public function store(Request $request)
+    public function indexByFacility(Request $request, Facility $facility): JsonResponse
     {
-        $validated = $request->validate([
+        $request->merge(['facility_id' => $facility->id]);
+
+        return $this->index($request);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $this->validate($request, [
             'facility_id' => ['required', 'integer', 'exists:facilities,id'],
             'event_id' => ['nullable', 'integer', 'exists:events,id'],
             'start_at' => ['required', 'date', 'after:now'],
             'end_at' => ['required', 'date', 'after:start_at'],
         ]);
 
-        $booking = $this->bookingService->request($validated, $request->user());
+        $booking = $this->bookingService->request($validated, $this->authUser($request));
 
         return (new BookingResource($booking->load(['facility', 'booker'])))->response()->setStatusCode(201);
     }
 
-    public function show(FacilityBooking $booking)
+    public function show(FacilityBooking $booking): BookingResource
     {
         $this->authorize('view', $booking);
 
         return new BookingResource($booking->load(['facility', 'booker', 'approver']));
     }
 
-    public function approve(Request $request, FacilityBooking $booking)
+    public function approve(Request $request, FacilityBooking $booking): BookingResource
     {
         $this->authorize('review', $booking);
 
-        return new BookingResource($this->bookingService->approve($booking, $request->user()));
+        return new BookingResource($this->bookingService->approve($booking, $this->authUser($request)));
     }
 
-    public function reject(Request $request, FacilityBooking $booking)
+    public function reject(Request $request, FacilityBooking $booking): BookingResource
     {
         $this->authorize('review', $booking);
 
-        $validated = $request->validate([
+        $this->validate($request, [
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
-        return new BookingResource($this->bookingService->reject($booking, $validated['reason'] ?? null, $request->user()));
+        return new BookingResource($this->bookingService->reject($booking, $this->optionalString($request, 'reason'), $this->authUser($request)));
     }
 
-    public function cancel(FacilityBooking $booking)
+    public function cancel(FacilityBooking $booking): BookingResource
     {
         $this->authorize('cancel', $booking);
 

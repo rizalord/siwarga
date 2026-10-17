@@ -39,7 +39,9 @@ class HouseService
             ->whereDoesntHave('houseResidents', function ($query) {
                 $query->whereNull('end_date');
             })
-            ->pluck('id');
+            ->pluck('id')
+            ->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)
+            ->values();
     }
 
     public function assignResident(House $house, int $residentId, string $startDate, ?string $endDate): HouseResident

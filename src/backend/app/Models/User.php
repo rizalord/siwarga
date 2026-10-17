@@ -40,39 +40,37 @@ class User extends Authenticatable implements PasskeyUser
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
 
+    /**
+     * @return BelongsTo<Resident, $this>
+     */
     public function resident(): BelongsTo
     {
         return $this->belongsTo(Resident::class)->withTrashed();
     }
 
+    /**
+     * @return BelongsToMany<Role, $this>
+     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles');
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getAllPermissions(): array
     {
-        if ($this->relationLoaded('roles')) {
-            return $this->roles
-                ->pluck('permissions')
-                ->flatten()
-                ->pluck('name')
-                ->unique()
-                ->sort()
-                ->values()
-                ->toArray();
-        }
+        $roles = $this->relationLoaded('roles')
+            ? $this->roles
+            : $this->roles()->with('permissions')->get();
 
-        return $this->roles()
-            ->with('permissions')
-            ->get()
-            ->pluck('permissions')
-            ->flatten()
-            ->pluck('name')
+        return $roles
+            ->flatMap(fn (Role $role) => $role->permissions->map(fn (Permission $permission): string => $permission->name))
             ->unique()
             ->sort()
             ->values()
-            ->toArray();
+            ->all();
     }
 
     public function hasPermission(string $permission): bool

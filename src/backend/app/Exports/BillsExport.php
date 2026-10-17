@@ -8,10 +8,17 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
+/**
+ * @implements FromCollection<int, Bill>
+ * @implements WithMapping<Bill>
+ */
 class BillsExport implements FromCollection, WithHeadings, WithMapping
 {
     public function __construct(private ?int $month = null, private ?int $year = null) {}
 
+    /**
+     * @return Collection<int, Bill>
+     */
     public function collection(): Collection
     {
         return Bill::with(['house', 'resident', 'dueType'])
@@ -29,17 +36,17 @@ class BillsExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-     * @param  mixed  $bill
+     * @param  Bill  $bill
      * @return array<int, mixed>
      */
-    public function map($bill): array
+    public function map(mixed $bill): array
     {
         return [
             $bill->house?->house_number,
             $bill->resident?->full_name,
             $bill->dueType?->name,
-            optional($bill->period_start)->format('Y-m-d'),
-            optional($bill->period_end)->format('Y-m-d'),
+            $bill->period_start->format('Y-m-d'),
+            $bill->period_end->format('Y-m-d'),
             $bill->amount_due,
             $bill->status,
         ];

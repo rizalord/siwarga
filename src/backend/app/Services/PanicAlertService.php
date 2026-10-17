@@ -30,8 +30,8 @@ class PanicAlertService
         }
 
         foreach (['location_note', 'note'] as $field) {
-            if (isset($data[$field]) && $data[$field] !== null) {
-                $data[$field] = $this->htmlSanitizer->sanitize($data[$field]);
+            if (isset($data[$field])) {
+                $data[$field] = $this->htmlSanitizer->sanitizeValue($data[$field]);
             }
         }
 
@@ -66,7 +66,7 @@ class PanicAlertService
             SendPanicWhatsappJob::dispatch($alert->id, PanicAlert::STATUS_ACTIVE, $staff->id);
         }
 
-        return $alert->fresh(['reporter', 'house', 'handler']);
+        return $alert->refresh()->load(['reporter', 'house', 'handler']);
     }
 
     public function handle(PanicAlert $alert, User $actor): PanicAlert
@@ -81,9 +81,9 @@ class PanicAlertService
             'handled_at' => now(),
         ]);
 
-        $this->notifyReporter($alert->fresh(['reporter']), PanicAlert::STATUS_ACTIVE, PanicAlert::STATUS_HANDLED, $actor);
+        $this->notifyReporter($alert->refresh()->load(['reporter']), PanicAlert::STATUS_ACTIVE, PanicAlert::STATUS_HANDLED, $actor);
 
-        return $alert->fresh(['reporter', 'house', 'handler']);
+        return $alert->refresh()->load(['reporter', 'house', 'handler']);
     }
 
     public function resolve(PanicAlert $alert, User $actor): PanicAlert
@@ -94,9 +94,9 @@ class PanicAlertService
 
         $alert->update(['status' => PanicAlert::STATUS_RESOLVED, 'resolved_at' => now()]);
 
-        $this->notifyReporter($alert->fresh(['reporter']), PanicAlert::STATUS_HANDLED, PanicAlert::STATUS_RESOLVED, $actor);
+        $this->notifyReporter($alert->refresh()->load(['reporter']), PanicAlert::STATUS_HANDLED, PanicAlert::STATUS_RESOLVED, $actor);
 
-        return $alert->fresh(['reporter', 'house', 'handler']);
+        return $alert->refresh()->load(['reporter', 'house', 'handler']);
     }
 
     public function cancel(PanicAlert $alert, User $actor): PanicAlert
@@ -108,9 +108,9 @@ class PanicAlertService
         $old = $alert->status;
         $alert->update(['status' => PanicAlert::STATUS_CANCELLED]);
 
-        $this->notifyReporter($alert->fresh(['reporter']), $old, PanicAlert::STATUS_CANCELLED, $actor);
+        $this->notifyReporter($alert->refresh()->load(['reporter']), $old, PanicAlert::STATUS_CANCELLED, $actor);
 
-        return $alert->fresh(['reporter', 'house', 'handler']);
+        return $alert->refresh()->load(['reporter', 'house', 'handler']);
     }
 
     private function notifyReporter(PanicAlert $alert, string $old, string $new, User $actor): void

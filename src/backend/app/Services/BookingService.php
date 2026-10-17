@@ -22,7 +22,7 @@ class BookingService
      */
     public function request(array $data, User $user): FacilityBooking
     {
-        $facility = Facility::findOrFail($data['facility_id']);
+        $facility = Facility::query()->findOrFail(is_numeric($data['facility_id']) ? (int) $data['facility_id'] : 0);
 
         if (! $facility->is_active) {
             throw ValidationException::withMessages(['facility_id' => ['Fasilitas sedang tidak aktif.']]);
@@ -57,11 +57,11 @@ class BookingService
                 $conflict->update(['status' => 'rejected', 'approved_by' => $actor->id]);
             }
 
-            $this->maybeBill($booking->fresh(['facility', 'booker']), $actor);
+            $this->maybeBill($booking->refresh()->load(['facility', 'booker']), $actor);
 
             return [
-                'booking' => $booking->fresh(['facility', 'booker', 'approver']),
-                'conflicts' => $conflicts->map(fn (FacilityBooking $conflict) => $conflict->fresh('facility'))->all(),
+                'booking' => $booking->refresh()->load(['facility', 'booker', 'approver']),
+                'conflicts' => $conflicts->map(fn (FacilityBooking $conflict) => $conflict->refresh()->load('facility'))->all(),
             ];
         });
 
@@ -81,9 +81,10 @@ class BookingService
         }
 
         $booking->update(['status' => 'rejected', 'approved_by' => $actor->id]);
-        $this->notify($booking->fresh('facility'), 'rejected', $actor, $reason);
+        $reason = $reason === null ? null : $this->htmlSanitizer->sanitize($reason);
+        $this->notify($booking->refresh()->load('facility'), 'rejected', $actor, $reason);
 
-        return $booking->fresh(['facility', 'booker', 'approver']);
+        return $booking->refresh()->load(['facility', 'booker', 'approver']);
     }
 
     public function cancel(FacilityBooking $booking): FacilityBooking
@@ -98,7 +99,7 @@ class BookingService
 
         $booking->update(['status' => 'cancelled']);
 
-        return $booking->fresh(['facility', 'booker', 'approver']);
+        return $booking->refresh()->load(['facility', 'booker', 'approver']);
     }
 
     public function overlaps(int $facilityId, mixed $start, mixed $end, ?int $exceptId = null): bool
@@ -119,11 +120,13 @@ class BookingService
             return;
         }
 
-        $houseId = HouseResident::where('resident_id', $booking->booker?->resident_id)
+        $residentId = $booking->booker?->resident_id;
+        $houseId = $residentId === null ? null : HouseResident::where('resident_id', $residentId)
             ->whereNull('end_date')
-            ->value('house_id');
+            ->first()
+            ?->house_id;
 
-        if ($houseId === null || $booking->booked_by === null) {
+        if ($residentId === null || $houseId === null) {
             Log::warning('BookingService: approved booking has no house, skipping bill', [
                 'booking_id' => $booking->id,
             ]);
@@ -148,7 +151,7 @@ class BookingService
 
         Bill::create([
             'house_id' => $houseId,
-            'resident_id' => $booking->booker->resident_id,
+            'resident_id' => $residentId,
             'due_type_id' => $facility->due_type_id,
             'period_start' => $period,
             'period_end' => $period,
@@ -170,7 +173,7 @@ class BookingService
         try {
             $booker->notify(new BookingDecided(
                 $booking->id,
-                $booking->facility->name,
+                $booking->facility->name ?? '',
                 $booking->start_at->format('d M Y H:i'),
                 $decision,
                 $actor->name,

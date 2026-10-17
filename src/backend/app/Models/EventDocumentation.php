@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\EventDocumentationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EventDocumentation extends Model
 {
+    /** @use HasFactory<EventDocumentationFactory> */
     use HasFactory;
 
     public $timestamps = false;
@@ -16,6 +18,9 @@ class EventDocumentation extends Model
 
     protected $fillable = ['event_id', 'media_type', 'file_path', 'caption'];
 
+    /**
+     * @return BelongsTo<Event, $this>
+     */
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);

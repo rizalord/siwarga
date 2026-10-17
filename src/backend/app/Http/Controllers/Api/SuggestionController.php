@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SuggestionResource;
 use App\Models\AnonymousSuggestion;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SuggestionController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'content' => ['required', 'string', 'max:2000'],
         ]);
 
@@ -21,7 +22,7 @@ class SuggestionController extends Controller
         return (new SuggestionResource($suggestion))->response()->setStatusCode(201);
     }
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = AnonymousSuggestion::query();
 
@@ -31,10 +32,10 @@ class SuggestionController extends Controller
 
         $query->orderByDesc('id');
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), SuggestionResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), SuggestionResource::class);
     }
 
-    public function markReviewed(AnonymousSuggestion $suggestion)
+    public function markReviewed(AnonymousSuggestion $suggestion): SuggestionResource
     {
         $suggestion->update(['status' => 'reviewed']);
 

@@ -15,17 +15,17 @@ class AnnouncementService
      */
     public function create(array $data, User $user): Announcement
     {
-        $data['content'] = $this->htmlSanitizer->sanitize($data['content']);
-        $data['slug'] = $this->generateUniqueSlug($data['title']);
+        $data['content'] = $this->htmlSanitizer->sanitizeValue($data['content']);
+        $data['slug'] = $this->generateUniqueSlug(is_string($data['title']) ? $data['title'] : '');
         $data['created_by'] = $user->id;
 
-        $targetHouseIds = $data['target_house_ids'] ?? [];
+        $targetHouseIds = IdList::from($data['target_house_ids'] ?? []);
         unset($data['target_house_ids']);
 
         $announcement = Announcement::create($data);
         $this->syncTargets($announcement, $targetHouseIds);
 
-        return $announcement->fresh('targets');
+        return $announcement->refresh()->load('targets');
     }
 
     /**
@@ -34,16 +34,16 @@ class AnnouncementService
     public function update(Announcement $announcement, array $data): Announcement
     {
         if (array_key_exists('content', $data)) {
-            $data['content'] = $data['content'] === null ? null : $this->htmlSanitizer->sanitize($data['content']);
+            $data['content'] = $this->htmlSanitizer->sanitizeValue($data['content']);
         }
 
         if (array_key_exists('title', $data) && $data['title'] !== $announcement->title) {
-            $data['slug'] = $this->generateUniqueSlug($data['title'], $announcement->id);
+            $data['slug'] = $this->generateUniqueSlug(is_string($data['title']) ? $data['title'] : '', $announcement->id);
         }
 
         $targetHouseIds = null;
         if (array_key_exists('target_house_ids', $data)) {
-            $targetHouseIds = $data['target_house_ids'];
+            $targetHouseIds = IdList::from($data['target_house_ids']);
             unset($data['target_house_ids']);
         }
 
@@ -53,7 +53,7 @@ class AnnouncementService
             $this->syncTargets($announcement, $targetHouseIds);
         }
 
-        return $announcement->fresh('targets');
+        return $announcement->refresh()->load('targets');
     }
 
     public function delete(Announcement $announcement): void

@@ -26,6 +26,16 @@ export function useBookings(params?: BookingFilter) {
   })
 }
 
+export function useFacilityBookings(facilityId: number | undefined, params?: BookingFilter) {
+  return useQuery({
+    queryKey: ['facilities', facilityId, 'bookings', params],
+    queryFn: () => facilitiesService.getBookings(facilityId as number, params),
+    enabled: facilityId !== undefined,
+    select: (res) => res.data,
+    placeholderData: (prev) => prev,
+  })
+}
+
 export function useCreateBooking() {
   const qc = useQueryClient()
   return useMutation({

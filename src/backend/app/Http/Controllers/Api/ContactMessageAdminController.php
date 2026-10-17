@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ContactMessageResource;
 use App\Models\ContactMessage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ContactMessageAdminController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = ContactMessage::query();
 
@@ -19,15 +20,15 @@ class ContactMessageAdminController extends Controller
 
         $this->applySorting($query, $request, ['created_at'], 'created_at');
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), ContactMessageResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), ContactMessageResource::class);
     }
 
-    public function show(ContactMessage $contactMessage)
+    public function show(ContactMessage $contactMessage): ContactMessageResource
     {
         return new ContactMessageResource($contactMessage);
     }
 
-    public function markRead(ContactMessage $contactMessage)
+    public function markRead(ContactMessage $contactMessage): ContactMessageResource
     {
         $contactMessage->update(['status' => 'read']);
 

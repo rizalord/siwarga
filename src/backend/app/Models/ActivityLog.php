@@ -22,6 +22,9 @@ class ActivityLog extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
@@ -43,9 +46,9 @@ class ActivityLog extends Model
             'subject_id' => $subject?->getKey(),
             'description' => $description,
             'changes' => $changes ?: null,
-            'ip_address' => $request?->ip(),
-            'user_agent' => $request?->userAgent(),
-            'url' => $url ?? $request?->header('referer'),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'url' => $url ?? $request->header('referer'),
         ]);
     }
 }

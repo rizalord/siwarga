@@ -8,7 +8,7 @@ use App\Models\Page;
 
 class PublicPageController extends Controller
 {
-    public function show(string $slug)
+    public function show(string $slug): PublicPageResource
     {
         $page = Page::where('slug', $slug)->firstOrFail();
 

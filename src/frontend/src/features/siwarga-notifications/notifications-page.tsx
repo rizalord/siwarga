@@ -35,6 +35,8 @@ const STATUS_LABELS: Record<string, string> = {
   paid: 'Lunas',
   rejected: 'Ditolak',
   expired: 'Kedaluarsa',
+  belum_lunas: 'Belum Lunas',
+  jatuh_tempo: 'Jatuh Tempo',
   failed: 'Gagal',
   none: '—',
 }

@@ -33,15 +33,15 @@ class ActivityLogService
         }
 
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->whereDate('created_at', '>=', $request->string('date_from')->toString());
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->whereDate('created_at', '<=', $request->string('date_to')->toString());
         }
 
         if ($request->search) {
-            $query->where('description', 'like', "%{$request->search}%");
+            $query->where('description', 'like', "%{$request->string('search')}%");
         }
 
         return $query;

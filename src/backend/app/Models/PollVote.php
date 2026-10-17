@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\PollVoteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PollVote extends Model
 {
+    /** @use HasFactory<PollVoteFactory> */
     use HasFactory;
 
     public $timestamps = false;
@@ -18,16 +20,25 @@ class PollVote extends Model
         'voted_at' => 'datetime',
     ];
 
+    /**
+     * @return BelongsTo<Poll, $this>
+     */
     public function poll(): BelongsTo
     {
         return $this->belongsTo(Poll::class);
     }
 
+    /**
+     * @return BelongsTo<PollOption, $this>
+     */
     public function option(): BelongsTo
     {
         return $this->belongsTo(PollOption::class, 'option_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

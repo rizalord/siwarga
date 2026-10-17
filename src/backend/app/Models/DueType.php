@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\DueTypeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DueType extends Model
 {
+    /** @use HasFactory<DueTypeFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['name', 'amount', 'billing_cycle'];

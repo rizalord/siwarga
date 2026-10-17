@@ -13,16 +13,16 @@ class ExpenseController extends Controller
 {
     public function __construct(private ExpenseService $expenseService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Expense::query()->with('category');
 
         if ($request->month) {
-            $query->whereMonth('expense_date', $request->month);
+            $query->whereMonth('expense_date', $request->integer('month'));
         }
 
         if ($request->year) {
-            $query->whereYear('expense_date', $request->year);
+            $query->whereYear('expense_date', $request->integer('year'));
         }
 
         if ($request->filled('category_id')) {
@@ -33,9 +33,9 @@ class ExpenseController extends Controller
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('description', 'like', "%{$request->search}%")
+                $q->where('description', 'like', "%{$request->string('search')}%")
                     ->orWhereHas('category', function ($q) use ($request) {
-                        $q->where('name', 'like', "%{$request->search}%");
+                        $q->where('name', 'like', "%{$request->string('search')}%");
                     });
             });
         }
@@ -43,10 +43,10 @@ class ExpenseController extends Controller
         $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['amount', 'expense_date', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), ExpenseResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), ExpenseResource::class);
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): JsonResponse
     {
         return $this->bulkDelete($request, Expense::class);
     }
@@ -56,33 +56,33 @@ class ExpenseController extends Controller
         return parent::bulkRestore($request, $modelClass);
     }
 
-    public function bulkForceDestroy(Request $request)
+    public function bulkForceDestroy(Request $request): JsonResponse
     {
         return $this->bulkForceDelete($request, Expense::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): ExpenseResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'category_id' => 'required|exists:expense_categories,id',
             'description' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'expense_date' => 'required|date',
         ]);
 
-        $expense = $this->expenseService->create($validated, $request->user()->id);
+        $expense = $this->expenseService->create($validated, $this->authUser($request)->id);
 
         return new ExpenseResource($expense);
     }
 
-    public function show(Expense $expense)
+    public function show(Expense $expense): ExpenseResource
     {
         return new ExpenseResource($expense->load('category'));
     }
 
-    public function update(Request $request, Expense $expense)
+    public function update(Request $request, Expense $expense): ExpenseResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'category_id' => 'sometimes|exists:expense_categories,id',
             'description' => 'nullable|string|max:255',
             'amount' => 'sometimes|numeric|min:0',
@@ -94,21 +94,21 @@ class ExpenseController extends Controller
         return new ExpenseResource($expense);
     }
 
-    public function destroy(Expense $expense)
+    public function destroy(Expense $expense): JsonResponse
     {
         $this->expenseService->delete($expense);
 
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function restore(Expense $expense)
+    public function restore(Expense $expense): ExpenseResource
     {
         $this->restoreModel($expense);
 
         return new ExpenseResource($expense->load('category'));
     }
 
-    public function forceDestroy(Expense $expense)
+    public function forceDestroy(Expense $expense): JsonResponse
     {
         $this->forceDeleteModel($expense);
 

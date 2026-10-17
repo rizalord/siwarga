@@ -11,9 +11,12 @@ use Illuminate\Support\Collection;
 
 class BillGenerationService
 {
+    /**
+     * @return Collection<int, Bill>
+     */
     public function generate(int $month, int $year, ?int $generatedBy = null): Collection
     {
-        $generated = collect();
+        $generated = [];
         $dueTypes = DueType::all();
 
         foreach ($dueTypes as $dueType) {
@@ -55,13 +58,16 @@ class BillGenerationService
                     'generated_by' => $generatedBy,
                     'generated_at' => now(),
                 ]);
-                $generated->push($bill);
+                $generated[] = $bill;
             }
         }
 
-        return $generated;
+        return collect($generated);
     }
 
+    /**
+     * @return Collection<int, Bill>
+     */
     public function generateFlexible(
         int $dueTypeId,
         Carbon $periodStart,
@@ -75,7 +81,7 @@ class BillGenerationService
             abort(422, 'Jenis iuran ini hanya dapat dibuat melalui generate bulanan.');
         }
 
-        $generated = collect();
+        $generated = [];
         $houses = House::where('status', 'dihuni')->get();
 
         foreach ($houses as $house) {
@@ -102,7 +108,7 @@ class BillGenerationService
                 continue;
             }
 
-            $generated->push(Bill::create([
+            $generated[] = Bill::create([
                 'house_id' => $house->id,
                 'resident_id' => $activeResident->resident_id,
                 'due_type_id' => $dueType->id,
@@ -111,9 +117,9 @@ class BillGenerationService
                 'amount_due' => $amountDue,
                 'generated_by' => $generatedBy,
                 'generated_at' => now(),
-            ]));
+            ]);
         }
 
-        return $generated;
+        return collect($generated);
     }
 }

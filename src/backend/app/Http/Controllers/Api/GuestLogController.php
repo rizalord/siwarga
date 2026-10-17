@@ -7,6 +7,7 @@ use App\Http\Resources\GuestLogResource;
 use App\Models\GuestLog;
 use App\Services\GuestLogService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class GuestLogController extends Controller
@@ -15,9 +16,9 @@ class GuestLogController extends Controller
 
     public function __construct(private GuestLogService $guestLogService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->authUser($request);
         $query = GuestLog::query()->with(['house:id,house_number', 'registrar:id,name']);
 
         if (! $user->hasPermission('guest-logs.manage')) {
@@ -29,21 +30,21 @@ class GuestLogController extends Controller
         }
 
         if ($request->filled('date')) {
-            $query->whereDate('visit_date', $request->date);
+            $query->whereDate('visit_date', $request->string('date')->toString());
         }
 
         if ($request->search) {
-            $query->where('guest_name', 'like', "%{$request->search}%");
+            $query->where('guest_name', 'like', "%{$request->string('search')}%");
         }
 
         $this->applySorting($query, $request, ['visit_date', 'created_at', 'status']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), GuestLogResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), GuestLogResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'guest_name' => ['required', 'string', 'max:100'],
             'purpose' => ['nullable', 'string', 'max:255'],
             'house_id' => ['required', 'integer', 'exists:houses,id'],
@@ -51,26 +52,26 @@ class GuestLogController extends Controller
             'visit_date' => ['nullable', 'date'],
         ]);
 
-        $log = $this->guestLogService->register($validated, $request->user());
+        $log = $this->guestLogService->register($validated, $this->authUser($request));
 
         return (new GuestLogResource($log->load(['house', 'registrar'])))->response()->setStatusCode(201);
     }
 
-    public function show(GuestLog $guestLog)
+    public function show(GuestLog $guestLog): GuestLogResource
     {
         $this->authorize('view', $guestLog);
 
         return new GuestLogResource($guestLog->load(['house', 'registrar', 'recorder']));
     }
 
-    public function checkIn(GuestLog $guestLog)
+    public function checkIn(GuestLog $guestLog): GuestLogResource
     {
         $this->authorize('checkIn', $guestLog);
 
-        return new GuestLogResource($this->guestLogService->checkIn($guestLog, request()->user()));
+        return new GuestLogResource($this->guestLogService->checkIn($guestLog, $this->authUser()));
     }
 
-    public function checkOut(GuestLog $guestLog)
+    public function checkOut(GuestLog $guestLog): GuestLogResource
     {
         $this->authorize('checkOut', $guestLog);
 

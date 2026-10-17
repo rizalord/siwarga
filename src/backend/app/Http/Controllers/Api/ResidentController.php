@@ -14,7 +14,7 @@ class ResidentController extends Controller
 {
     public function __construct(private ResidentService $residentService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Resident::query();
 
@@ -32,28 +32,25 @@ class ResidentController extends Controller
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('full_name', 'like', "%{$request->search}%")
-                    ->orWhere('phone_number', 'like', "%{$request->search}%");
+                $q->where('full_name', 'like', "%{$request->string('search')}%")
+                    ->orWhere('phone_number', 'like', "%{$request->string('search')}%");
             });
         }
 
         $this->applyTrashedFilter($query, $request);
         $this->applySorting($query, $request, ['full_name', 'status', 'phone_number', 'marital_status', 'created_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), ResidentResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), ResidentResource::class);
     }
 
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'ids' => 'required|array|min:1',
-            'ids.*' => 'integer',
-        ]);
+        $ids = $this->validatedIds($request);
 
-        $deletableIds = $this->residentService->deletableIds($validated['ids']);
+        $deletableIds = $this->residentService->deletableIds($ids);
         $deleted = Resident::destroy($deletableIds);
 
-        if ($deleted < count($validated['ids'])) {
+        if ($deleted < count($ids)) {
             return response()->json([
                 'data' => null,
                 'message' => "{$deleted} penghuni berhasil dihapus. Sisanya tidak bisa dihapus karena masih ditempatkan di sebuah rumah.",
@@ -68,14 +65,14 @@ class ResidentController extends Controller
         return parent::bulkRestore($request, $modelClass);
     }
 
-    public function bulkForceDestroy(Request $request)
+    public function bulkForceDestroy(Request $request): JsonResponse
     {
         return $this->bulkForceDelete($request, Resident::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): ResidentResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'full_name' => 'required|string|max:150',
             'status' => 'required|in:kontrak,tetap',
             'phone_number' => 'required|string|max:20',
@@ -85,17 +82,17 @@ class ResidentController extends Controller
 
         $resident = $this->residentService->create($validated, $request->file('ktp_photo'));
 
-        return new ResidentResource($resident, 201);
+        return new ResidentResource($resident);
     }
 
-    public function show(Resident $resident)
+    public function show(Resident $resident): ResidentResource
     {
         return new ResidentResource($resident);
     }
 
-    public function update(Request $request, Resident $resident)
+    public function update(Request $request, Resident $resident): ResidentResource
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'full_name' => 'sometimes|string|max:150',
             'status' => 'sometimes|in:kontrak,tetap',
             'phone_number' => 'sometimes|string|max:20',
@@ -108,7 +105,7 @@ class ResidentController extends Controller
         return new ResidentResource($resident);
     }
 
-    public function destroy(Resident $resident)
+    public function destroy(Resident $resident): JsonResponse
     {
         try {
             $this->residentService->delete($resident);
@@ -121,14 +118,14 @@ class ResidentController extends Controller
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function restore(Resident $resident)
+    public function restore(Resident $resident): ResidentResource
     {
         $this->restoreModel($resident);
 
         return new ResidentResource($resident);
     }
 
-    public function forceDestroy(Resident $resident)
+    public function forceDestroy(Resident $resident): JsonResponse
     {
         $this->forceDeleteModel($resident);
 

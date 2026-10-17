@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PaymentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
+    /** @use HasFactory<PaymentFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['bill_id', 'amount_paid', 'payment_date', 'notes', 'created_by'];
@@ -21,11 +23,17 @@ class Payment extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Bill, $this>
+     */
     public function bill(): BelongsTo
     {
         return $this->belongsTo(Bill::class)->withTrashed();
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by')->withTrashed();

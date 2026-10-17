@@ -15,7 +15,7 @@ class PaymentService
      */
     public function create(array $data, int $createdBy): Payment
     {
-        $this->assertWithinRemaining((int) $data['bill_id'], (float) $data['amount_paid']);
+        $this->assertWithinRemaining(self::toInt($data['bill_id']), self::toFloat($data['amount_paid']));
 
         $data['created_by'] = $createdBy;
 
@@ -31,8 +31,8 @@ class PaymentService
      */
     public function update(Payment $payment, array $data): Payment
     {
-        $newBillId = (int) ($data['bill_id'] ?? $payment->bill_id);
-        $newAmount = (float) ($data['amount_paid'] ?? $payment->amount_paid);
+        $newBillId = isset($data['bill_id']) ? self::toInt($data['bill_id']) : $payment->bill_id;
+        $newAmount = isset($data['amount_paid']) ? self::toFloat($data['amount_paid']) : (float) $payment->amount_paid;
 
         $this->assertWithinRemaining($newBillId, $newAmount, $payment->id);
 
@@ -60,7 +60,7 @@ class PaymentService
     public function bulkDelete(array $ids): int
     {
         $payments = Payment::whereIn('id', $ids)->get();
-        $billIds = $payments->pluck('bill_id')->unique();
+        $billIds = $payments->map(fn (Payment $payment): int => $payment->bill_id)->unique();
 
         return DB::transaction(function () use ($payments, $billIds) {
             $deleted = Payment::destroy($payments->pluck('id'));
@@ -75,7 +75,7 @@ class PaymentService
      */
     public function afterBulkRestore(EloquentCollection $payments): void
     {
-        $this->refreshBillStatuses($payments->pluck('bill_id')->all());
+        $this->refreshBillStatuses($payments->map(fn (Payment $payment): int => $payment->bill_id)->all());
     }
 
     public function afterRestore(Payment $payment): void
@@ -129,5 +129,15 @@ class PaymentService
                 'status' => $totalPaid >= $bill->amount_due ? 'lunas' : 'belum_lunas',
             ]);
         });
+    }
+
+    private static function toInt(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    private static function toFloat(mixed $value): float
+    {
+        return is_numeric($value) ? (float) $value : 0.0;
     }
 }

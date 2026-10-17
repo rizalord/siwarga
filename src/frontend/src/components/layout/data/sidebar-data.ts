@@ -25,6 +25,7 @@ import {
   CalendarDays,
   BookOpen,
   Siren,
+  Cctv,
   QrCode,
   Download,
 } from 'lucide-react'
@@ -184,6 +185,12 @@ export const sidebarData: SidebarData = {
           icon: Phone,
           permission: 'emergency-contacts.manage',
         },
+        {
+          title: 'CCTV',
+          url: '/cctv',
+          icon: Cctv,
+          permission: 'snapshots.view',
+        },
       ],
     },
     {
@@ -223,7 +230,7 @@ export const sidebarData: SidebarData = {
           title: 'Laporan',
           url: '/reports',
           icon: FileText,
-          permission: 'reports.view',
+          permission: 'reports.view.summary',
         },
         {
           title: 'Export & Backup',

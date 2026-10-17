@@ -146,4 +146,35 @@ class ReportTest extends TestCase
         $response->assertJsonPath('data.expenses.0.category.name', 'Keamanan');
         $response->assertJsonPath('data.expenses.0.description', null);
     }
+
+    public function test_warga_sees_monthly_report_without_payer_details()
+    {
+        $warga = User::factory()->create();
+        $warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+
+        $bill = Bill::factory()->create();
+        Payment::factory()->create([
+            'bill_id' => $bill->id,
+            'amount_paid' => 150000,
+            'payment_date' => '2026-03-10',
+            'notes' => 'Dibayar oleh Pak Budi',
+        ]);
+
+        $response = $this->actingAs($warga)->getJson('/api/reports/monthly/2026/3');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.total_income', 150000)
+            ->assertJsonMissingPath('data.payments.0.bill')
+            ->assertJsonMissingPath('data.payments.0.created_by');
+        $this->assertStringNotContainsString('Budi', $response->getContent());
+    }
+
+    public function test_warga_can_view_yearly_summary_but_not_pdf_export()
+    {
+        $warga = User::factory()->create();
+        $warga->roles()->attach(Role::where('name', 'warga')->first()->id);
+
+        $this->actingAs($warga)->getJson('/api/reports/summary/2026')->assertStatus(200);
+        $this->actingAs($warga)->get('/api/reports/summary/2026/pdf')->assertStatus(403);
+    }
 }

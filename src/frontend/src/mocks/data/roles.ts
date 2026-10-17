@@ -34,6 +34,7 @@ export const mockRoles: Role[] = [
         'expense-categories.manage',
         'expense-categories.trash',
         'reports.view',
+        'reports.view.summary',
       ].includes(p.name)
     ),
     users_count: 1,
@@ -42,7 +43,15 @@ export const mockRoles: Role[] = [
     id: 3,
     name: 'warga',
     description: 'Warga',
-    permissions: mockPermissions.filter((p) => ['bills.view', 'bills.view.own', 'payments.view', 'payments.view.own'].includes(p.name)),
+    permissions: mockPermissions.filter((p) =>
+      [
+        'bills.view',
+        'bills.view.own',
+        'payments.view',
+        'payments.view.own',
+        'reports.view.summary',
+      ].includes(p.name)
+    ),
     users_count: 1,
   },
 ]

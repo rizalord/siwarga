@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ForumThreadFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,15 +11,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ForumThread extends Model
 {
+    /** @use HasFactory<ForumThreadFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = ['title', 'created_by'];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * @return HasMany<ForumPost, $this>
+     */
     public function posts(): HasMany
     {
         return $this->hasMany(ForumPost::class, 'thread_id');

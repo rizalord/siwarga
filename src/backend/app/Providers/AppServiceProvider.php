@@ -25,6 +25,8 @@ use App\Policies\AssetLoanPolicy;
 use App\Policies\AssetPolicy;
 use App\Policies\BillPolicy;
 use App\Policies\BookingPolicy;
+use App\Policies\CameraPolicy;
+use App\Policies\CameraSnapshotPolicy;
 use App\Policies\ContactMessagePolicy;
 use App\Policies\DueTypePolicy;
 use App\Policies\EmergencyContactPolicy;
@@ -165,6 +167,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('family-members.manage', fn (User $user) => $user->hasPermission('family-members.manage'));
         Gate::define('emergency-contacts.manage', [EmergencyContactPolicy::class, 'create']);
 
+        // CCTV (Fase 6)
+        Gate::define('cameras.view', [CameraPolicy::class, 'viewAny']);
+        Gate::define('cameras.manage', [CameraPolicy::class, 'create']);
+        Gate::define('snapshots.view', [CameraSnapshotPolicy::class, 'viewAny']);
+
         // Residents
         Gate::define('residents.view', [ResidentPolicy::class, 'viewAny']);
         Gate::define('residents.create', [ResidentPolicy::class, 'create']);
@@ -203,6 +210,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Reports
         Gate::define('reports.view', fn (User $user) => $user->hasPermission('reports.view'));
+        Gate::define('reports.view.summary', fn (User $user) => $user->hasPermission('reports.view') || $user->hasPermission('reports.view.summary'));
 
         // Users
         Gate::define('users.view', [UserPolicy::class, 'viewAny']);
@@ -233,11 +241,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('suggestions', function (Request $request) {
-            return Limit::perMinute(3)->by($request->user()?->id ?? $request->ip());
+            return Limit::perMinute(3)->by($request->user()->id ?? $request->ip());
         });
 
         RateLimiter::for('panic', function (Request $request) {
-            return Limit::perMinute(3)->by($request->user()?->id ?? $request->ip());
+            return Limit::perMinute(3)->by($request->user()->id ?? $request->ip());
         });
 
         RateLimiter::for('webhooks', function (Request $request) {
@@ -245,7 +253,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('exports', function (Request $request) {
-            return Limit::perMinute(10)->by($request->user()?->id ?? $request->ip());
+            return Limit::perMinute(10)->by($request->user()->id ?? $request->ip());
         });
     }
 }

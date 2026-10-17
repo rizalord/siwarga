@@ -6,6 +6,7 @@ use App\Models\DueType;
 use App\Models\House;
 use App\Models\Resident;
 use App\Services\BillGenerationService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -82,8 +83,8 @@ class BillGenerationServiceTest extends TestCase
         $service = new BillGenerationService;
         $bills = $service->generateFlexible(
             $dueType->id,
-            \Carbon\Carbon::parse('2026-08-01'),
-            \Carbon\Carbon::parse('2026-08-31'),
+            Carbon::parse('2026-08-01'),
+            Carbon::parse('2026-08-31'),
             100000,
         );
 

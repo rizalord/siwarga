@@ -7,6 +7,7 @@ use App\Http\Resources\AssetResource;
 use App\Models\Asset;
 use App\Services\AssetService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AssetController extends Controller
@@ -15,63 +16,63 @@ class AssetController extends Controller
 
     public function __construct(private AssetService $assetService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = Asset::query();
 
         if ($request->search) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $query->where('name', 'like', "%{$request->string('search')}%");
         }
 
         $this->applySorting($query, $request, ['name', 'quantity', 'created_at']);
 
-        $assets = $query->paginate($request->per_page ?? 10);
+        $assets = $query->paginate($request->integer('per_page') ?: 10);
 
         $assets->getCollection()->transform(fn (Asset $asset) => tap($asset, function (Asset $a): void {
-            $a->available = $this->assetService->available($a);
+            $a->setAttribute('available', $this->assetService->available($a));
         }));
 
         return $this->paginated($assets, AssetResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => ['required', 'string', 'max:150'],
             'quantity' => ['required', 'integer', 'min:0'],
             'condition' => ['sometimes', 'in:baik,rusak_ringan,rusak_berat'],
         ]);
 
         $asset = Asset::create($validated);
-        $asset->available = $this->assetService->available($asset);
+        $asset->setAttribute('available', $this->assetService->available($asset));
 
         return (new AssetResource($asset))->response()->setStatusCode(201);
     }
 
-    public function show(Asset $asset)
+    public function show(Asset $asset): AssetResource
     {
-        $asset->available = $this->assetService->available($asset);
+        $asset->setAttribute('available', $this->assetService->available($asset));
 
         return new AssetResource($asset);
     }
 
-    public function update(Request $request, Asset $asset)
+    public function update(Request $request, Asset $asset): AssetResource
     {
         $this->authorize('update', $asset);
 
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'name' => ['sometimes', 'string', 'max:150'],
             'quantity' => ['sometimes', 'integer', 'min:0'],
             'condition' => ['sometimes', 'in:baik,rusak_ringan,rusak_berat'],
         ]);
 
         $asset->update($validated);
-        $asset->available = $this->assetService->available($asset->fresh());
+        $asset->setAttribute('available', $this->assetService->available($asset->refresh()));
 
         return new AssetResource($asset);
     }
 
-    public function destroy(Asset $asset)
+    public function destroy(Asset $asset): JsonResponse
     {
         $this->authorize('delete', $asset);
         $asset->delete();

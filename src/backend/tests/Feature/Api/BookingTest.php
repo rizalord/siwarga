@@ -130,4 +130,40 @@ class BookingTest extends TestCase
         $this->actingAs($this->warga)->postJson("/api/bookings/{$booking->id}/cancel")->assertStatus(200)
             ->assertJsonPath('data.status', 'cancelled');
     }
+
+    public function test_facility_bookings_endpoint_is_scoped_to_facility()
+    {
+        $other = Facility::factory()->create(['name' => 'Lapangan']);
+        $slot = $this->slot(5);
+        $mine = FacilityBooking::factory()->create(['facility_id' => $this->hall->id, 'booked_by' => $this->warga->id, 'status' => 'pending'] + $slot);
+        $theirs = FacilityBooking::factory()->create(['facility_id' => $this->hall->id, 'status' => 'pending'] + $slot);
+        $elsewhere = FacilityBooking::factory()->create(['facility_id' => $other->id, 'booked_by' => $this->warga->id, 'status' => 'pending'] + $slot);
+
+        $response = $this->actingAs($this->admin)->getJson("/api/facilities/{$this->hall->id}/bookings");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.0.facility_id', $this->hall->id)
+            ->assertJsonCount(2, 'data');
+        $this->assertContains($mine->id, $response->json('data.*.id'));
+        $this->assertContains($theirs->id, $response->json('data.*.id'));
+        $this->assertNotContains($elsewhere->id, $response->json('data.*.id'));
+    }
+
+    public function test_facility_bookings_endpoint_scopes_warga_to_own()
+    {
+        $slot = $this->slot(6);
+        $mine = FacilityBooking::factory()->create(['facility_id' => $this->hall->id, 'booked_by' => $this->warga->id, 'status' => 'pending'] + $slot);
+        $theirs = FacilityBooking::factory()->create(['facility_id' => $this->hall->id, 'status' => 'pending'] + $slot);
+
+        $response = $this->actingAs($this->warga)->getJson("/api/facilities/{$this->hall->id}/bookings");
+
+        $response->assertStatus(200)->assertJsonCount(1, 'data');
+        $this->assertContains($mine->id, $response->json('data.*.id'));
+        $this->assertNotContains($theirs->id, $response->json('data.*.id'));
+    }
+
+    public function test_facility_bookings_endpoint_returns_404_for_unknown_facility()
+    {
+        $this->actingAs($this->admin)->getJson('/api/facilities/999999/bookings')->assertStatus(404);
+    }
 }

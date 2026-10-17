@@ -7,6 +7,7 @@ use App\Http\Resources\PatrolScheduleResource;
 use App\Models\PatrolSchedule;
 use App\Services\HtmlSanitizer;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -17,7 +18,7 @@ class PatrolScheduleController extends Controller
 
     public function __construct(private HtmlSanitizer $htmlSanitizer) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = PatrolSchedule::query();
 
@@ -31,31 +32,31 @@ class PatrolScheduleController extends Controller
 
         $this->applySorting($query, $request, ['date', 'shift', 'created_at'], 'date', 'asc');
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), PatrolScheduleResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), PatrolScheduleResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validated = $this->validateSchedule($request);
 
         return (new PatrolScheduleResource(PatrolSchedule::create($validated)))->response()->setStatusCode(201);
     }
 
-    public function show(PatrolSchedule $patrolSchedule)
+    public function show(PatrolSchedule $patrolSchedule): PatrolScheduleResource
     {
         return new PatrolScheduleResource($patrolSchedule);
     }
 
-    public function update(Request $request, PatrolSchedule $patrolSchedule)
+    public function update(Request $request, PatrolSchedule $patrolSchedule): PatrolScheduleResource
     {
         $this->authorize('update', $patrolSchedule);
 
         $patrolSchedule->update($this->validateSchedule($request, $patrolSchedule->id));
 
-        return new PatrolScheduleResource($patrolSchedule->fresh());
+        return new PatrolScheduleResource($patrolSchedule->refresh());
     }
 
-    public function destroy(PatrolSchedule $patrolSchedule)
+    public function destroy(PatrolSchedule $patrolSchedule): JsonResponse
     {
         $this->authorize('delete', $patrolSchedule);
         $patrolSchedule->delete();
@@ -70,7 +71,7 @@ class PatrolScheduleController extends Controller
     {
         $required = $exceptId === null ? 'required' : 'sometimes';
 
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'date' => [$required, 'date'],
             'shift' => [$required, Rule::in(['pagi', 'siang', 'malam'])],
             'personnel_name' => [$required, 'string', 'max:100'],
@@ -80,13 +81,14 @@ class PatrolScheduleController extends Controller
         ]);
 
         foreach (['personnel_name', 'area', 'note'] as $field) {
-            if (isset($validated[$field]) && $validated[$field] !== null) {
+            if (isset($validated[$field]) && is_string($validated[$field])) {
                 $validated[$field] = $this->htmlSanitizer->sanitize($validated[$field]);
             }
         }
 
-        $date = $validated['date'] ?? PatrolSchedule::whereKey($exceptId)->value('date');
-        $shift = $validated['shift'] ?? PatrolSchedule::whereKey($exceptId)->value('shift');
+        $existing = $exceptId !== null ? PatrolSchedule::query()->find($exceptId) : null;
+        $date = $request->filled('date') ? $request->string('date')->toString() : $existing?->date;
+        $shift = $request->filled('shift') ? $request->string('shift')->toString() : $existing?->shift;
 
         $conflict = PatrolSchedule::whereDate('date', $date)
             ->where('shift', $shift)

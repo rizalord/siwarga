@@ -41,7 +41,8 @@ class SendBookingWhatsappJob implements ShouldQueue
         }
 
         $verdict = $this->decision === 'approved' ? 'DISETUJUI' : 'DITOLAK';
-        $message = "[SIWarga] Booking {$booking->facility->name} {$booking->start_at->format('d M Y H:i')}: {$verdict}.";
+        $facilityName = $booking->facility->name ?? 'fasilitas';
+        $message = "[SIWarga] Booking {$facilityName} {$booking->start_at->format('d M Y H:i')}: {$verdict}.";
 
         try {
             $sent = $wahaService->sendMessage($phone, $message);

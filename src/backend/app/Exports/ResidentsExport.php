@@ -8,8 +8,15 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
+/**
+ * @implements FromCollection<int, Resident>
+ * @implements WithMapping<Resident>
+ */
 class ResidentsExport implements FromCollection, WithHeadings, WithMapping
 {
+    /**
+     * @return Collection<int, Resident>
+     */
     public function collection(): Collection
     {
         return Resident::with('activeHouse')->get();
@@ -24,10 +31,10 @@ class ResidentsExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-     * @param  mixed  $resident
+     * @param  Resident  $resident
      * @return array<int, mixed>
      */
-    public function map($resident): array
+    public function map(mixed $resident): array
     {
         return [
             $resident->full_name,

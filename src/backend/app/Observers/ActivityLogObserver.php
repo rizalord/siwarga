@@ -97,7 +97,9 @@ class ActivityLogObserver
     {
         $meta = self::SUBJECT_META[$model::class] ?? ['label' => class_basename($model), 'name' => 'id'];
 
-        return [$meta['label'], (string) ($model->{$meta['name']} ?? $model->getKey())];
+        $identifier = $model->{$meta['name']} ?? $model->getKey();
+
+        return [$meta['label'], is_scalar($identifier) ? (string) $identifier : ''];
     }
 
     /**

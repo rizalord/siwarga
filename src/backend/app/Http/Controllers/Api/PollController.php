@@ -8,7 +8,9 @@ use App\Models\Poll;
 use App\Models\PollOption;
 use App\Models\PollVote;
 use App\Services\PollService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PollController extends Controller
@@ -17,14 +19,14 @@ class PollController extends Controller
 
     public function __construct(private PollService $pollService) {}
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = $this->authUser($request);
         $query = Poll::query()->with('options')
-            ->withExists(['votes as has_voted' => fn ($q) => $q->where('user_id', $user->id)]);
+            ->withExists(['votes as has_voted' => fn (Builder $q) => $q->where('user_id', $user->id)]);
 
         if ($request->search) {
-            $query->where('title', 'like', "%{$request->search}%");
+            $query->where('title', 'like', "%{$request->string('search')}%");
         }
 
         if ($request->filled('status')) {
@@ -35,12 +37,12 @@ class PollController extends Controller
 
         $this->applySorting($query, $request, ['title', 'starts_at', 'ends_at']);
 
-        return $this->paginated($query->paginate($request->per_page ?? 10), PollResource::class);
+        return $this->paginated($query->paginate($request->integer('per_page') ?: 10), PollResource::class);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
             'starts_at' => ['required', 'date'],
@@ -49,29 +51,29 @@ class PollController extends Controller
             'options.*' => ['string', 'max:150', 'distinct'],
         ]);
 
-        $options = $validated['options'];
+        $options = array_values(array_map(fn (mixed $option): string => is_string($option) ? $option : '', $request->array('options')));
         unset($validated['options']);
 
-        $poll = $this->pollService->create($validated, $options, $request->user());
+        $poll = $this->pollService->create($validated, $options, $this->authUser($request));
 
         return (new PollResource($poll))->response()->setStatusCode(201);
     }
 
-    public function show(Request $request, Poll $poll)
+    public function show(Request $request, Poll $poll): PollResource
     {
         $poll->load('options');
-        $vote = PollVote::where('poll_id', $poll->id)->where('user_id', $request->user()->id)->first();
-        $poll->user_voted_option_id = $vote?->option_id;
-        $poll->has_voted = $vote !== null;
+        $vote = PollVote::where('poll_id', $poll->id)->where('user_id', $this->authUser($request)->id)->first();
+        $poll->setAttribute('user_voted_option_id', $vote?->option_id);
+        $poll->setAttribute('has_voted', $vote !== null);
 
         return new PollResource($poll);
     }
 
-    public function update(Request $request, Poll $poll)
+    public function update(Request $request, Poll $poll): PollResource
     {
         $this->authorize('update', $poll);
 
-        $validated = $request->validate([
+        $validated = $this->validate($request, [
             'title' => ['sometimes', 'string', 'max:200'],
             'description' => ['sometimes', 'nullable', 'string'],
             'starts_at' => ['sometimes', 'date'],
@@ -82,7 +84,7 @@ class PollController extends Controller
         return new PollResource($this->pollService->update($poll, $validated));
     }
 
-    public function destroy(Poll $poll)
+    public function destroy(Poll $poll): JsonResponse
     {
         $this->authorize('delete', $poll);
 
@@ -91,23 +93,23 @@ class PollController extends Controller
         return response()->json(['data' => null, 'message' => 'Deleted']);
     }
 
-    public function vote(Request $request, Poll $poll)
+    public function vote(Request $request, Poll $poll): JsonResponse
     {
         // Permission-only: the can:polls.vote route middleware already ran.
         // Period/duplicate/foreign-option rejections are owned by PollService
         // and return 422 (spec §2.2/§3) — no per-instance authorize() here,
         // it would 403 cases the spec mandates as 422.
 
-        $validated = $request->validate([
+        $this->validate($request, [
             'option_id' => ['required', 'integer', 'exists:poll_options,id'],
         ]);
 
-        $this->pollService->vote($poll, PollOption::findOrFail($validated['option_id']), $request->user());
+        $this->pollService->vote($poll, PollOption::query()->findOrFail($request->integer('option_id')), $this->authUser($request));
 
         return response()->json(['data' => null, 'message' => 'Suara berhasil direkam']);
     }
 
-    public function results(Request $request, Poll $poll)
+    public function results(Request $request, Poll $poll): JsonResponse
     {
         $this->authorize('results', $poll);
 
@@ -123,7 +125,7 @@ class PollController extends Controller
                 'votes' => $poll->votes->where('option_id', $option->id)->count(),
                 'percent' => $total > 0 ? round($poll->votes->where('option_id', $option->id)->count() / $total * 100, 1) : 0,
             ])->values(),
-            'user_voted_option_id' => $poll->votes->firstWhere('user_id', $request->user()->id)?->option_id,
+            'user_voted_option_id' => $poll->votes->firstWhere('user_id', $this->authUser($request)->id)?->option_id,
         ]]);
     }
 }

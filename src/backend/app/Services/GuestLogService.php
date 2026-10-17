@@ -16,10 +16,10 @@ class GuestLogService
      */
     public function register(array $data, User $user): GuestLog
     {
-        $data['guest_name'] = $this->htmlSanitizer->sanitize($data['guest_name']);
+        $data['guest_name'] = $this->htmlSanitizer->sanitizeValue($data['guest_name']);
 
-        if (isset($data['purpose']) && $data['purpose'] !== null) {
-            $data['purpose'] = $this->htmlSanitizer->sanitize($data['purpose']);
+        if (isset($data['purpose'])) {
+            $data['purpose'] = $this->htmlSanitizer->sanitizeValue($data['purpose']);
         }
 
         // Staff walk-in goes straight to checked_in; warga pre-registration
@@ -52,7 +52,7 @@ class GuestLogService
             'recorded_by' => $actor->id,
         ]);
 
-        return $log->fresh(['house', 'registrar', 'recorder']);
+        return $log->refresh()->load(['house', 'registrar', 'recorder']);
     }
 
     public function checkOut(GuestLog $log): GuestLog
@@ -66,6 +66,6 @@ class GuestLogService
             'checked_out_at' => now(),
         ]);
 
-        return $log->fresh(['house', 'registrar', 'recorder']);
+        return $log->refresh()->load(['house', 'registrar', 'recorder']);
     }
 }

@@ -27,6 +27,10 @@ class SendAnnouncementWhatsappJob implements ShouldQueue
         $message = $this->buildMessage();
 
         foreach ($residents as $resident) {
+            if ($resident->phone_number === null) {
+                continue;
+            }
+
             try {
                 $sent = $wahaService->sendMessage($resident->phone_number, $message);
 

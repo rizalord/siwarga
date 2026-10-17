@@ -5,9 +5,13 @@ namespace App\Services;
 use App\Models\Expense;
 use App\Models\Payment;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 class ReportService
 {
+    /**
+     * @return array{year: int, monthly_data: list<array{month: int, total_income: float, total_expense: float, balance: float}>, year_balance: float}
+     */
     public function yearlySummary(int $year): array
     {
         $monthlyData = [];
@@ -40,6 +44,9 @@ class ReportService
         ];
     }
 
+    /**
+     * @return array{year: int, month: int, total_income: float, total_expense: float, balance: float, payments: Collection<int, Payment>, expenses: Collection<int, Expense>}
+     */
     public function monthlyDetail(int $year, int $month): array
     {
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
@@ -53,15 +60,15 @@ class ReportService
             ->with('category')
             ->get();
 
-        $totalIncome = $payments->sum('amount_paid');
-        $totalExpense = $expenses->sum('amount');
+        $totalIncome = $payments->sum(fn (Payment $payment): float => (float) $payment->amount_paid);
+        $totalExpense = $expenses->sum(fn (Expense $expense): float => (float) $expense->amount);
 
         return [
             'year' => $year,
             'month' => $month,
-            'total_income' => (float) $totalIncome,
-            'total_expense' => (float) $totalExpense,
-            'balance' => (float) ($totalIncome - $totalExpense),
+            'total_income' => $totalIncome,
+            'total_expense' => $totalExpense,
+            'balance' => $totalIncome - $totalExpense,
             'payments' => $payments,
             'expenses' => $expenses,
         ];

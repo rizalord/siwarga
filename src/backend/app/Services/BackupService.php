@@ -38,7 +38,7 @@ class BackupService
             'meta' => [
                 'version' => 1,
                 'exported_at' => now()->toIso8601String(),
-                'app' => config('app.name'),
+                'app' => ConfigValue::string('app.name'),
             ],
             'domains' => [
                 'residents' => Resident::withTrashed()->get(),

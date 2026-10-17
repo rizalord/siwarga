@@ -40,7 +40,22 @@ until php -r "new PDO('mysql:host=${DB_HOST:-db};port=${DB_PORT:-3306}', '${DB_U
 done
 echo ">> Database siap."
 
-php artisan migrate --force --isolated
+# Migrasi DB. Service backend + queue + scheduler start bersamaan, jadi
+# migrasi harus serial agar tidak balapan DDL.
+#
+# `migrate --isolated` saja tidak cukup di database fresh: lock-nya memakai
+# CACHE_STORE=database yang butuh tabel `cache_locks` — tabel yang justru
+# belum ada sebelum migrasi pertama jalan (menyebabkan restart-loop).
+# Solusinya: serialisasi pakai file lock di bind mount (shared antar
+# container; path ini di-ignore git via storage/framework/cache/.gitignore),
+# lalu migrasi bootstrap memakai file cache agar tidak menyentuh DB cache
+# store sebelum tabelnya ada.
+mkdir -p storage/framework/cache
+(
+    flock -w 600 9 || { echo ">> Gagal mendapatkan lock migrasi." >&2; exit 1; }
+    CACHE_STORE=file php artisan migrate --force
+    php artisan migrate --force --isolated
+) 9>storage/framework/cache/migrate.lock
 
 # Storage symlink dengan target RELATIF agar valid di dalam container maupun
 # di host (workflow native). Dibuat ulang kalau symlink hilang, patah, atau

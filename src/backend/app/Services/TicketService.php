@@ -25,7 +25,7 @@ class TicketService
      */
     public function create(array $data, User $user): Ticket
     {
-        $data['description'] = $this->htmlSanitizer->sanitize($data['description']);
+        $data['description'] = $this->htmlSanitizer->sanitizeValue($data['description']);
         $data['reported_by'] = $user->id;
         $data['house_id'] ??= HouseResident::where('resident_id', $user->resident_id)
             ->whereNull('end_date')
@@ -74,14 +74,14 @@ class TicketService
             SendTicketWhatsappJob::dispatch($ticket->id, $oldStatus, $newStatus);
         }
 
-        return $ticket->fresh(['reporter', 'assignee'])->loadCount(['comments', 'attachments']);
+        return $ticket->refresh()->load(['reporter', 'assignee'])->loadCount(['comments', 'attachments']);
     }
 
     public function assign(Ticket $ticket, int $userId): Ticket
     {
         $ticket->update(['assigned_to' => $userId]);
 
-        return $ticket->fresh(['reporter', 'assignee'])->loadCount(['comments', 'attachments']);
+        return $ticket->refresh()->load(['reporter', 'assignee'])->loadCount(['comments', 'attachments']);
     }
 
     public function addComment(Ticket $ticket, string $comment, User $user): TicketComment

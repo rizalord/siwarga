@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\AssetLoanController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\CameraController;
+use App\Http\Controllers\Api\CameraSnapshotController;
 use App\Http\Controllers\Api\ContactMessageAdminController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\DueTypeController;
@@ -175,8 +177,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->middleware('can:expenses.delete');
 
     // Reports
-    Route::get('reports/summary/{year}', [ReportController::class, 'summary'])->middleware('can:reports.view');
-    Route::get('reports/monthly/{year}/{month}', [ReportController::class, 'monthly'])->middleware('can:reports.view');
+    Route::get('reports/summary/{year}', [ReportController::class, 'summary'])->middleware('can:reports.view.summary');
+    Route::get('reports/monthly/{year}/{month}', [ReportController::class, 'monthly'])->middleware('can:reports.view.summary');
 
     // Exports & backup (Fase 5)
     Route::get('reports/monthly/{year}/{month}/pdf', [ExportController::class, 'monthlyPdf'])->middleware(['can:reports.view', 'throttle:exports']);
@@ -237,6 +239,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('facilities', [FacilityController::class, 'index'])->middleware('can:facilities.view');
     Route::post('facilities', [FacilityController::class, 'store'])->middleware('can:facilities.manage');
     Route::get('facilities/{facility}', [FacilityController::class, 'show'])->middleware('can:facilities.view');
+    Route::get('facilities/{facility}/bookings', [BookingController::class, 'indexByFacility'])->middleware('can:bookings.view');
     Route::put('facilities/{facility}', [FacilityController::class, 'update']);
     Route::delete('facilities/{facility}', [FacilityController::class, 'destroy']);
     Route::get('bookings', [BookingController::class, 'index'])->middleware('can:bookings.view');
@@ -312,6 +315,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('family-members/{familyMember}', [FamilyMemberController::class, 'update']);
     Route::delete('family-members/{familyMember}', [FamilyMemberController::class, 'destroy']);
     Route::get('households/card', [HouseholdCardController::class, 'show'])->middleware('can:family-members.view');
+
+    // CCTV (Fase 6)
+    Route::get('cameras', [CameraController::class, 'index'])->middleware('can:cameras.view');
+    Route::post('cameras', [CameraController::class, 'store'])->middleware('can:cameras.manage');
+    Route::get('cameras/{camera}', [CameraController::class, 'show'])->middleware('can:cameras.view');
+    Route::put('cameras/{camera}', [CameraController::class, 'update']);
+    Route::delete('cameras/{camera}', [CameraController::class, 'destroy']);
+    Route::post('cameras/{camera}/simulate', [CameraController::class, 'simulate']);
+    Route::get('camera-snapshots', [CameraSnapshotController::class, 'index'])->middleware('can:snapshots.view');
+    Route::get('camera-snapshots/{cameraSnapshot}', [CameraSnapshotController::class, 'show'])->middleware('can:snapshots.view');
+    Route::delete('camera-snapshots/{cameraSnapshot}', [CameraSnapshotController::class, 'destroy']);
 });
 
 Route::prefix('public')->group(function () {

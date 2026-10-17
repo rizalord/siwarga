@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PanicAlertFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PanicAlert extends Model
 {
+    /** @use HasFactory<PanicAlertFactory> */
     use HasFactory, SoftDeletes;
 
     public const STATUS_ACTIVE = 'active';
@@ -32,16 +34,25 @@ class PanicAlert extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function reporter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reporter_id');
     }
 
+    /**
+     * @return BelongsTo<House, $this>
+     */
     public function house(): BelongsTo
     {
         return $this->belongsTo(House::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function handler(): BelongsTo
     {
         return $this->belongsTo(User::class, 'handler_id');
