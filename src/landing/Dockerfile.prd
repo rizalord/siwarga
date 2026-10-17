@@ -24,7 +24,11 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
+# The standalone server still imports a few adapter packages
+# (piccolore, send, cookie, ...) as externals, so node_modules
+# must ship in the runtime image.
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/node_modules ./node_modules
 
 EXPOSE 4321
 
