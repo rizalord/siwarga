@@ -60,5 +60,18 @@ fi
 
 echo ">> Backend /up OK"
 
+LANDING_PORT=$(grep -E '^LANDING_PROD_PORT=' .env | cut -d= -f2- || true)
+LANDING_URL="http://${BIND_IP:-127.0.0.1}:${LANDING_PORT:-8090}/"
+
+echo ">> Menunggu landing sehat ($LANDING_URL)"
+for _ in $(seq 1 30); do
+    if curl -fsS "$LANDING_URL" >/dev/null 2>&1; then
+        break
+    fi
+    sleep 5
+done
+curl -fsS "$LANDING_URL" >/dev/null
+echo ">> Landing / OK"
+
 docker image prune -f >/dev/null
 echo ">> Deploy selesai: $(git rev-parse --short HEAD)"

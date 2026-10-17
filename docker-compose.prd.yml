@@ -150,6 +150,19 @@ services:
     depends_on:
       - backend
 
+  landing:
+    build:
+      context: ./src/landing
+      dockerfile: Dockerfile.prd
+      args:
+        PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:8000/api}
+    image: siwarga-landing:prd
+    restart: unless-stopped
+    ports:
+      - '${HOST_BIND_IP:-0.0.0.0}:${LANDING_PROD_PORT:-8090}:4321'
+    depends_on:
+      - backend
+
   waha:
     # Server ARM64 (mis. Oracle Ampere): set WAHA_IMAGE=devlikeapro/waha:arm
     image: ${WAHA_IMAGE:-devlikeapro/waha:latest}
